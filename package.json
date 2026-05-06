@@ -1,9 +1,6 @@
 {
   "name": "newtube-ton-api",
   "version": "1.0.0",
-  "scripts": {
-    "start": "node api/getUser.js"
-  },
   "dependencies": {
     "firebase-admin": "^12.0.0"
   }
