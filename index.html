@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NEWTUBE TON</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #121212; --card: #1e1e24; --primary: #FDE047; --diamond: #00e5ff;
+            --text: #ffffff; --text2: #a0a0a0; --border: #333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 60px 0 80px; }
+        
+        .header { position: fixed; top: 0; width: 100%; height: 60px; background: var(--card); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); z-index: 100; font-weight: bold; color: var(--primary); font-size: 1.2rem; }
+        .container { padding: 0 16px; max-width: 500px; margin: 0 auto; }
+        
+        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .btn-gold { background: var(--primary); color: #000; }
+        .btn-dia { background: var(--diamond); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        
+        .bal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; text-align: center; }
+        .bal-box { background: #000; padding: 15px; border-radius: 10px; border: 1px solid var(--border); }
+        
+        /* Bottom Nav */
+        .nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid var(--border); }
+        .nav-item { color: var(--text2); text-align: center; font-size: 0.8rem; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 3px; }
+        
+        .section { display: none; } .section.active { display: block; }
+        
+        /* Modals & Overlays */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .overlay-box { background: var(--card); width: 100%; max-width: 350px; padding: 20px; border-radius: 12px; text-align: center; }
+        input { width: 100%; padding: 12px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 8px; margin-bottom: 10px; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header"><i class="fas fa-play-circle"></i> NEWTUBE TON</div>
+
+    <!-- Mandatory Join Overlay -->
+    <div id="joinOverlay" class="overlay">
+        <div class="overlay-box">
+            <i class="fab fa-telegram" style="font-size: 3rem; color: #0088cc; margin-bottom: 15px;"></i>
+            <h3>Join to Continue</h3>
+            <p style="color: var(--text2); font-size: 0.9rem; margin-bottom: 15px;">You must join our official channel to use this app.</p>
+            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" style="text-decoration: none;">
+                <button class="btn btn-outline">1. Join Channel</button>
+            </a>
+            <button class="btn btn-gold" onclick="verifyJoin()" id="verifyJoinBtn">2. Verify & Enter</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 1. HOME SECTION -->
+        <div id="home-sec" class="section active">
+            <div class="card flex-between">
+                <div>
+                    <h3 id="userName">Loading...</h3>
+                    <small style="color: var(--text2);" id="userId">UID: ...</small>
+                </div>
+                <button class="btn btn-dia" style="width: auto; padding: 8px 15px;" onclick="document.getElementById('withdrawModal').style.display='flex'">Withdraw</button>
+            </div>
+
+            <div class="bal-grid">
+                <div class="bal-box" style="border-color: var(--primary);">
+                    <h2 id="balGold" style="color: var(--primary);">0</h2>
+                    <small>Total Gold</small>
+                </div>
+                <div class="bal-box" style="border-color: var(--diamond);">
+                    <h2 id="balDiamond" style="color: var(--diamond);">0</h2>
+                    <small>Diamonds</small>
+                </div>
+            </div>
+
+            <button class="btn btn-gold" onclick="exchangeGold()"><i class="fas fa-sync-alt"></i> Exchange (1k Gold = 1 Dia)</button>
+            
+            <div class="card" style="margin-top: 15px;">
+                <h4><i class="fas fa-users" style="color: var(--primary);"></i> Refer to Earn</h4>
+                <p style="font-size: 0.8rem; color: var(--text2); margin: 5px 0 10px;">Get 300 Gold for every valid invite!</p>
+                <input type="text" id="refLink" readonly>
+                <button class="btn btn-outline" onclick="copyRef()"><i class="fas fa-copy"></i> Copy Link</button>
+            </div>
+        </div>
+
+        <!-- 2. EARN (Ads & Lootbox) -->
+        <div id="earn-sec" class="section">
+            <div class="card" style="text-align: center; border-color: var(--primary);">
+                <h3><i class="fas fa-box-open" style="color: var(--primary);"></i> Ad Lootbox</h3>
+                <h1 id="lootboxPoints" style="margin: 10px 0; color: var(--primary);">0 / 500</h1>
+                <p style="font-size: 0.8rem; color: var(--text2); margin-bottom: 10px;">Watch ads to fill. Claim at 500 Gold.</p>
+                <button class="btn btn-outline" onclick="watchAd()"><i class="fas fa-video"></i> Watch Ad (+50 Gold)</button>
+                <button class="btn btn-gold" id="claimLootBtn" onclick="claimLootbox()" disabled>Claim Lootbox</button>
+            </div>
+        </div>
+
+        <!-- 3. VIDEO SECTION -->
+        <div id="video-sec" class="section">
+            <div class="card">
+                <div style="width: 100%; height: 180px; background: #000; border-radius: 8px; margin-bottom: 10px; position: relative;">
+                    <img src="https://img.youtube.com/vi/ScMzIvxBSi4/mqdefault.jpg" style="width:100%; height:100%; object-fit: cover; border-radius: 8px;">
+                    <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items:center; justify-content:center;">
+                        <i class="fas fa-play-circle" style="font-size: 3rem; color: var(--primary);"></i>
+                    </div>
+                </div>
+                <h4>Watch & Earn</h4>
+                <p style="font-size: 0.8rem; color: var(--text2); margin: 5px 0 10px;">Watch for 1 minute to earn 100 Gold.</p>
+                <button class="btn btn-gold" onclick="claimTask('video', 100, this)"><i class="fas fa-play"></i> Watch Now</button>
+            </div>
+        </div>
+
+        <!-- 4. TASKS SECTION -->
+        <div id="task-sec" class="section">
+            <div class="card flex-between">
+                <div>
+                    <h4>Join Partner Channel</h4>
+                    <small style="color: var(--primary);">+200 Gold</small>
+                </div>
+                <button class="btn btn-outline" style="width: auto; padding: 8px 15px;" onclick="claimTask('social', 200, this)">Claim</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="nav">
+        <div class="nav-item active" onclick="switchTab('home-sec', this)"><i class="fas fa-home"></i> Home</div>
+        <div class="nav-item" onclick="switchTab('earn-sec', this)"><i class="fas fa-bolt"></i> Earn</div>
+        <div class="nav-item" onclick="switchTab('video-sec', this)"><i class="fab fa-youtube"></i> Video</div>
+        <div class="nav-item" onclick="switchTab('task-sec', this)"><i class="fas fa-tasks"></i> Tasks</div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div id="withdrawModal" class="overlay">
+        <div class="overlay-box">
+            <h3 style="color: var(--diamond); margin-bottom: 15px;">Withdraw Diamonds</h3>
+            <select id="wMethod" style="width: 100%; padding: 10px; background: #000; color: #fff; margin-bottom: 10px;">
+                <option value="tonkeeper">Tonkeeper (Min 50 Dia)</option>
+                <option value="binance">Binance UID (Min 100 Dia)</option>
+            </select>
+            <input type="number" id="wAmount" placeholder="Amount (Diamonds)">
+            <input type="text" id="wAddress" placeholder="Address / UID">
+            <button class="btn btn-dia" onclick="submitWithdraw()">Submit Request</button>
+            <button class="btn btn-outline" onclick="document.getElementById('withdrawModal').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const API_BASE = '/api'; 
+        let user = null;
+        let localLoot = 0;
+
+        async function init() {
+            tg.ready(); tg.expand();
+            const tgUser = tg.initDataUnsafe?.user;
+            const startParam = tg.initDataUnsafe?.start_param || "";
+            
+            if(!tgUser) { document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>Open in Telegram</h2>"; return; }
+
+            document.getElementById('userName').innerText = tgUser.first_name;
+            document.getElementById('userId').innerText = `UID: ${tgUser.id}`;
+            document.getElementById('refLink').value = `https://t.me/YourBotUsername?start=${tgUser.id}`;
+
+            try {
+                // Initialize user (and handle refer logic inside API)
+                const res = await fetch(`${API_BASE}/init`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ userId: tgUser.id, username: tgUser.first_name, referrer: startParam })
+                });
+                user = await res.json();
+                updateUI();
+
+                // Check Mandatory Join
+                if(!user.isVerified) {
+                    document.getElementById('joinOverlay').style.display = 'flex';
+                }
+            } catch(e) { alert("Server connection failed."); }
+        }
+
+        function updateUI() {
+            document.getElementById('balGold').innerText = user.goldBalance;
+            document.getElementById('balDiamond').innerText = user.diamondBalance;
+        }
+
+        function switchTab(id, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+        }
+
+        async function verifyJoin() {
+            const btn = document.getElementById('verifyJoinBtn');
+            btn.innerText = "Checking...";
+            try {
+                const res = await fetch(`${API_BASE}/verifyJoin?userId=${user.id}`);
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('joinOverlay').style.display = 'none';
+                    user.isVerified = true;
+                    alert("Verified successfully!");
+                } else {
+                    alert("Please join the channel first!");
+                }
+            } catch(e) { alert("Error checking status."); }
+            btn.innerText = "2. Verify & Enter";
+        }
+
+        // --- LOOTBOX SYSTEM (Frontend Logic to save DB Writes) ---
+        function watchAd() {
+            if(localLoot >= 500) return alert("Lootbox is full! Claim it first.");
+            // Here you can integrate your actual Ad network code later.
+            // For now, simulating Ad view:
+            setTimeout(() => {
+                localLoot += 50;
+                document.getElementById('lootboxPoints').innerText = `${localLoot} / 500`;
+                if(localLoot >= 500) document.getElementById('claimLootBtn').disabled = false;
+                alert("Ad watched! +50 Gold added to Lootbox.");
+            }, 1000);
+        }
+
+        async function claimLootbox() {
+            if(localLoot < 500) return;
+            const btn = document.getElementById('claimLootBtn');
+            btn.disabled = true; btn.innerText = "Claiming...";
+            
+            await executeTask('lootbox', localLoot);
+            localLoot = 0;
+            document.getElementById('lootboxPoints').innerText = `0 / 500`;
+            btn.innerText = "Claim Lootbox";
+        }
+
+        // --- MASTER TASK FUNCTION ---
+        async function claimTask(type, reward, btnElement) {
+            if(btnElement) { btnElement.disabled = true; btnElement.innerText = "Processing..."; }
+            // Simulating watch/task delay
+            setTimeout(async () => {
+                await executeTask(type, reward);
+                if(btnElement) btnElement.innerText = "Completed ✅";
+            }, 2000);
+        }
+
+        async function executeTask(actionType, reward) {
+            try {
+                const res = await fetch(`${API_BASE}/tasks`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ userId: user.id, action: actionType, amount: reward })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    user.goldBalance = data.newGoldBalance;
+                    updateUI();
+                }
+            } catch(e) { alert("Task failed. Check internet."); }
+        }
+
+        // --- EXCHANGE ---
+        async function exchangeGold() {
+            if(user.goldBalance < 1000) return alert("You need at least 1,000 Gold!");
+            if(confirm("Exchange 1,000 Gold for 1 Diamond?")) {
+                try {
+                    const res = await fetch(`${API_BASE}/exchange`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ userId: user.id, goldAmount: 1000 })
+                    });
+                    const data = await res.json();
+                    if(data.success) {
+                        user.goldBalance -= 1000; user.diamondBalance += 1;
+                        updateUI(); alert("Exchanged successfully!");
+                    } else alert(data.error);
+                } catch(e) { alert("Error exchanging."); }
+            }
+        }
+
+        function copyRef() {
+            const link = document.getElementById('refLink');
+            link.select(); document.execCommand("copy");
+            alert("Referral Link Copied!");
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
