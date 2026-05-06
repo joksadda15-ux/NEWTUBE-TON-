@@ -11,41 +11,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- Adexium Ads Script -->
-    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                try {
-                    const adexiumWidget = new AdexiumWidget({wid: '12c05dba-2642-46f2-950f-cee6575119c9', adFormat: 'interstitial'});
-                    adexiumWidget.autoMode();
-                } catch(e) { console.error('Adexium error:', e); }
-            }, 30000);
-        });
-    </script>
-
-    <script>
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.onkeydown = function(e) {
-            if (e.keyCode == 123) return false;
-            if (e.ctrlKey && e.shiftKey && ['I','C','J'].includes(String.fromCharCode(e.keyCode))) return false;
-            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-        }
-    </script>
-
-    <!-- AD INTEGRATIONS -->
+    <!-- Ad Scripts -->
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
     <script src="https://ad.gigapub.tech/script?id=846"></script>
 
     <style>
-        /* ── PREMIUM CYBER GOLD & FUCHSIA THEME ── */
+        /* ── NEW PREMIUM CYBER GOLD & FUCHSIA THEME (From a.html) ── */
         :root {
             --bg: #090310; --card: rgba(22, 10, 36, 0.85); --header-bg: rgba(9, 3, 16, 0.95);
             --primary: #FDE047; --primary-dim: rgba(253, 224, 71, 0.15); --primary-hover: #FACC15;
-            --diamond: #00e5ff; --diamond-dim: rgba(0, 229, 255, 0.15);
             --secondary: #D946EF; --violet: #A855F7; --violet-dim: rgba(168, 85, 247, 0.15);
             --gold: #F59E0B; --gold-dim: rgba(245, 158, 11, 0.15);
+            --diamond: #00e5ff; --diamond-dim: rgba(0, 229, 255, 0.15);
             --green: #2DD4BF; --red: #FB7185; --text: #F8FAFC; --text2: #CBD5E1;
             --border: rgba(217, 70, 239, 0.25); --disabled-bg: #1A1025; --disabled-text: #64748B;
             --r-card: 20px; --r-btn: 14px;
@@ -53,57 +31,76 @@
 
         * { box-sizing: border-box; }
         body { background: var(--bg); color: var(--text2); font-family: 'Inter', sans-serif; margin: 0; padding: 68px 0 88px; min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-x: hidden; position: relative; }
+
         .bg-canvas { position: fixed; inset: 0; z-index: -2; overflow: hidden; background: radial-gradient(circle at 50% 0%, #1e0b30 0%, var(--bg) 70%); }
         .bg-grid { position: fixed; inset: 0; z-index: -1; background-image: linear-gradient(rgba(217, 70, 239, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(217, 70, 239, 0.05) 1px, transparent 1px); background-size: 40px 40px; animation: gridMove 30s linear infinite; mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%); -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%); }
         @keyframes gridMove { 0%{background-position:0 0;} 100%{background-position:40px 40px;} }
+        .particles { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+        .particle { position: absolute; border-radius: 50%; animation: float linear infinite; }
+        @keyframes float { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 0.8; } 100% { transform: translateY(-10vh) scale(1.5); opacity: 0; } }
 
+        /* Header */
         .main-header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 64px; background: var(--header-bg); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6); }
         .site-branding { display: flex; align-items: center; gap: 10px; }
-        .logo-ring { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, rgba(253,224,71,0.1), rgba(217,70,239,0.1)); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.1rem; }
+        .logo-ring { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, rgba(253,224,71,0.1), rgba(217,70,239,0.1)); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.1rem; box-shadow: 0 0 15px rgba(253,224,71,0.3); }
         .site-title { font-size: 1.15rem; color: var(--text); font-weight: 800; margin: 0; letter-spacing: 0.5px; }
         .site-title span { color: var(--primary); }
         .header-right { display: flex; gap: 8px; }
         .hbtn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
-        .hbtn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
+        .hbtn:hover { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 10px var(--primary-dim); background: var(--primary-dim); }
 
         .container { max-width: 780px; margin: 0 auto; padding: 0 14px; position: relative; z-index: 1; }
 
+        /* General Cards */
         .profile-card { position: relative; overflow: hidden; margin-bottom: 18px; background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 24px; padding: 26px 20px 22px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
         .profile-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--secondary), var(--primary), var(--green)); }
         .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
         .avatar-wrap { position: relative; flex-shrink: 0; width: 64px; height: 64px; }
-        .avatar-ring { width: 100%; height: 100%; border-radius: 18px; background: var(--primary-dim); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.9rem; color: var(--primary); }
-        .avatar-status { position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px; background: var(--green); border: 2px solid var(--bg); border-radius: 50%; }
+        .avatar-ring { width: 100%; height: 100%; border-radius: 18px; background: var(--primary-dim); border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.9rem; color: var(--primary); box-shadow: 0 0 20px rgba(253,224,71,0.25); }
         .profile-info { flex: 1; min-width: 0; }
         .profile-name { font-size: 1.15rem; font-weight: 800; color: var(--text); margin: 0 0 4px; }
-        .profile-id { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-family: monospace; color: var(--primary); }
+        .profile-id { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-family: 'Roboto Mono', monospace; color: var(--primary); }
 
-        .balance-display { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-        .bal-box { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 15px; text-align: center; }
-        .bal-val { font-size: 1.8rem; font-weight: 800; font-family: monospace; margin-bottom: 5px; }
+        /* Currency Boxes */
+        .balance-display { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .bal-box { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 20px 10px; text-align: center; }
+        .bal-val { font-size: 2rem; font-weight: 800; line-height: 1; font-family: 'Roboto Mono', monospace; margin-bottom: 6px; }
 
-        .btn { width: 100%; padding: 14px; border: none; border-radius: var(--r-btn); font-weight: 700; font-size: 0.9rem; cursor: pointer; background: var(--primary); color: #000; transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* Buttons */
+        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: var(--r-btn); font-weight: 700; font-size: 0.9rem; cursor: pointer; background: var(--primary); color: #000; transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(253,224,71,0.3); }
         .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(253,224,71,0.5); background: var(--primary-hover); }
-        .btn.outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
-        .btn.dia { background: var(--diamond); color: #000; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3); }
-        .btn.ghost { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); }
+        .btn.outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); box-shadow: none; }
+        .btn.outline:hover:not(:disabled) { background: var(--primary-dim); box-shadow: 0 0 15px var(--primary-dim); }
+        .btn.ghost { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); box-shadow: none; }
+        .btn.ghost:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
         .btn:disabled { background: var(--disabled-bg) !important; color: var(--disabled-text) !important; cursor: not-allowed; border: 1px solid #222 !important; box-shadow: none !important; transform: none !important; }
 
-        /* General UI components (Ads, Lootbox, Video) */
+        /* Sections & Typography */
         .section-title { font-size: 1.2rem; font-weight: 800; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
-        .section-title .title-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; background: var(--primary-dim); color: var(--primary); border: 1px solid rgba(253,224,71,0.3); }
-        
-        .ad-card { background: var(--card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-card); padding: 18px 20px; margin-bottom: 14px; border-left: 4px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
-        .lootbox-card { background: linear-gradient(145deg, rgba(22,10,36,0.9), rgba(253,224,71,0.05)); border: 1px solid var(--primary); border-radius: var(--r-card); padding: 22px; text-align: center; margin-bottom: 18px; }
-        .video-player-card { padding: 0; overflow: hidden; border-radius: 16px; margin-bottom: 14px; position: relative; background: #000; border: 1px solid rgba(217,70,239,0.4); }
-        
-        .mining-compact { background: linear-gradient(135deg, rgba(14,6,24,0.95), rgba(217,70,239,0.07)); border: 1px solid rgba(217,70,239,0.35); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 14px; }
-        .mining-compact-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
-        .mining-compact-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--violet)); transition: width 0.5s; }
+        .section-title .title-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; }
+        .ti-blue { background: var(--violet-dim); color: var(--violet); border: 1px solid var(--border); }
+        .ti-gold  { background: var(--primary-dim); color: var(--primary); border: 1px solid rgba(253,224,71,0.3); }
+        .ti-violet{ background: var(--secondary);  color: #fff;  border: 1px solid rgba(217,70,239,0.3); }
+        .ti-red { background: rgba(251,113,133,0.15); color: var(--red); border: 1px solid rgba(251,113,133,0.3); }
 
+        /* Video Section Specifics */
+        .video-player-card { padding: 0; overflow: hidden; border-radius: 16px; margin-bottom: 14px; position: relative; background: #000; border: 1px solid rgba(217,70,239,0.4); box-shadow: 0 0 30px rgba(217,70,239,0.2); }
+        .mining-compact { background: linear-gradient(135deg, rgba(14,6,24,0.95), rgba(217,70,239,0.07)); border: 1px solid rgba(217,70,239,0.35); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 14px; }
+        .mining-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+        .mining-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--violet)); transition: width 0.5s; }
+        
+        .main-video-vault { background: linear-gradient(145deg, rgba(22,10,36,0.9), rgba(253,224,71,0.05)); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 18px; box-shadow: 0 0 20px rgba(253,224,71,0.1); }
+        
+        /* General components from a.html */
+        .ad-card { background: var(--card); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--r-card); padding: 18px 20px; margin-bottom: 14px; border-left: 4px solid transparent; display: flex; justify-content: space-between; align-items: center; }
+        .task-btn { padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; width: auto; }
+        
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; background: rgba(9,3,16,0.95); border-top: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(20px); display: flex; padding: 12px 0 24px; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: var(--disabled-text); font-size: 0.7rem; font-weight: 700; transition: all 0.25s; text-transform: uppercase; }
+        .nav-item i { font-size: 1.3rem; transition: transform 0.2s; }
         .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-4px); filter: drop-shadow(0 0 8px var(--primary)); }
 
         .content-section { display: none; animation: fadeUp 0.3s ease forwards; }
         .content-section.active { display: block; }
@@ -112,135 +109,144 @@
         /* Modals */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(10px); padding: 16px; }
         .modal-overlay.show { display: flex; }
-        .modal-box { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 26px; border-radius: 24px; width: 100%; max-width: 360px; }
+        .modal-box { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 26px; border-radius: 24px; width: 100%; max-width: 360px; box-shadow: 0 10px 50px rgba(253,224,71,0.15); animation: modalPop 0.3s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
+        @keyframes modalPop { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+        
         input, select { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); color: var(--text); font-size: 0.95rem; outline: none; margin-bottom: 15px; }
-        .conversion-box { background: rgba(0, 229, 255, 0.1); padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 0.85rem; color: var(--diamond); text-align: center; border: 1px dashed var(--diamond); }
+        .rate-box { background: rgba(0, 229, 255, 0.1); padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 0.85rem; color: var(--diamond); text-align: center; border: 1px dashed var(--diamond); }
     </style>
 </head>
 <body>
 
     <div class="bg-canvas"></div>
     <div class="bg-grid"></div>
+    <div class="particles" id="particles"></div>
 
+    <!-- HEADER -->
     <header class="main-header">
         <div class="site-branding">
-            <div class="logo-ring"><i class="fas fa-gem"></i></div>
+            <div class="logo-ring"><i class="fas fa-cube"></i></div>
             <h1 class="site-title">NEW<span>TUBE</span> TON</h1>
         </div>
         <div class="header-right">
-            <button class="hbtn" onclick="openWithdrawModal()"><i class="fas fa-wallet"></i></button>
+            <button class="hbtn" onclick="openModal('referModal')"><i class="fas fa-users"></i></button>
+            <button class="hbtn" onclick="openModal('withdrawModal')"><i class="fas fa-wallet"></i></button>
         </div>
     </header>
 
     <main class="container">
 
-        <!-- ══ HOME SECTION ══ -->
+        <!-- ══ 1. HOME SECTION ══ -->
         <section id="home-content" class="content-section active">
             <div class="profile-card">
                 <div class="profile-top">
                     <div class="avatar-wrap"><div class="avatar-ring"><i class="fas fa-user-ninja"></i></div></div>
                     <div class="profile-info">
-                        <div class="profile-name" id="userName">Terminal Access</div>
-                        <div class="profile-id" onclick="copyUID()">UID: <span id="userId">...</span></div>
+                        <div class="profile-name" id="userName">Loading...</div>
+                        <div class="profile-id" onclick="copyUID()">UID: <span id="userId">...</span> <i class="fas fa-copy"></i></div>
                     </div>
                 </div>
 
                 <div class="balance-display">
                     <div class="bal-box" style="border-color: var(--primary-dim);">
-                        <div class="bal-val" style="color: var(--primary);" id="balGold">0</div>
-                        <div style="font-size: 0.75rem; color: var(--text2);">Total Gold</div>
+                        <div class="bal-val" style="color: var(--primary); text-shadow: 0 0 15px rgba(253,224,71,0.4);" id="balGold">0</div>
+                        <div style="font-size: 0.75rem; color: var(--text2);">Available Gold</div>
                     </div>
                     <div class="bal-box" style="border-color: var(--diamond-dim);">
-                        <div class="bal-val" style="color: var(--diamond);" id="balDiamond">0</div>
+                        <div class="bal-val" style="color: var(--diamond); text-shadow: 0 0 15px rgba(0,229,255,0.4);" id="balDiamond">0</div>
                         <div style="font-size: 0.75rem; color: var(--text2);">Diamonds</div>
                     </div>
                 </div>
 
-                <button class="btn" onclick="openExchangeModal()" style="margin-bottom: 15px;">
+                <button class="btn" onclick="openModal('exchangeModal')" style="margin-bottom: 14px;">
                     <i class="fas fa-sync-alt"></i> Exchange Gold to Diamond
                 </button>
 
-                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 16px; padding: 15px; margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 8px; color: var(--primary); font-size: 0.95rem;"><i class="fas fa-users"></i> Referral Network</h4>
-                    <p style="font-size: 0.75rem; color: var(--text2); margin-bottom: 10px;">Invite friends to get <b>1500 Gold</b> instantly + <b>10% commission</b> on their earnings forever!</p>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="refLink" readonly style="margin: 0; padding: 10px; font-size: 0.8rem;">
-                        <button class="btn outline" style="width: auto; padding: 0 15px;" onclick="copyRef()"><i class="fas fa-copy"></i></button>
-                    </div>
+                <div class="action-row">
+                    <button class="btn outline" onclick="alert('Daily Reward Claimed!')"><i class="fas fa-calendar-check"></i> Daily Reward</button>
+                    <button class="btn outline" onclick="openModal('promoModal')"><i class="fas fa-gift"></i> Promo Code</button>
+                </div>
+            </div>
+            
+            <div style="background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px;">
+                <h4 style="margin: 0 0 10px; color: var(--text); font-size: 1.1rem;"><i class="fas fa-link" style="color: var(--primary);"></i> Share Referral Link</h4>
+                <p style="font-size: 0.8rem; color: var(--text2); margin-bottom: 15px;">Invite friends to get <b>1500 Gold</b> and <b>10% commission</b> on their earnings!</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="refLink" readonly style="margin: 0;">
+                    <button class="btn" style="width: auto; padding: 0 20px;" onclick="copyRef()"><i class="fas fa-copy"></i></button>
                 </div>
             </div>
         </section>
 
-        <!-- ══ ADS & LOOTBOX ══ -->
-        <section id="ads-content" class="content-section">
-            <div class="section-title"><div class="title-icon"><i class="fas fa-bolt"></i></div> Network Missions</div>
-
-            <div class="lootbox-card">
-                <h3 style="margin:0 0 12px; color:var(--text); font-size:1.2rem;"><i class="fas fa-box-open" style="color:var(--primary);"></i> Ad Lootbox</h3>
-                <p style="font-size:0.85rem; color:var(--text2); margin-bottom:18px;">Watch ads to fill the box. Claim when it reaches 200 Gold. Max capacity: 500 Gold.</p>
-                <div style="font-size:2.4rem; font-weight:800; color:var(--green); font-family:monospace; margin-bottom:18px;" id="lootboxPointsDisplay">0 Gold</div>
-                <button id="claimLootboxBtn" class="btn outline" disabled><i class="fas fa-lock"></i> Min 200 Required</button>
-            </div>
-
-            <!-- Ad Networks -->
-            <div class="ad-card" style="border-left-color: var(--primary);">
-                <div>
-                    <div style="font-weight:800; font-size:1rem; color:#fff;">AdsGram Daily</div>
-                    <div style="font-size:0.75rem; color:var(--text2);">Earn 10-15 Gold</div>
-                </div>
-                <button class="btn outline" style="width:auto; padding:8px 15px;" onclick="watchAd('adsgramDaily', 10, 15, showAdsgramDailyAd, this)">Watch</button>
-            </div>
-            <div class="ad-card" style="border-left-color: var(--gold);">
-                <div>
-                    <div style="font-weight:800; font-size:1rem; color:#fff;">AdsGram Special</div>
-                    <div style="font-size:0.75rem; color:var(--text2);">Earn 15-25 Gold</div>
-                </div>
-                <button class="btn" style="width:auto; padding:8px 15px; background:var(--gold);" onclick="watchAd('adsgramSpecial', 15, 25, showAdsgramSpecialAd, this)">Watch</button>
-            </div>
-            <div class="ad-card" style="border-left-color: var(--secondary);">
-                <div>
-                    <div style="font-weight:800; font-size:1rem; color:#fff;">Monetag Web</div>
-                    <div style="font-size:0.75rem; color:var(--text2);">Earn 10-18 Gold</div>
-                </div>
-                <button class="btn outline" style="width:auto; padding:8px 15px; border-color:var(--secondary); color:var(--secondary);" onclick="watchAd('monetag', 10, 18, showMonetagAd, this)">Watch</button>
-            </div>
-            <div class="ad-card" style="border-left-color: var(--red);">
-                <div>
-                    <div style="font-weight:800; font-size:1rem; color:#fff;">GigaPub Display</div>
-                    <div style="font-size:0.75rem; color:var(--text2);">Earn 10-18 Gold</div>
-                </div>
-                <button class="btn outline" style="width:auto; padding:8px 15px; border-color:var(--red); color:var(--red);" onclick="watchAd('giga', 10, 18, showGigaPubAd, this)">Watch</button>
-            </div>
-        </section>
-
-        <!-- ══ VIDEO MINING ══ -->
+        <!-- ══ 2. VIDEO SECTION ══ -->
         <section id="video-content" class="content-section">
-            <div class="section-title"><div class="title-icon" style="background:rgba(251,113,133,0.15); color:var(--red);"><i class="fab fa-youtube"></i></div> Watch Videos</div>
+            <div class="section-title"><div class="title-icon ti-red"><i class="fab fa-youtube"></i></div> Watch & Earn</div>
 
             <div class="video-player-card">
                 <div class="video-player-label">&#9679; LIVE STREAM</div>
                 <div id="ytplayer" style="width:100%; height:210px; background:#000;"></div>
             </div>
 
+            <!-- Box 1: Mini Mining Box -->
             <div class="mining-compact">
-                <div class="mining-compact-left">
-                    <div style="font-size: 0.78rem; font-weight: 800; color: var(--secondary); margin-bottom: 6px;">
-                        <i class="fas fa-microchip"></i> Video Terminal <span style="color:var(--text2); font-weight:500;">(Max 25 Gold/Box)</span>
-                    </div>
-                    <div class="mining-compact-bar"><div class="mining-compact-fill" id="videoMiningProgress" style="width:0%;"></div></div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--secondary);"><i class="fas fa-microchip"></i> Video Mining Box <span style="color:var(--text2); font-weight:500; font-size:0.7rem;">(Max 50 G)</span></div>
+                    <div class="mining-bar-bg"><div class="mining-bar-fill" id="miniProgress" style="width:0%;"></div></div>
                 </div>
-                <div style="flex-shrink:0; text-align:right;">
-                    <div style="font-family:monospace; font-weight:800; color:var(--secondary); font-size:1.3rem; margin-bottom:5px;" id="videoMinedDisplay">0.0 G</div>
-                    <button id="claimVideoPtsBtn" class="btn outline" disabled style="padding:8px 12px; font-size:0.75rem; width:auto;"><i class="fas fa-lock"></i> Min 5 Gold</button>
+                <div style="text-align: right;">
+                    <div style="font-family:monospace; font-weight:800; color:var(--secondary); font-size:1.2rem; margin-bottom:5px;" id="miniMined">0.0 G</div>
+                    <button id="transferBtn" class="btn outline task-btn" disabled onclick="transferToMainBox()"><i class="fas fa-exchange-alt"></i> Transfer (Ad)</button>
                 </div>
             </div>
 
+            <!-- Box 2: Main Vault -->
+            <div class="main-video-vault">
+                <h3 style="margin:0 0 10px; color:var(--text); font-size:1.1rem;"><i class="fas fa-vault" style="color:var(--primary);"></i> Main Video Vault</h3>
+                <p style="font-size:0.8rem; color:var(--text2); margin-bottom:15px;">Collect exactly 1,000 Gold here to claim to main balance.</p>
+                <div style="font-size:2.2rem; font-weight:800; color:var(--primary); font-family:monospace; margin-bottom:15px;" id="mainVaultDisplay">0 / 1000</div>
+                <button id="claimMainVaultBtn" class="btn" disabled onclick="claimVaultToBalance()"><i class="fas fa-download"></i> Claim 1000 Gold</button>
+            </div>
+
+            <h4 style="color:var(--text); margin-bottom:10px; font-weight:800;"><i class="fas fa-film" style="color:var(--secondary);"></i> Suggested Videos</h4>
             <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(217,70,239,0.2); border-radius: 14px; overflow: hidden;">
-                <div style="padding: 10px 14px; background: rgba(217,70,239,0.1); font-size: 0.75rem; font-weight: 800; color: var(--text2);">Available Streams</div>
                 <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);" onclick="playYtVideo('ScMzIvxBSi4')">
                     <img src="https://img.youtube.com/vi/ScMzIvxBSi4/mqdefault.jpg" style="width:60px; border-radius:6px;">
-                    <div><div style="font-size:0.85rem; font-weight:600; color:#fff;">Crypto Web3 Premium</div><div style="font-size:0.75rem; color:var(--green);">Earn Gold by Watching</div></div>
+                    <div><div style="font-size:0.85rem; font-weight:600; color:#fff;">Premium Strategy 1</div><div style="font-size:0.75rem; color:var(--green);">Earn 200 Gold/Hr</div></div>
                 </div>
+            </div>
+        </section>
+
+        <!-- ══ 3. TASKS SECTION ══ -->
+        <section id="task-content" class="content-section">
+            <div class="section-title"><div class="title-icon ti-violet"><i class="fas fa-check-double"></i></div> Smart Contracts</div>
+            
+            <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); padding: 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight:700; font-size:0.95rem; color:#fff;"><i class="fab fa-telegram-plane" style="color:var(--primary);"></i> Join Partner Channel</div>
+                    <div style="color:var(--green); font-size:0.85rem; margin-top:4px;">+200 Gold</div>
+                </div>
+                <button class="btn outline task-btn" onclick="alert('API Required')">Join</button>
+            </div>
+        </section>
+
+        <!-- ══ 4. ADS SECTION ══ -->
+        <section id="ads-content" class="content-section">
+            <div class="section-title"><div class="title-icon ti-blue"><i class="fas fa-satellite-dish"></i></div> Ad Networks</div>
+
+            <div class="lootbox-card">
+                <h3 style="margin:0 0 12px; color:var(--text); font-size:1.2rem;"><i class="fas fa-box-open" style="color:var(--primary);"></i> Ad Lootbox</h3>
+                <p style="font-size:0.85rem; color:var(--text2); margin-bottom:18px;">Watch ads to fill the box. Max capacity: 500 Gold.</p>
+                <div style="font-size:2.4rem; font-weight:800; color:var(--green); font-family:monospace; margin-bottom:18px;" id="adLootboxDisplay">0 Gold</div>
+                <button id="claimAdLootBtn" class="btn outline" disabled onclick="alert('API Required')"><i class="fas fa-lock"></i> Min 200 Required</button>
+            </div>
+
+            <div class="ad-card" style="border-left-color: var(--primary);">
+                <div><div style="font-weight:800; font-size:1rem; color:#fff;">AdsGram Daily</div><div style="font-size:0.75rem; color:var(--text2);">10-15 Gold</div></div>
+                <button class="btn outline task-btn" onclick="alert('Ads API Loading')">Watch</button>
+            </div>
+            <div class="ad-card" style="border-left-color: var(--gold);">
+                <div><div style="font-weight:800; font-size:1rem; color:#fff;">AdsGram Special</div><div style="font-size:0.75rem; color:var(--text2);">15-25 Gold</div></div>
+                <button class="btn task-btn" style="background:var(--gold);" onclick="alert('Ads API Loading')">Watch</button>
             </div>
         </section>
 
@@ -248,34 +254,34 @@
 
     <!-- ══ BOTTOM NAV ══ -->
     <nav class="bottom-nav">
-        <a href="#" class="nav-item active" onclick="switchTab('home-content', this)"><i class="fas fa-layer-group"></i>Panel</a>
-        <a href="#" class="nav-item" onclick="switchTab('ads-content', this)"><i class="fas fa-bolt"></i>Extract</a>
-        <a href="#" class="nav-item" onclick="switchTab('video-content', this)"><i class="fas fa-play-circle"></i>Watch</a>
+        <a href="#" class="nav-item active" onclick="switchTab('home-content', this)"><i class="fas fa-layer-group"></i>Home</a>
+        <a href="#" class="nav-item" onclick="switchTab('video-content', this)"><i class="fas fa-play-circle"></i>Video</a>
+        <a href="#" class="nav-item" onclick="switchTab('task-content', this)"><i class="fas fa-check-double"></i>Tasks</a>
+        <a href="#" class="nav-item" onclick="switchTab('ads-content', this)"><i class="fas fa-bolt"></i>Ads</a>
     </nav>
 
     <!-- ══ MODALS ══ -->
 
-    <!-- Activation/Verify Modal -->
-    <div id="activationModal" class="modal-overlay" style="z-index: 5000;">
+    <!-- Verification Modal (Mandatory) -->
+    <div id="verifyModal" class="modal-overlay" style="z-index: 5000;">
         <div class="modal-box" style="text-align:center;">
             <i class="fas fa-shield-alt" style="font-size:3.5rem; color:var(--red); margin-bottom:18px;"></i>
-            <h3 style="margin:0 0 12px; font-size:1.3rem;">Security Check</h3>
-            <p style="color:var(--text2); font-size:0.9rem; margin-bottom:24px;">Join our networks to authenticate your device.</p>
+            <h3 style="margin:0 0 12px; font-size:1.3rem;">Security Verification</h3>
+            <p style="color:var(--text2); font-size:0.9rem; margin-bottom:24px;">You must join our Official Channel and Group to access the app.</p>
             <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" style="text-decoration:none;"><button class="btn outline" style="margin-bottom:12px;"><i class="fab fa-telegram-plane"></i> 1. Official Channel</button></a>
             <a href="https://t.me/newTon_Gc" target="_blank" style="text-decoration:none;"><button class="btn outline" style="margin-bottom:20px;"><i class="fas fa-users"></i> 2. Community Group</button></a>
-            <button class="btn" id="verifyJoinBtn" onclick="verifyJoin()">Verify Access</button>
+            <button class="btn" id="checkVerifyBtn" onclick="checkVerification()">Verify Now</button>
         </div>
     </div>
 
     <!-- Exchange Modal -->
     <div id="exchangeModal" class="modal-overlay">
         <div class="modal-box">
-            <h3 style="color:var(--gold); margin-bottom:10px;"><i class="fas fa-sync-alt"></i> Exchange</h3>
+            <h3 style="color:var(--gold); margin-bottom:10px;"><i class="fas fa-sync-alt"></i> Exchange Gold</h3>
             <p style="font-size:0.85rem; color:var(--text2); margin-bottom:15px;">Rate: 1,000 Gold = 1 Diamond</p>
-            <input type="number" id="exAmount" placeholder="Enter Gold Amount (Min 1000)" oninput="calcExchange()">
-            <div class="conversion-box" id="exPreview">You will receive: 0 Diamonds</div>
-            <button class="btn" onclick="submitExchange()">Exchange Now</button>
-            <button class="btn ghost" onclick="closeModals()" style="margin-top:10px;">Cancel</button>
+            <input type="number" id="exAmount" placeholder="Enter Gold (Min 1000)">
+            <button class="btn" onclick="alert('API Integration Needed')">Exchange</button>
+            <button class="btn ghost" onclick="closeModals()" style="margin-top:10px;">Close</button>
         </div>
     </div>
 
@@ -283,302 +289,135 @@
     <div id="withdrawModal" class="modal-overlay">
         <div class="modal-box">
             <h3 style="color:var(--diamond); margin-bottom:10px;"><i class="fas fa-wallet"></i> Withdraw</h3>
-            <p style="font-size:0.8rem; color:var(--text2); margin-bottom:15px;">Rate: 1k Dia = 1 USDT | 1k Dia = 0.6 TON</p>
-            <select id="wMethod" onchange="calcWithdraw()">
+            <p style="font-size:0.8rem; color:var(--text2); margin-bottom:15px;">1k Dia = 1 USDT | 1k Dia = 0.6 TON</p>
+            <select id="wMethod">
                 <option value="tonkeeper">Tonkeeper (Min 50 Dia)</option>
                 <option value="binance">Binance UID (Min 100 Dia)</option>
             </select>
-            <input type="number" id="wAmount" placeholder="Amount (Diamonds)" oninput="calcWithdraw()">
-            <input type="text" id="wAddress" placeholder="Enter Tonkeeper Address">
-            <div class="conversion-box" id="wdPreview">Value: 0.00 USDT | 0.0000 TON</div>
-            <button class="btn dia" onclick="submitWithdraw()">Submit Request</button>
+            <input type="number" id="wAmount" placeholder="Amount of Diamonds">
+            <input type="text" id="wAddress" placeholder="Address / UID">
+            <button class="btn" style="background:var(--diamond); color:#000;" onclick="alert('API Integration Needed')">Submit</button>
             <button class="btn ghost" onclick="closeModals()" style="margin-top:10px;">Cancel</button>
         </div>
     </div>
 
-    <!-- MAIN SCRIPT (Vercel API Based - No Firebase SDK) -->
+    <!-- Referral / Promo Modals (Placeholders) -->
+    <div id="referModal" class="modal-overlay"><div class="modal-box"><h3 style="color:var(--gold); margin-bottom:15px;">Your Network</h3><p>API required to show list.</p><button class="btn ghost" onclick="closeModals()">Close</button></div></div>
+    <div id="promoModal" class="modal-overlay"><div class="modal-box"><h3 style="color:var(--gold); margin-bottom:15px;">Promo Code</h3><input type="text" placeholder="Enter code..."><button class="btn">Claim</button><button class="btn ghost" onclick="closeModals()" style="margin-top:10px;">Close</button></div></div>
+
+    <!-- SCRIPT LOGIC (UI Simulation Before Backend Integration) -->
     <script>
         const tg = window.Telegram.WebApp;
-        const API_BASE = '/api'; 
-        let currentUser = null;
-        let isAdRunning = false;
+        tg.ready(); tg.expand(); tg.setHeaderColor('#090310');
 
-        // Vercel UI Logic Setup
-        async function initApp() {
-            tg.ready(); tg.expand(); tg.setHeaderColor('#090310');
-            const tgUser = tg.initDataUnsafe?.user;
-            const startParam = tg.initDataUnsafe?.start_param || "";
+        let isVerified = false; // Set to false to trigger modal
 
-            if(!tgUser) { document.body.innerHTML = "<h3 style='text-align:center;margin-top:50px;'>Open in Telegram.</h3>"; return; }
+        // Video Dual-Lootbox System Logic
+        let miniBox = 0;       // Max 50
+        let mainVault = 0;     // Max 1000
+        let ytPlayer = null;
+        let isVideoPlaying = false;
+        let videoInterval;
 
-            document.getElementById('userName').innerText = tgUser.first_name || 'Terminal User';
-            document.getElementById('userId').innerText = tgUser.id;
-            document.getElementById('refLink').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${tgUser.id}`;
+        window.onload = () => {
+            if(!isVerified) document.getElementById('verifyModal').classList.add('show');
+            document.getElementById('refLink').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${tg.initDataUnsafe?.user?.id || 'TEST'}`;
+            
+            // Load YouTube API
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            document.head.appendChild(tag);
+        };
 
-            try {
-                // Call Vercel Init API (Handles Login & Referrals securely)
-                const res = await fetch(`${API_BASE}/init`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: tgUser.id, username: tgUser.first_name, referrer: startParam })
-                });
-                currentUser = await res.json();
-                updateUI();
-                
-                // Show Verification Modal if not verified
-                if(!currentUser.isVerified) {
-                    document.getElementById('activationModal').classList.add('show');
-                }
-            } catch(e) { alert("Server connection failed. Please restart."); }
-
-            loadLocalData();
-        }
-
-        function updateUI() {
-            if(!currentUser) return;
-            document.getElementById('balGold').innerText = currentUser.goldBalance || 0;
-            document.getElementById('balDiamond').innerText = currentUser.diamondBalance || 0;
-        }
-
-        // --- VERIFICATION API ---
-        async function verifyJoin() {
-            const btn = document.getElementById('verifyJoinBtn');
-            btn.innerText = "Checking Servers..."; btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/verifyJoin?userId=${currentUser.id}`);
-                const data = await res.json();
-                if(data.success) {
-                    document.getElementById('activationModal').classList.remove('show');
-                    currentUser.isVerified = true;
-                    alert("Verification Successful! Welcome.");
-                } else {
-                    alert("Verification Failed!\nPlease join BOTH the Channel and the Group to continue.");
-                }
-            } catch(e) { alert("Network error. Try again."); }
-            btn.innerText = "Verify Access"; btn.disabled = false;
-        }
-
-        // --- NAVIGATION & MODALS ---
+        // UI Functions
         function switchTab(id, el) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
-
-            // Pause video if leaving video tab
-            if(id !== 'video-content' && isVideoPlaying && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
-                ytPlayer.pauseVideo();
-            }
+            if(id !== 'video-content' && ytPlayer && isVideoPlaying) ytPlayer.pauseVideo();
         }
+
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
         function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show')); }
-        function copyUID() { navigator.clipboard.writeText(currentUser.id); alert("UID Copied!"); }
+        function copyUID() { alert("UID Copied!"); }
         function copyRef() { document.getElementById('refLink').select(); document.execCommand("copy"); alert("Referral Link Copied!"); }
 
-        // --- EXCHANGE API (Gold -> Diamond) ---
-        function openExchangeModal() { document.getElementById('exchangeModal').classList.add('show'); document.getElementById('exAmount').value=''; calcExchange(); }
-        function calcExchange() {
-            let val = parseInt(document.getElementById('exAmount').value) || 0;
-            document.getElementById('exPreview').innerText = `You will receive: ${Math.floor(val/1000)} Diamonds`;
-        }
-        async function submitExchange() {
-            let amt = parseInt(document.getElementById('exAmount').value) || 0;
-            if(amt < 1000 || amt % 1000 !== 0) return alert("Enter Gold in multiples of 1000.");
-            if(amt > currentUser.goldBalance) return alert("Not enough Gold.");
-            
-            try {
-                const res = await fetch(`${API_BASE}/exchange`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: currentUser.id, goldAmount: amt })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    currentUser.goldBalance -= amt; currentUser.diamondBalance += Math.floor(amt/1000);
-                    updateUI(); closeModals(); alert("Exchange Successful! 💎");
-                } else alert(data.error);
-            } catch(e) { alert("Server error."); }
+        function checkVerification() {
+            const btn = document.getElementById('checkVerifyBtn');
+            btn.innerText = "Checking API...";
+            // Simulate API response
+            setTimeout(() => {
+                alert("This will connect to the API to check Telegram membership.");
+                document.getElementById('verifyModal').classList.remove('show');
+                isVerified = true;
+            }, 1500);
         }
 
-        // --- WITHDRAW API (Diamond -> USDT/TON) ---
-        function openWithdrawModal() { document.getElementById('withdrawModal').classList.add('show'); calcWithdraw(); }
-        function calcWithdraw() {
-            let method = document.getElementById('wMethod').value;
-            let amt = parseInt(document.getElementById('wAmount').value) || 0;
-            document.getElementById('wAddress').placeholder = method === 'binance' ? "Enter Binance UID" : "Enter Tonkeeper Address";
-            
-            // 1k Dia = 1 USDT | 1k Dia = 0.6 TON -> 1 Dia = 0.001 USDT | 1 Dia = 0.0006 TON
-            let usdt = (amt * 0.001).toFixed(2);
-            let ton = (amt * 0.0006).toFixed(4);
-            document.getElementById('wdPreview').innerText = `Value: ${usdt} USDT | ${ton} TON`;
-        }
-        async function submitWithdraw() {
-            let method = document.getElementById('wMethod').value;
-            let amt = parseInt(document.getElementById('wAmount').value) || 0;
-            let address = document.getElementById('wAddress').value.trim();
-            
-            if(!address || amt <= 0) return alert("Please fill all fields properly.");
-            if(method === 'tonkeeper' && amt < 50) return alert("Minimum 50 Diamonds required for Tonkeeper.");
-            if(method === 'binance' && amt < 100) return alert("Minimum 100 Diamonds required for Binance.");
-            if(amt > currentUser.diamondBalance) return alert("Insufficient Diamonds.");
-
-            try {
-                const res = await fetch(`${API_BASE}/withdraw`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: currentUser.id, method, amount: amt, address })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    currentUser.diamondBalance -= amt; updateUI(); closeModals();
-                    alert("Withdrawal Request Submitted Successfully! ⏳");
-                } else alert(data.error || "Failed to submit.");
-            } catch(e) { alert("Server error."); }
-        }
-
-        // ════════════════════════════════════════════
-        // LOCAL LOOTBOX & AD SYSTEM (Connected to API)
-        // ════════════════════════════════════════════
-        let localLoot = 0;
-        
-        function loadLocalData() {
-            localLoot = parseInt(localStorage.getItem('nt_lootbox_' + currentUser.id)) || 0;
-            updateLootboxUI();
-            
-            let savedVid = JSON.parse(localStorage.getItem('nt_video_' + currentUser.id) || '{}');
-            localVideoMined = savedVid.mined || 0;
-            updateVideoUI();
-        }
-
-        function updateLootboxUI() {
-            document.getElementById('lootboxPointsDisplay').innerText = `${localLoot} Gold`;
-            const btn = document.getElementById('claimLootboxBtn');
-            if(localLoot >= 200) {
-                btn.disabled = false; btn.classList.remove('outline'); btn.innerHTML = '<i class="fas fa-download"></i> Claim Lootbox';
-            } else {
-                btn.disabled = true; btn.classList.add('outline'); btn.innerHTML = '<i class="fas fa-lock"></i> Min 200 Gold';
-            }
-        }
-
-        async function watchAd(network, min, max, adFunc, btnElement) {
-            if(isAdRunning) return alert("Ad already playing!");
-            if(localLoot >= 500) return alert("Lootbox is full! Please claim it first.");
-
-            btnElement.disabled = true; btnElement.innerText = "Checking...";
-            isAdRunning = true;
-
-            // Simulate ad run logic (same as your old code)
-            const minDuration = 6000; const startTime = Date.now();
-            let closedEarly = false;
-            const visHandler = () => { if (!document.hidden && (Date.now() - startTime) < minDuration) closedEarly = true; };
-            document.addEventListener('visibilitychange', visHandler);
-
-            try {
-                if (adFunc) await adFunc(); // Trigger native ad SDK if available
-                const remaining = minDuration - (Date.now() - startTime);
-                if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
-            } catch (e) { closedEarly = true; }
-
-            document.removeEventListener('visibilitychange', visHandler);
-            isAdRunning = false; btnElement.disabled = false; btnElement.innerText = "Watch";
-
-            if (closedEarly) {
-                alert("⚠️ Ad skipped or closed too early. No Gold awarded.");
-            } else {
-                let reward = Math.floor(Math.random() * (max - min + 1)) + min;
-                if(localLoot + reward > 500) reward = 500 - localLoot;
-                localLoot += reward;
-                localStorage.setItem('nt_lootbox_' + currentUser.id, localLoot);
-                updateLootboxUI();
-                alert(`Ad Watched! +${reward} Gold added to Lootbox.`);
-            }
-        }
-
-        // Send Lootbox points to Database via API
-        document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
-            if(localLoot < 200) return;
-            const btn = document.getElementById('claimLootboxBtn');
-            btn.disabled = true; btn.innerText = "Claiming to Server...";
-
-            try {
-                const res = await fetch(`${API_BASE}/tasks`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: currentUser.id, action: 'lootbox', amount: localLoot })
-                });
-                const data = await res.json();
-                
-                if(data.success) {
-                    currentUser.goldBalance = data.newGoldBalance; updateUI();
-                    alert(`Successfully claimed ${localLoot} Gold! 🎁`);
-                    localLoot = 0; localStorage.setItem('nt_lootbox_' + currentUser.id, 0);
-                } else alert(data.error);
-            } catch(e) { alert("Server error. Try again."); }
-            updateLootboxUI();
-        });
-
-        // ════════════════════════════════════════════
-        // VIDEO MINING SYSTEM (Connected to API)
-        // ════════════════════════════════════════════
-        let ytPlayer = null; let isVideoPlaying = false; let localVideoMined = 0; let videoPlaySeconds = 0;
-        
-        const ytScriptTag = document.createElement('script'); ytScriptTag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(ytScriptTag, firstScriptTag);
-        window.onYouTubeIframeAPIReady = function() { window.ytApiReady = true; };
-
-        function onPlayerStateChange(event) { isVideoPlaying = (event.data == YT.PlayerState.PLAYING); }
-        document.addEventListener('visibilitychange', () => { if (document.hidden && isVideoPlaying && ytPlayer) ytPlayer.pauseVideo(); });
-
-        window.playYtVideo = function(vId) {
-            if (!window.ytApiReady) return alert("YouTube Player is loading...");
-            if (localVideoMined >= 25) return alert("Terminal full! Claim your 25 Gold first.");
-            
-            if (!ytPlayer) {
-                ytPlayer = new YT.Player('ytplayer', { height: '100%', width: '100%', videoId: vId, playerVars: { 'playsinline': 1, 'rel': 0 }, events: { 'onStateChange': onPlayerStateChange } });
-            } else ytPlayer.loadVideoById(vId);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        // --- VIDEO SYSTEM LOGIC ---
+        window.onYouTubeIframeAPIReady = function() {
+            ytPlayer = new YT.Player('ytplayer', {
+                height: '100%', width: '100%', videoId: 'ScMzIvxBSi4',
+                playerVars: { 'playsinline': 1 },
+                events: { 'onStateChange': e => isVideoPlaying = (e.data == YT.PlayerState.PLAYING) }
+            });
         };
 
-        function updateVideoUI() {
-            document.getElementById('videoMinedDisplay').innerText = `${localVideoMined.toFixed(1)} G`;
-            document.getElementById('videoMiningProgress').style.width = `${(localVideoMined / 25) * 100}%`;
-            const btn = document.getElementById('claimVideoPtsBtn');
-            if (localVideoMined >= 5) {
-                btn.disabled = false; btn.classList.remove('outline'); btn.style.background = localVideoMined>=25 ? 'var(--red)' : 'var(--secondary)'; btn.style.color='#fff'; btn.innerHTML = '<i class="fas fa-bolt"></i> Claim Gold';
-            } else {
-                btn.disabled = true; btn.classList.add('outline'); btn.style.background=''; btn.style.color=''; btn.innerHTML = '<i class="fas fa-lock"></i> Min 5 Gold';
-            }
+        window.playYtVideo = function(vId) {
+            if(ytPlayer) ytPlayer.loadVideoById(vId);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        setInterval(() => {
-            if (!isVideoPlaying || !currentUser) return;
-            if (localVideoMined >= 25) { if(ytPlayer) ytPlayer.pauseVideo(); updateVideoUI(); return; }
+        function updateVideoUI() {
+            document.getElementById('miniMined').innerText = `${miniBox.toFixed(1)} G`;
+            document.getElementById('miniProgress').style.width = `${(miniBox/50)*100}%`;
+            document.getElementById('mainVaultDisplay').innerText = `${mainVault} / 1000`;
 
-            videoPlaySeconds++;
-            if (videoPlaySeconds >= 15) { // Earn 0.1 Gold every 15 seconds
-                localVideoMined = Math.round((localVideoMined + 0.1) * 10) / 10; 
-                videoPlaySeconds = 0; updateVideoUI();
-                localStorage.setItem('nt_video_' + currentUser.id, JSON.stringify({ mined: localVideoMined }));
+            const btnTransfer = document.getElementById('transferBtn');
+            if(miniBox >= 50) {
+                btnTransfer.disabled = false; btnTransfer.classList.remove('outline'); btnTransfer.style.background = 'var(--red)'; btnTransfer.style.color = '#fff';
+            } else {
+                btnTransfer.disabled = true; btnTransfer.classList.add('outline'); btnTransfer.style.background = 'transparent'; btnTransfer.style.color = 'var(--primary)';
             }
-        }, 1000);
 
-        document.getElementById('claimVideoPtsBtn').addEventListener('click', async () => {
-            if (localVideoMined < 5) return;
-            const btn = document.getElementById('claimVideoPtsBtn');
-            btn.disabled = true; btn.innerText = "Encrypting...";
-            
-            try {
-                const res = await fetch(`${API_BASE}/tasks`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: currentUser.id, action: 'video', amount: localVideoMined })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    currentUser.goldBalance = data.newGoldBalance; updateUI();
-                    alert(`Mined ${localVideoMined} Gold secured! ⚡`);
-                    localVideoMined = 0; localStorage.setItem('nt_video_' + currentUser.id, JSON.stringify({ mined: 0 }));
-                    if(ytPlayer) ytPlayer.playVideo();
-                } else alert(data.error);
-            } catch(e) { alert("Network Error."); }
+            const btnClaim = document.getElementById('claimMainVaultBtn');
+            if(mainVault >= 1000) { btnClaim.disabled = false; } else { btnClaim.disabled = true; }
+        }
+
+        // Timer: 200 Gold/Hour = ~0.8 Gold every 15 seconds
+        setInterval(() => {
+            if(!isVideoPlaying) return;
+            if(miniBox >= 50) { ytPlayer.pauseVideo(); return alert("Mini Box is full! Transfer it to Main Vault by watching an Ad."); }
+
+            miniBox += 0.8; 
+            if(miniBox > 50) miniBox = 50;
             updateVideoUI();
-        });
+        }, 15000); // Trigger every 15s
 
-        window.onload = initApp;
+        function transferToMainBox() {
+            if(miniBox < 50) return;
+            if(mainVault + 50 > 1000) return alert("Main Vault is almost full. Claim it first!");
+            
+            // Simulate watching ad
+            const btn = document.getElementById('transferBtn');
+            btn.innerText = "Watching Ad..."; btn.disabled = true;
+            setTimeout(() => {
+                mainVault += 50;
+                miniBox = 0;
+                alert("Transferred 50 Gold to Main Vault!");
+                updateVideoUI();
+                if(ytPlayer) ytPlayer.playVideo();
+                btn.innerHTML = '<i class="fas fa-exchange-alt"></i> Transfer (Ad)';
+            }, 3000);
+        }
+
+        function claimVaultToBalance() {
+            if(mainVault < 1000) return;
+            alert("This will trigger the API to add 1000 Gold to your Main Balance!");
+            mainVault = 0;
+            updateVideoUI();
+        }
+
     </script>
 </body>
 </html>
