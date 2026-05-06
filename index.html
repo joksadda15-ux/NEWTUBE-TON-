@@ -53,6 +53,8 @@
             --violet-dim: rgba(168, 85, 247, 0.15);
             --gold: #F59E0B;
             --gold-dim: rgba(245, 158, 11, 0.15);
+            --diamond: #00e5ff;
+            --diamond-dim: rgba(0, 229, 255, 0.15);
             --green: #2DD4BF;
             --green-dim: rgba(45, 212, 191, 0.15);
             --red: #FB7185;
@@ -154,10 +156,10 @@
             padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-family: 'Roboto Mono', monospace; color: var(--primary);
         }
 
-        .balance-display { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 20px; text-align: center; margin-bottom: 16px; }
-        .bal-ton { font-size: 2.5rem; font-weight: 800; color: var(--text); line-height: 1; text-shadow: 0 0 20px rgba(253,224,71,0.4); font-family: 'Roboto Mono', monospace; }
+        .balance-display { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 20px; text-align: center; margin-bottom: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .bal-ton { font-size: 2rem; font-weight: 800; color: var(--diamond); line-height: 1; text-shadow: 0 0 20px rgba(0,229,255,0.4); font-family: 'Roboto Mono', monospace; }
         .bal-ton-label { font-size: 0.75rem; color: var(--text2); font-weight: 600; letter-spacing: 1px; margin-top: 6px; }
-        .bal-pts { font-size: 1.05rem; color: var(--green); font-weight: 700; margin-top: 8px; }
+        .bal-pts { font-size: 2rem; font-weight: 800; color: var(--primary); line-height: 1; text-shadow: 0 0 20px rgba(253,224,71,0.4); font-family: 'Roboto Mono', monospace;}
 
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
         .stat-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 14px 8px; text-align: center; }
@@ -286,11 +288,11 @@
 
         .form-group { margin-bottom: 16px; text-align: left; }
         .form-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text2); }
-        input[type="text"], input[type="number"] { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); color: var(--text); font-size: 0.95rem; outline: none; transition: all 0.2s; }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-dim); }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); color: var(--text); font-size: 0.95rem; outline: none; transition: all 0.2s; margin-bottom: 15px; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-dim); }
         input:read-only { background: var(--disabled-bg); color: var(--text2); }
         .input-row { display: flex; gap: 10px; margin-bottom: 16px; }
-        .input-row input { flex: 1; text-align: center; font-family: 'Roboto Mono', monospace; }
+        .input-row input { flex: 1; text-align: center; font-family: 'Roboto Mono', monospace; margin-bottom:0; }
         .input-row .btn { width: auto; padding: 0 20px; flex-shrink: 0; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; background: rgba(9,3,16,0.95); border-top: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(20px); display: flex; padding: 12px 0 24px; }
@@ -319,9 +321,10 @@
         .tier-row:last-child { border-bottom: none; }
         .tier-range { color: var(--text2); font-weight: 500;}
         .tier-ref { font-weight: 800; color: var(--primary); }
-        .required-refs-display { text-align: center; padding: 14px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; margin-bottom: 16px; font-size: 0.9rem; }
-        .ton-preview { margin-top: 8px; font-size: 0.9rem; color: var(--green); font-weight: 800; display: none; text-align:center; }
-
+        
+        /* New Custom CSS for Exchange & Withdraw Previews */
+        .conversion-box { background: rgba(0,229,255,0.1); border: 1px dashed var(--diamond); border-radius: 12px; padding: 14px; text-align: center; color: var(--diamond); font-size: 0.9rem; font-weight: 600; margin-bottom: 15px; }
+        
         .tab-bar { display: flex; gap: 10px; margin-bottom: 18px; }
         .tab-btn { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: var(--text2); font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
         .tab-btn.active { background: var(--secondary); color: #fff; border-color: var(--secondary); }
@@ -360,7 +363,7 @@
                         <div class="avatar-status"></div>
                     </div>
                     <div class="profile-info">
-                        <div class="profile-name">Terminal Access</div>
+                        <div class="profile-name" id="display-username">Terminal Access</div>
                         <div class="profile-id" id="profile-id-display">
                             UID: <span>...</span>&nbsp;<i class="fas fa-copy" style="font-size:0.75rem;"></i>
                         </div>
@@ -368,10 +371,20 @@
                 </div>
 
                 <div class="balance-display">
-                    <div class="bal-ton"><span id="home-ton">0.0000</span> TON</div>
-                    <div class="bal-ton-label">ESTIMATED BALANCE</div>
-                    <div class="bal-pts"><i class="fas fa-database" style="font-size:0.9rem;"></i> <span id="home-pts">0</span> Data Points</div>
+                    <div>
+                        <div class="bal-pts"><span id="home-gold">0</span> Gold</div>
+                        <div class="bal-ton-label">TOTAL GOLD</div>
+                    </div>
+                    <div>
+                        <div class="bal-ton"><span id="home-diamond">0</span> DIA</div>
+                        <div class="bal-ton-label">DIAMONDS</div>
+                    </div>
                 </div>
+                
+                <!-- NEW EXCHANGE BUTTON IN HOME -->
+                <button class="btn" style="margin-bottom:16px; font-size: 0.85rem;" id="open-exchange-btn">
+                    <i class="fas fa-sync-alt"></i> Exchange Gold to Diamond
+                </button>
 
                 <div class="stats-grid">
                     <div class="stat-box">
@@ -389,7 +402,7 @@
                 </div>
 
                 <div class="action-row">
-                    <button class="btn" id="action-invite"><i class="fas fa-users"></i> Referrals</button>
+                    <button class="btn outline" id="action-invite"><i class="fas fa-users"></i> Referrals</button>
                     <button class="btn outline" id="action-promo-code"><i class="fas fa-gift"></i> Gift Code</button>
                 </div>
 
@@ -414,8 +427,8 @@
             <!-- LOOTBOX SECTION -->
             <div class="lootbox-card">
                 <h3 style="margin:0 0 12px; color:var(--text); font-size:1.2rem;"><i class="fas fa-box-open" style="color:var(--primary);"></i> Ad Lootbox</h3>
-                <p style="font-size:0.85rem; color:var(--text2); margin-bottom:18px;">Watch ads to fill the box. Claim when it reaches 200 Points to save server loads. Max capacity: 500 Pts.</p>
-                <div style="font-size:2.4rem; font-weight:800; color:var(--green); font-family:monospace; margin-bottom:18px; text-shadow: 0 0 15px rgba(45,212,191,0.4);" id="lootboxPointsDisplay">0 Pts</div>
+                <p style="font-size:0.85rem; color:var(--text2); margin-bottom:18px;">Watch ads to fill the box. Claim when it reaches 200 Gold to save server loads. Max capacity: 500 Gold.</p>
+                <div style="font-size:2.4rem; font-weight:800; color:var(--green); font-family:monospace; margin-bottom:18px; text-shadow: 0 0 15px rgba(45,212,191,0.4);" id="lootboxPointsDisplay">0 Gold</div>
                 <button id="claimLootboxBtn" class="btn" disabled><i class="fas fa-download"></i> Claim Lootbox</button>
             </div>
 
@@ -437,7 +450,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward">10-15 Pts</div>
+                    <div class="ad-reward">10-15 Gold</div>
                     <button id="btn-watch-adsgram-daily" class="btn outline task-btn">Watch</button>
                 </div>
             </div>
@@ -455,7 +468,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--gold);">15-25 Pts</div>
+                    <div class="ad-reward" style="color:var(--gold);">15-25 Gold</div>
                     <button id="btn-watch-adsgram-special" class="btn task-btn" style="background:var(--gold);color:#000;">Watch</button>
                 </div>
             </div>
@@ -473,7 +486,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward">10-18 Pts</div>
+                    <div class="ad-reward">10-18 Gold</div>
                     <button id="btn-watch-monetag" class="btn outline task-btn" style="border-color:var(--secondary);color:var(--secondary);">Watch</button>
                 </div>
             </div>
@@ -491,7 +504,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--text);">10-18 Pts</div>
+                    <div class="ad-reward" style="color:var(--text);">10-18 Gold</div>
                     <button id="btn-watch-giga" class="btn outline task-btn" style="border-color:var(--red);color:var(--red);">Watch</button>
                 </div>
             </div>
@@ -510,23 +523,28 @@
                 <div id="ytplayer" style="width:100%; height:210px; background:#000;"></div>
             </div>
 
-            <!-- Compact Mining Box -->
+            <!-- Compact Mini Mining Box -->
             <div class="mining-compact">
                 <div class="mining-compact-left">
                     <div class="mining-compact-title">
-                        <i class="fas fa-microchip"></i> Mining Terminal &nbsp;<span style="font-size:0.65rem;color:var(--text2);font-weight:500;">Max 25 Pts/Box</span>
+                        <i class="fas fa-microchip"></i> Video Mining Box &nbsp;<span style="font-size:0.65rem;color:var(--text2);font-weight:500;">Max 50 Gold</span>
                     </div>
                     <div class="mining-compact-bar">
-                        <div class="mining-compact-fill" id="videoMiningProgress" style="width:0%;"></div>
-                    </div>
-                    <div class="mining-compact-stats">
-                        <span id="videoDailyLimitDisplay">Daily: 0 / 250 Pts</span>
+                        <div class="mining-compact-fill" id="miniVideoProgress" style="width:0%;"></div>
                     </div>
                 </div>
                 <div class="mining-compact-right" style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-                    <div class="mining-compact-pts" id="videoMinedDisplay">0.0 Pts</div>
-                    <button id="claimVideoPtsBtn" class="btn outline" disabled style="padding:9px 14px; font-size:0.78rem; width:auto; white-space:nowrap;"><i class="fas fa-lock"></i> Min 5 Pts</button>
+                    <div class="mining-compact-pts" id="miniVideoDisplay">0.0 G</div>
+                    <button id="miniTransferBtn" class="btn outline" disabled style="padding:9px 14px; font-size:0.75rem; width:auto; white-space:nowrap;"><i class="fas fa-exchange-alt"></i> Transfer (Ad)</button>
                 </div>
+            </div>
+
+            <!-- MAIN VIDEO VAULT (Added matching original design style) -->
+            <div class="card" style="text-align:center; border: 1px dashed var(--primary); background: linear-gradient(145deg, rgba(22,10,36,0.9), rgba(253,224,71,0.05)); margin-bottom: 18px;">
+                <h3 style="margin:0 0 10px; color:var(--text); font-size:1.1rem;"><i class="fas fa-vault" style="color:var(--primary);"></i> Main Video Vault</h3>
+                <p style="font-size:0.8rem; color:var(--text2); margin-bottom:15px;">Collect exactly 1,000 Gold here to claim to main balance.</p>
+                <div style="font-size:2.2rem; font-weight:800; color:var(--primary); font-family:monospace; margin-bottom:15px;" id="mainVaultDisplay">0 / 1000</div>
+                <button id="claimMainVaultBtn" class="btn" disabled><i class="fas fa-download"></i> Claim 1000 Gold</button>
             </div>
 
             <!-- Video List Table -->
@@ -536,8 +554,16 @@
                     <span>Video</span>
                     <span style="text-align:right;">Reward</span>
                 </div>
-                <div id="video-list-container">
-                    <div class="loader"></div>
+                <!-- Static Demo Video to ensure it works without external database -->
+                <div class="video-table-row" onclick="window.playYtVideo('ScMzIvxBSi4')">
+                    <div class="video-row-info">
+                        <div class="video-row-thumb">
+                            <img src="https://img.youtube.com/vi/ScMzIvxBSi4/mqdefault.jpg" alt="Crypto Web3">
+                            <div class="video-row-thumb-overlay"><i class="fas fa-play"></i></div>
+                        </div>
+                        <div class="video-row-title">Crypto Web3 Premium Strategy</div>
+                    </div>
+                    <div class="video-row-pts"><i class="fas fa-bolt"></i> 200 Gold/Hr</div>
                 </div>
             </div>
         </section>
@@ -558,7 +584,15 @@
                 </button>
             </div>
 
-            <div id="task-list-channel" style="display:grid; gap:14px;"></div>
+            <div id="task-list-channel" style="display:grid; gap:14px;">
+                <!-- Demo Task for Channel -->
+                <div class="card" style="padding:18px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                        <div style="flex:1;"><div style="font-weight:700;font-size:0.95rem;color:#fff;"><i class="fab fa-telegram-plane" style="color:var(--primary);"></i> Join Partner Channel</div><div style="color:var(--green);font-size:0.85rem;margin-top:4px;">+12 Gold</div></div>
+                        <button class="btn outline task-button" data-task-id="demo1" data-task-url="https://t.me/NEEWTON_OFFICIAL" data-category="channel" data-state="start" style="padding:10px 14px;width:auto;">Join</button>
+                    </div>
+                </div>
+            </div>
             <div id="task-list-partner" style="display:none; gap:14px;"></div>
         </section>
 
@@ -574,46 +608,63 @@
 
     <!-- ══ MODALS ══ -->
 
+    <!-- Exchange Modal (NEW) -->
+    <div id="exchangeModalOverlay" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-header-icon" style="background:var(--primary-dim); color:var(--primary);"><i class="fas fa-sync-alt"></i></div>
+                <h3 class="modal-title">Exchange Gold</h3>
+            </div>
+            
+            <p style="font-size:0.9rem; color:var(--text2); margin-bottom:18px;">Rate: 1,000 Gold = 1 Diamond</p>
+            
+            <div class="form-group">
+                <input type="number" id="exchangeAmount" placeholder="Enter Gold (Min 1000)" oninput="calcExchangePreview()">
+                <div class="conversion-box" id="exchangePreviewDisplay" style="display:none;">You receive: <span id="calc-dia-val">0</span> Diamonds</div>
+            </div>
+            
+            <div style="display:flex; gap:12px;">
+                <button class="btn outline close-modal-btn" style="flex:1;">Cancel</button>
+                <button id="submitExchangeBtn" class="btn" style="flex:1;">Exchange</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Withdraw Modal -->
     <div id="withdrawModalOverlay" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
-                <div class="modal-header-icon" style="background:var(--primary-dim); color:var(--primary);"><i class="fas fa-wallet"></i></div>
+                <div class="modal-header-icon" style="background:rgba(0, 229, 255, 0.15); color:var(--diamond);"><i class="fas fa-wallet"></i></div>
                 <h3 class="modal-title">Withdraw Funds</h3>
             </div>
 
             <div style="background:rgba(45,212,191,0.07); border:1px solid rgba(45,212,191,0.25); border-radius:12px; padding:12px 14px; margin-bottom:16px; display:flex; align-items:flex-start; gap:10px;">
                 <i class="fas fa-clock" style="color:var(--green); margin-top:2px; flex-shrink:0;"></i>
                 <div style="font-size:0.82rem; color:var(--text2); line-height:1.6;">
-                    Withdraw request দেওয়ার পর <b style="color:var(--green);">১২ থেকে ৪৮ ঘণ্টার মধ্যে</b> আপনার Tonkeeper Wallet-এ payment পেয়ে যাবেন। Processing সময় network এবং verification-এর উপর নির্ভর করে।
+                    Withdraw request দেওয়ার পর <b style="color:var(--green);">১২ থেকে ৪৮ ঘণ্টার মধ্যে</b> payment পেয়ে যাবেন।
                 </div>
             </div>
 
             <div style="text-align:center; margin-bottom:18px;">
-                <div style="font-size:2rem; font-weight:800; color:var(--text); font-family:monospace;" id="withdrawPointBalance">0.0000 TON</div>
-                <div style="font-size:0.8rem; color:var(--text2); margin-top:6px; font-weight:600;">Rate: 50,000 Pts = 1.00 TON</div>
+                <div style="font-size:0.8rem; color:var(--text2); font-weight:600;">Rate: 1k Dia = 1 USDT | 1k Dia = 0.6 TON</div>
             </div>
-
-            <div class="tier-info">
-                <!-- Dynamically Rendered New Rule -->
-            </div>
-
-            <div class="required-refs-display" id="requiredRefsDisplay">Enter amount to verify</div>
 
             <div class="form-group">
-                <label>Amount (Points) - Min: 1500</label>
-                <input type="number" id="withdrawalAmount" placeholder="Example: 2000">
-                <div class="ton-preview" id="realtime-ton-display">You receive: <span id="calc-ton-val">0.0000</span> TON</div>
+                <select id="wMethod" onchange="calcWithdrawPreview()">
+                    <option value="tonkeeper">Tonkeeper (Min 50 Dia)</option>
+                    <option value="binance">Binance UID (Min 100 Dia)</option>
+                </select>
+                <input type="number" id="withdrawalAmount" placeholder="Amount (Diamonds)" oninput="calcWithdrawPreview()">
+                <div class="conversion-box" id="realtime-wd-display" style="display:none;">Value: <span id="calc-usdt-val">0.00</span> USDT | <span id="calc-ton-val">0.0000</span> TON</div>
             </div>
 
             <div class="form-group" style="margin-bottom:20px;">
-                <label>Tonkeeper Address</label>
-                <input type="text" id="accountDetails" placeholder="UQ... Address">
+                <input type="text" id="accountDetails" placeholder="Tonkeeper Address / Binance UID">
             </div>
 
             <div style="display:flex; gap:12px;">
                 <button class="btn outline close-modal-btn" style="flex:1;">Cancel</button>
-                <button id="submitWithdrawalBtn" class="btn" style="flex:1;">Submit</button>
+                <button id="submitWithdrawalBtn" class="btn" style="flex:1; background:var(--diamond); color:#000;">Submit</button>
             </div>
         </div>
     </div>
@@ -625,7 +676,7 @@
                 <div class="modal-header-icon" style="background:rgba(255,255,255,0.1); color:#fff;"><i class="fas fa-gift"></i></div>
                 <h3 class="modal-title">Promo Code</h3>
             </div>
-            <p style="font-size:0.9rem; color:var(--text2); margin-bottom:18px;">Redeem secret codes for extra Data Points. Ad verification required.</p>
+            <p style="font-size:0.9rem; color:var(--text2); margin-bottom:18px;">Redeem secret codes for extra Gold. Ad verification required.</p>
             <div class="form-group"><input type="text" id="promoCodeInput" placeholder="Enter code..."></div>
             <button id="claimPromoBtn" class="btn" style="margin-bottom:12px;">Claim Reward</button>
             <button class="btn ghost close-modal-btn">Close</button>
@@ -640,11 +691,10 @@
             <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(253,224,71,0.2); border-radius:14px; padding:16px; margin-bottom:20px; text-align:left;">
                 <div style="font-size:0.75rem; font-weight:800; color:var(--primary); letter-spacing:1px; margin-bottom:10px; text-transform:uppercase;">📋 How Referral Works</div>
                 <div style="font-size:0.85rem; color:var(--text2); line-height:1.8;">
-                    <div style="margin-bottom:6px;">👥 <b style="color:#fff;">Step 1:</b> Share your referral link with friends.</div>
-                    <div style="margin-bottom:6px;">🎮 <b style="color:#fff;">Step 2:</b> Your friend opens the app & watches ads.</div>
-                    <div style="margin-bottom:6px;">📦 <b style="color:#fff;">Step 3:</b> As soon as your friend <b style="color:var(--primary);">Claims their first Lootbox</b>, the referral becomes <b style="color:var(--green);">Valid</b>.</div>
+                    <div style="margin-bottom:6px;">👥 <b style="color:#fff;">Step 1:</b> Share your referral link.</div>
+                    <div style="margin-bottom:6px;">🎮 <b style="color:#fff;">Step 2:</b> Friend joins & verifies account.</div>
                     <div style="padding:10px; background:rgba(45,212,191,0.1); border:1px solid rgba(45,212,191,0.3); border-radius:10px; margin-top:8px;">
-                        🎁 <b style="color:var(--green);">Reward: +300 Points</b> credited instantly to your account for each valid referral!
+                        🎁 <b style="color:var(--green);">Reward: 1500 Gold</b> instantly + <b style="color:var(--green);">10% commission</b> on their earnings forever!
                     </div>
                 </div>
             </div>
@@ -665,200 +715,27 @@
         </div>
     </div>
 
-    <!-- History Modal -->
-    <div id="historyModalOverlay" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-header-icon" style="background:var(--gold-dim); color:var(--gold);"><i class="fas fa-history"></i></div>
-                <h3 class="modal-title">Log History</h3>
-            </div>
-            <div id="combined-history-list" style="max-height:50vh; overflow-y:auto; padding-right:5px;"></div>
-            <button class="btn ghost close-modal-btn" style="margin-top:20px;">Close</button>
-        </div>
-    </div>
-
     <!-- Verification Modal -->
     <div id="activationModalOverlay" class="modal-overlay" style="z-index: 5000;">
         <div class="modal-box" style="text-align:center;">
             <i class="fas fa-shield-alt" style="font-size:3.5rem; color:var(--red); margin-bottom:18px;"></i>
             <h3 style="margin:0 0 12px; font-size:1.3rem;">Security Check</h3>
-            <p style="color:var(--text2); font-size:0.9rem; margin-bottom:24px;">Join our networks to authenticate your device and claim <b style="color:var(--primary);">+10 Pts</b>.</p>
-            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:12px;"><i class="fab fa-telegram-plane"></i> 1. Official Channel</a>
-            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:20px;"><i class="fas fa-users"></i> 2. Community Group</a>
+            <p style="color:var(--text2); font-size:0.9rem; margin-bottom:24px;">Join our networks to authenticate your device.</p>
+            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:12px;text-decoration:none;"><i class="fab fa-telegram-plane"></i> 1. Official Channel</a>
+            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:20px;text-decoration:none;"><i class="fas fa-users"></i> 2. Community Group</a>
             <button id="activateAccountBtn" class="btn">Verify Access</button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
-            authDomain: "newtube-ton.firebaseapp.com",
-            databaseURL: "https://newtube-ton-default-rtdb.firebaseio.com",
-            projectId: "newtube-ton",
-            storageBucket: "newtube-ton.firebasestorage.app",
-            messagingSenderId: "41011548816",
-            appId: "1:41011548816:web:9c27139d9487b144ecbe15"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <!-- VERCEL API BACKEND SCRIPT (No Firebase SDK) -->
+    <script>
         const tg = window.Telegram.WebApp;
-
+        const API_BASE = '/api'; // Calls your Vercel functions directly
+        
         let currentUser = null;
-        let isSubmittingWithdrawal = false;
         let isAdRunning = false; 
 
-        const REFERRAL_REWARD_POINTS = 300;
-        const POINTS_TO_TON_RATE = 0.00002;
-
-        let localAdData = { unclaimedPoints: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-        
-        // --- NEW VIDEO VARIABLES ---
-        let ytPlayer = null;
-        let isVideoPlaying = false;
-        let localVideoMined = 0; 
-        let videoPlaySeconds = 0;
-        let vServerStartTime = 0;
-        let vServerSignature = "";
-        
-        const VERCEL_API_BASE = "https://new-ton-8835.vercel.app";
-
-        // AD FUNCTIONS
-        // ── MONETAG INTERSTITIAL: প্রতি 10 মিনিট video দেখার পর show করবে ──
-        let videoWatchTotalSeconds = 0;  // মোট কতক্ষণ video দেখা হলো
-        const MONETAG_AD_INTERVAL_SECONDS = 600; // 10 মিনিট = 600 সেকেন্ড
-        let lastMonetagAdShownAt = 0; // কত সেকেন্ডে শেষ ads দেখানো হয়েছিল
-        const showAdsgramDailyAd = () => new Promise((res, rej) => {
-            if (window.Adsgram) { window.Adsgram.init({blockId:"int-27565"}).show().then(res).catch(rej); } 
-            else { setTimeout(res, 2000); }
-        });
-        const showAdsgramSpecialAd = () => new Promise((res, rej) => {
-            if (window.Adsgram) { window.Adsgram.init({blockId:"27566"}).show().then(res).catch(rej); } 
-            else { setTimeout(res, 2000); }
-        });
-        const showMonetagAd = () => new Promise((res) => {
-            if (typeof show_9442539 === 'function') {
-                const t = setTimeout(res, 15000);
-                show_9442539().then(() => { clearTimeout(t); res(); }).catch(() => { clearTimeout(t); res(); });
-            } else { setTimeout(res, 2000); }
-        });
-        const showGigaPubAd = () => new Promise((res) => {
-            if (typeof window.showGiga === 'function') {
-                const t = setTimeout(res, 15000);
-                window.showGiga("main").then(() => { clearTimeout(t); res(); }).catch(() => { clearTimeout(t); res(); });
-            } else { setTimeout(res, 2000); }
-        });
-
-        // ════════════════════════════════════════════
-        // LOOTBOX SYSTEM WITH VERCEL
-        // ════════════════════════════════════════════
-        function updateLootboxUI() {
-            const display = document.getElementById('lootboxPointsDisplay');
-            const btn = document.getElementById('claimLootboxBtn');
-            display.textContent = `${localAdData.unclaimedPoints} Pts`;
-            
-            if (btn.dataset.busy === "true") return;
-
-            if (localAdData.unclaimedPoints >= 200) {
-                btn.disabled = false;
-                btn.classList.remove('outline');
-                btn.innerHTML = '<i class="fas fa-download"></i> Claim Lootbox';
-            } else {
-                btn.disabled = true;
-                btn.classList.add('outline');
-                btn.innerHTML = '<i class="fas fa-lock"></i> Min 200 Pts Required';
-            }
-        }
-
-        document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
-            if (localAdData.unclaimedPoints < 200) return;
-            
-            if (localAdData.unclaimedPoints > 550) {
-                alert("⚠️ Security Error: Invalid Lootbox Data.");
-                localAdData = { unclaimedPoints: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                updateLootboxUI(); updateAdButtonStats(); return;
-            }
-
-            const btn = document.getElementById('claimLootboxBtn');
-            btn.disabled = true; 
-
-            // RANDOMLY SHOW 1 AD BEFORE CLAIMING
-            btn.dataset.busy = "true";
-            const adFunctions = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd, showGigaPubAd];
-            const randomAdFunc = adFunctions[Math.floor(Math.random() * adFunctions.length)];
-            
-            const ok = await runAdAndVerifyTime('claimLootboxBtn', randomAdFunc);
-            
-            if (!ok) {
-                btn.dataset.busy = "false";
-                updateLootboxUI(); 
-                return;
-            }
-
-            btn.textContent = "Claiming...";
-
-            try {
-                // Call Vercel API
-                const response = await fetch(`${VERCEL_API_BASE}/api/claimLootbox`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: currentUser.id,
-                        points: localAdData.unclaimedPoints,
-                        adsWatched: localAdData.adsWatched,
-                        adsWatchedAdsgramDaily: localAdData.adsWatchedAdsgramDaily,
-                        adsWatchedAdsgramSpecial: localAdData.adsWatchedAdsgramSpecial,
-                        adsWatchedMonetag: localAdData.adsWatchedMonetag,
-                        adsWatchedGiga: localAdData.adsWatchedGiga
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success || data.ok) {
-                    currentUser.pointBalance = (currentUser.pointBalance || 0) + localAdData.unclaimedPoints;
-                    currentUser.lifetimePointsEarned = (currentUser.lifetimePointsEarned || 0) + localAdData.unclaimedPoints;
-                    currentUser.lifetimeAdsWatched = (currentUser.lifetimeAdsWatched || 0) + localAdData.adsWatched;
-                    
-                    currentUser.adsWatchedAdsgramDaily = (currentUser.adsWatchedAdsgramDaily || 0) + localAdData.adsWatchedAdsgramDaily;
-                    currentUser.adsWatchedAdsgramSpecial = (currentUser.adsWatchedAdsgramSpecial || 0) + localAdData.adsWatchedAdsgramSpecial;
-                    currentUser.adsWatchedMonetag = (currentUser.adsWatchedMonetag || 0) + localAdData.adsWatchedMonetag;
-                    currentUser.adsWatchedGiga = (currentUser.adsWatchedGiga || 0) + localAdData.adsWatchedGiga;
-
-                    const claimedPts = localAdData.unclaimedPoints;
-                    showSuccessModal("Lootbox Claimed! 🎉", `+${claimedPts} Points Saved securely!`);
-
-                    localAdData = { unclaimedPoints: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-                    localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                    
-                    updateBalanceUI(); 
-                    updateAdButtonStats();
-
-                    // যদি referrer-কে bonus দেওয়া হয়েছে, user কে জানাও
-                    if (data.refBonusGiven) {
-                        setTimeout(() => {
-                            showSuccessModal("🎁 Referral Activated!", "আপনার Inviter-এর account-এ +300 Pts পাঠানো হয়েছে!");
-                        }, 3200);
-                    }
-                } else {
-                    alert("Error: " + (data.message || "Invalid data"));
-                    localAdData = { unclaimedPoints: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-                    localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                    updateAdButtonStats();
-                }
-            } catch(e) {
-                alert("Server connection failed. Please try again.");
-            }
-            btn.dataset.busy = "false";
-            updateLootboxUI();
-        });
-
-        // ════════════════════════════════════════════
-        // REWARDS INCREASED UPDATED
-        // ════════════════════════════════════════════
+        // Ad Limits Configuration
         const AD_CONFIG = { 
             adsgramDaily:   { limit: 10, min: 10, max: 15 },
             adsgramSpecial: { limit: 5,  min: 15, max: 25 },
@@ -866,869 +743,346 @@
             giga:           { limit: 10, min: 10, max: 18 }
         };
 
+        // --- NEW VIDEO VARIABLES ---
+        let ytPlayer = null;
+        let isVideoPlaying = false;
+        let miniBoxGold = 0;   // Max 50
+        let mainVaultGold = 0; // Max 1000
+        let videoPlaySeconds = 0;
+
+        // AD FUNCTIONS
+        const showAdsgramDailyAd = () => new Promise((res, rej) => { if (window.Adsgram) { window.Adsgram.init({blockId:"int-27565"}).show().then(res).catch(rej); } else { setTimeout(res, 2000); } });
+        const showAdsgramSpecialAd = () => new Promise((res, rej) => { if (window.Adsgram) { window.Adsgram.init({blockId:"27566"}).show().then(res).catch(rej); } else { setTimeout(res, 2000); } });
+        const showMonetagAd = () => new Promise((res) => { if (typeof show_9442539 === 'function') { const t = setTimeout(res, 15000); show_9442539().then(() => { clearTimeout(t); res(); }).catch(() => { clearTimeout(t); res(); }); } else { setTimeout(res, 2000); } });
+        const showGigaPubAd = () => new Promise((res) => { if (typeof window.showGiga === 'function') { const t = setTimeout(res, 15000); window.showGiga("main").then(() => { clearTimeout(t); res(); }).catch(() => { clearTimeout(t); res(); }); } else { setTimeout(res, 2000); } });
+
+        // APP INIT
+        async function initApp() {
+            tg.ready(); tg.expand(); tg.setHeaderColor('#090310');
+            const tgUser = tg.initDataUnsafe?.user;
+            const startParam = tg.initDataUnsafe?.start_param || "";
+
+            if (!tgUser) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;">Open in Telegram.</h3>`; return; }
+
+            document.getElementById('display-username').textContent = tgUser.first_name || 'User';
+            document.querySelector('#profile-id-display span').textContent = tgUser.id;
+            document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${tgUser.id}`;
+
+            try {
+                const res = await fetch(`${API_BASE}/init`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ userId: tgUser.id, username: tgUser.first_name, referrer: startParam })
+                });
+                currentUser = await res.json();
+                
+                if (!currentUser.isVerified) { document.getElementById('activationModalOverlay').classList.add('show'); }
+                
+                loadLocalState();
+                updateUI();
+            } catch(e) { alert("Backend connection failed."); }
+        }
+
+        function updateUI() {
+            if(!currentUser) return;
+            document.getElementById('home-gold').textContent = currentUser.goldBalance || 0;
+            document.getElementById('home-diamond').textContent = currentUser.diamondBalance || 0;
+            document.getElementById('home-life').textContent = currentUser.goldBalance || 0; // Simplified
+            document.getElementById('home-normal-ref').textContent = currentUser.referredUsersCount || 0;
+        }
+
+        // LOAD LOCAL CACHE (Lootbox & Video Box)
+        function loadLocalState() {
+            // Main Ad Lootbox
+            let savedAdLoot = parseInt(localStorage.getItem(`nt_lootbox_${currentUser.id}`)) || 0;
+            updateAdLootboxUI(savedAdLoot);
+
+            // Video Lootboxes
+            miniBoxGold = parseFloat(localStorage.getItem(`nt_vid_mini_${currentUser.id}`)) || 0;
+            mainVaultGold = parseInt(localStorage.getItem(`nt_vid_main_${currentUser.id}`)) || 0;
+            updateVideoUI();
+        }
+
+        // ════════════════════════════════════════════
+        // VERIFICATION
+        // ════════════════════════════════════════════
+        document.getElementById('activateAccountBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('activateAccountBtn');
+            btn.textContent = "Verifying..."; btn.disabled = true;
+            try {
+                const res  = await fetch(`${API_BASE}/verifyJoin?userId=${currentUser.id}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert("Verified ✅");
+                    document.getElementById('activationModalOverlay').classList.remove('show');
+                    currentUser.isVerified = true;
+                } else {
+                    alert("Join required ❌\nPlease join BOTH the Channel & Group.");
+                }
+            } catch (e) { alert("Error verifying account! Try again."); }
+            btn.textContent = "Verify Access"; btn.disabled = false;
+        });
+
+        // ════════════════════════════════════════════
+        // ADS LOOTBOX SYSTEM
+        // ════════════════════════════════════════════
+        function updateAdLootboxUI(points) {
+            document.getElementById('lootboxPointsDisplay').textContent = `${points} Gold`;
+            const btn = document.getElementById('claimLootboxBtn');
+            if(points >= 200) { btn.disabled = false; btn.classList.remove('outline'); btn.innerHTML = '<i class="fas fa-download"></i> Claim Lootbox'; } 
+            else { btn.disabled = true; btn.classList.add('outline'); btn.innerHTML = '<i class="fas fa-lock"></i> Min 200 Gold'; }
+        }
+
+        async function handleAdClick(type, btnId, min, max, adFunc) {
+            let currentLoot = parseInt(localStorage.getItem(`nt_lootbox_${currentUser.id}`)) || 0;
+            if (currentLoot >= 500) return alert("⚠️ Lootbox is full (Max 500 Gold). Please claim it first!");
+
+            const ok = await runAdAndVerifyTime(btnId, adFunc);
+            if (ok) {
+                let reward = Math.floor(Math.random() * (max - min + 1)) + min;
+                if (currentLoot + reward > 500) reward = 500 - currentLoot;
+                currentLoot += reward;
+                
+                localStorage.setItem(`nt_lootbox_${currentUser.id}`, currentLoot);
+                showSuccessModal("Ad Watched! 🎁", `+${reward} Gold added to Lootbox`);
+                updateAdLootboxUI(currentLoot);
+            }
+        }
+
+        document.getElementById('btn-watch-adsgram-daily').addEventListener('click', (e) => handleAdClick('adsgramDaily', 'btn-watch-adsgram-daily', AD_CONFIG.adsgramDaily.min, AD_CONFIG.adsgramDaily.max, showAdsgramDailyAd));
+        document.getElementById('btn-watch-adsgram-special').addEventListener('click', (e) => handleAdClick('adsgramSpecial', 'btn-watch-adsgram-special', AD_CONFIG.adsgramSpecial.min, AD_CONFIG.adsgramSpecial.max, showAdsgramSpecialAd));
+        document.getElementById('btn-watch-monetag').addEventListener('click', (e) => handleAdClick('monetag', 'btn-watch-monetag', AD_CONFIG.monetag.min, AD_CONFIG.monetag.max, showMonetagAd));
+        document.getElementById('btn-watch-giga').addEventListener('click', (e) => handleAdClick('giga', 'btn-watch-giga', AD_CONFIG.giga.min, AD_CONFIG.giga.max, showGigaPubAd));
+
+        document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
+            let currentLoot = parseInt(localStorage.getItem(`nt_lootbox_${currentUser.id}`)) || 0;
+            if (currentLoot < 200) return;
+
+            const btn = document.getElementById('claimLootboxBtn');
+            btn.disabled = true; btn.textContent = "Claiming...";
+
+            try {
+                const res = await fetch(`${API_BASE}/tasks`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, action: 'adLootbox', amount: currentLoot })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentUser.goldBalance = data.newGoldBalance; updateUI();
+                    showSuccessModal("Lootbox Claimed! 🎉", `+${currentLoot} Gold added to balance!`);
+                    localStorage.setItem(`nt_lootbox_${currentUser.id}`, 0);
+                    updateAdLootboxUI(0);
+                } else { alert("Failed: " + data.error); }
+            } catch(e) { alert("Server connection failed."); }
+            btn.textContent = "Claim Lootbox";
+        });
+
+        // ════════════════════════════════════════════
+        // VIDEO MINING SYSTEM (DUAL LOOTBOX)
+        // ════════════════════════════════════════════
+        const ytScriptTag = document.createElement('script'); ytScriptTag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(ytScriptTag, firstScriptTag);
+        window.onYouTubeIframeAPIReady = function() { window.ytApiReady = true; };
+
+        function onPlayerStateChange(event) { isVideoPlaying = (event.data == YT.PlayerState.PLAYING); }
+        document.addEventListener('visibilitychange', () => { if (document.hidden && isVideoPlaying && ytPlayer) ytPlayer.pauseVideo(); });
+
+        window.playYtVideo = function(vId) {
+            if (!window.ytApiReady) return alert("YouTube Player is loading...");
+            if (miniBoxGold >= 50) return alert("Video Mining Box is full! Transfer it first.");
+            if (!ytPlayer) ytPlayer = new YT.Player('ytplayer', { height: '100%', width: '100%', videoId: vId, playerVars: { 'playsinline': 1, 'rel': 0 }, events: { 'onStateChange': onPlayerStateChange } });
+            else ytPlayer.loadVideoById(vId);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        function updateVideoUI() {
+            document.getElementById('miniVideoDisplay').textContent = `${miniBoxGold.toFixed(1)} G`;
+            document.getElementById('miniVideoProgress').style.width = `${(miniBoxGold / 50) * 100}%`;
+            document.getElementById('mainVaultDisplay').textContent = `${mainVaultGold} / 1000`;
+
+            const miniBtn = document.getElementById('miniTransferBtn');
+            if (miniBoxGold >= 50) { miniBtn.disabled = false; miniBtn.classList.remove('outline'); miniBtn.style.background = 'var(--red)'; miniBtn.style.color = '#fff'; }
+            else { miniBtn.disabled = true; miniBtn.classList.add('outline'); miniBtn.style.background = ''; miniBtn.style.color = ''; }
+
+            const mainBtn = document.getElementById('claimMainVaultBtn');
+            if (mainVaultGold >= 1000) { mainBtn.disabled = false; mainBtn.style.background = 'var(--gold)'; mainBtn.style.color = '#000'; }
+            else { mainBtn.disabled = true; mainBtn.style.background = 'var(--primary)'; }
+        }
+
+        setInterval(() => {
+            if (!isVideoPlaying || !currentUser) return;
+            if (miniBoxGold >= 50) { if(ytPlayer) ytPlayer.pauseVideo(); updateVideoUI(); return alert("Mini Box full! Transfer to Main Vault."); }
+
+            videoPlaySeconds++;
+            if (videoPlaySeconds >= 15) { // 200 Gold/Hr = ~0.83 Gold per 15s
+                miniBoxGold += 0.83; if(miniBoxGold > 50) miniBoxGold = 50;
+                videoPlaySeconds = 0; updateVideoUI();
+                localStorage.setItem(`nt_vid_mini_${currentUser.id}`, miniBoxGold);
+            }
+        }, 1000);
+
+        document.getElementById('miniTransferBtn').addEventListener('click', async () => {
+            if(miniBoxGold < 50) return;
+            if(mainVaultGold + 50 > 1000) return alert("Main Vault is full. Claim it first!");
+            
+            // Require AD watch to transfer
+            const adFunctions = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd, showGigaPubAd];
+            const randomAdFunc = adFunctions[Math.floor(Math.random() * adFunctions.length)];
+            const ok = await runAdAndVerifyTime('miniTransferBtn', randomAdFunc); 
+            
+            if(ok) {
+                mainVaultGold += 50; miniBoxGold = 0;
+                localStorage.setItem(`nt_vid_mini_${currentUser.id}`, 0);
+                localStorage.setItem(`nt_vid_main_${currentUser.id}`, mainVaultGold);
+                updateVideoUI(); showSuccessModal("Transferred!", "50 Gold sent to Main Vault.");
+                if(ytPlayer) ytPlayer.playVideo();
+            }
+        });
+
+        document.getElementById('claimMainVaultBtn').addEventListener('click', async () => {
+            if(mainVaultGold < 1000) return;
+            const btn = document.getElementById('claimMainVaultBtn'); btn.disabled = true; btn.textContent = "Processing...";
+            try {
+                const res = await fetch(`${API_BASE}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id, action: 'videoVault', amount: 1000 }) });
+                const data = await res.json();
+                if(data.success) {
+                    currentUser.goldBalance = data.newGoldBalance; updateUI();
+                    mainVaultGold = 0; localStorage.setItem(`nt_vid_main_${currentUser.id}`, 0);
+                    showSuccessModal("1000 Gold Claimed! 🎉", "Added to your Main Balance.");
+                } else alert(data.error);
+            } catch(e) { alert("Server Error."); }
+            updateVideoUI(); btn.innerHTML = '<i class="fas fa-download"></i> Claim 1000 Gold';
+        });
+
+        // ════════════════════════════════════════════
+        // EXCHANGE LOGIC (Gold -> Diamond)
+        // ════════════════════════════════════════════
+        document.getElementById('open-exchange-btn').addEventListener('click', () => { document.getElementById('exchangeModalOverlay').classList.add('show'); document.getElementById('exchangeAmount').value = ''; document.getElementById('exchangePreviewDisplay').style.display='none'; });
+        
+        window.calcExchangePreview = function() {
+            const amt = parseInt(document.getElementById('exchangeAmount').value) || 0;
+            const preview = document.getElementById('exchangePreviewDisplay');
+            if (amt >= 1000) { document.getElementById('calc-dia-val').textContent = Math.floor(amt/1000); preview.style.display = 'block'; }
+            else { preview.style.display = 'none'; }
+        }
+
+        document.getElementById('submitExchangeBtn').addEventListener('click', async () => {
+            const amt = parseInt(document.getElementById('exchangeAmount').value) || 0;
+            if(amt < 1000 || amt % 1000 !== 0) return alert("Must be multiples of 1000 Gold.");
+            if(amt > currentUser.goldBalance) return alert("Insufficient Gold.");
+            
+            const btn = document.getElementById('submitExchangeBtn'); btn.disabled=true; btn.textContent="Exchanging...";
+            try {
+                const res = await fetch(`${API_BASE}/exchange`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id, goldAmount: amt }) });
+                const data = await res.json();
+                if(data.success) {
+                    currentUser.goldBalance -= amt; currentUser.diamondBalance += Math.floor(amt/1000); updateUI();
+                    document.getElementById('exchangeModalOverlay').classList.remove('show');
+                    showSuccessModal("Exchanged!", `Received ${Math.floor(amt/1000)} Diamonds.`);
+                } else alert(data.error);
+            } catch(e) { alert("Server error."); }
+            btn.disabled=false; btn.textContent="Exchange";
+        });
+
+        // ════════════════════════════════════════════
+        // WITHDRAW LOGIC
+        // ════════════════════════════════════════════
+        window.calcWithdrawPreview = function() {
+            const method = document.getElementById('wMethod').value;
+            const amt = parseInt(document.getElementById('withdrawalAmount').value) || 0;
+            const preview = document.getElementById('realtime-wd-display');
+            
+            document.getElementById('accountDetails').placeholder = method === 'binance' ? "Binance UID" : "Tonkeeper Address";
+
+            if (amt > 0) {
+                // 1k Dia = 1 USDT | 1k Dia = 0.6 TON
+                document.getElementById('calc-usdt-val').textContent = (amt * 0.001).toFixed(2);
+                document.getElementById('calc-ton-val').textContent = (amt * 0.0006).toFixed(4);
+                preview.style.display = 'block';
+            } else { preview.style.display = 'none'; }
+        }
+
+        document.getElementById('submitWithdrawalBtn').addEventListener('click', async () => {
+            const method = document.getElementById('wMethod').value;
+            const amt = parseInt(document.getElementById('withdrawalAmount').value) || 0;
+            const addr = document.getElementById('accountDetails').value.trim();
+
+            if(!addr || amt <= 0) return alert("Fill all fields.");
+            if(method === 'tonkeeper' && amt < 50) return alert("Min 50 Dia for Tonkeeper.");
+            if(method === 'binance' && amt < 100) return alert("Min 100 Dia for Binance.");
+            if(amt > currentUser.diamondBalance) return alert("Insufficient Diamonds.");
+
+            const btn = document.getElementById('submitWithdrawalBtn'); btn.disabled=true; btn.textContent="Submitting...";
+            try {
+                const res = await fetch(`${API_BASE}/withdraw`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id, method, amount: amt, address: addr }) });
+                const data = await res.json();
+                if(data.success) {
+                    currentUser.diamondBalance -= amt; updateUI();
+                    document.getElementById('withdrawModalOverlay').classList.remove('show');
+                    showSuccessModal("Request Sent!", "Withdrawal is pending.");
+                } else alert(data.error);
+            } catch(e) { alert("Server error."); }
+            btn.disabled=false; btn.textContent="Submit";
+        });
+
+        // ════════════════════════════════════════════
+        // UTILS & NAVIGATION
+        // ════════════════════════════════════════════
         async function runAdAndVerifyTime(btnId, adFunc) {
             if (isAdRunning) { alert("⚠️ Please wait, an ad is already playing."); return false; }
-            const btn = document.getElementById(btnId);
-            if (!btn) return false;
-            isAdRunning = true; btn.dataset.busy = "true"; btn.disabled = true;
-            const originalHTML = btn.innerHTML;
+            const btn = document.getElementById(btnId); if (!btn) return false;
+            isAdRunning = true; btn.dataset.busy = "true"; btn.disabled = true; const originalHTML = btn.innerHTML;
             const minDuration = 6000; const startTime = Date.now();
-
-            const timer = setInterval(() => {
-                const left = Math.ceil((minDuration - (Date.now() - startTime)) / 1000);
-                btn.textContent = left > 0 ? `Wait ${left}s...` : "Checking...";
-            }, 500);
+            const timer = setInterval(() => { const left = Math.ceil((minDuration - (Date.now() - startTime)) / 1000); btn.textContent = left > 0 ? `Wait ${left}s...` : "Checking..."; }, 500);
 
             return new Promise(async (resolve) => {
                 let closedEarly = false;
                 const visHandler = () => { if (!document.hidden && (Date.now() - startTime) < minDuration) closedEarly = true; };
                 document.addEventListener('visibilitychange', visHandler);
-                
-                try {
-                    const adStart = Date.now();
-                    if (adFunc) await adFunc();
-                    if ((Date.now() - adStart) > 500 && (Date.now() - adStart) < minDuration) closedEarly = true;
-                    const remaining = minDuration - (Date.now() - startTime);
-                    if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
-                } catch (e) { closedEarly = true; }
-
-                clearInterval(timer); document.removeEventListener('visibilitychange', visHandler);
-                isAdRunning = false; btn.dataset.busy = "false";
-
-                if (closedEarly) {
-                    alert("⚠️ Ad skipped or closed too early. No points awarded.");
-                    btn.innerHTML = originalHTML; btn.disabled = false; resolve(false);
-                } else { 
-                    btn.innerHTML = originalHTML;
-                    resolve(true); 
-                }
+                try { if (adFunc) await adFunc(); const remaining = minDuration - (Date.now() - startTime); if (remaining > 0) await new Promise(r => setTimeout(r, remaining)); } catch (e) { closedEarly = true; }
+                clearInterval(timer); document.removeEventListener('visibilitychange', visHandler); isAdRunning = false; btn.dataset.busy = "false";
+                if (closedEarly) { alert("⚠️ Ad skipped or closed too early. No points awarded."); btn.innerHTML = originalHTML; btn.disabled = false; resolve(false); } 
+                else { btn.innerHTML = originalHTML; btn.disabled = false; resolve(true); }
             });
         }
-
-        function getTodayDateString() { return new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }); }
-
-        async function checkDailyReset(user) {
-            const today = getTodayDateString();
-            if (user.lastResetDate !== today) {
-                const updates = { 
-                    adsWatchedAdsgramDaily: 0, 
-                    adsWatchedAdsgramSpecial: 0, 
-                    adsWatchedMonetag: 0, 
-                    adsWatchedGiga: 0, 
-                    dailyVideoMined: 0,
-                    lastResetDate: today 
-                };
-                Object.assign(user, updates);
-                try { await updateDoc(doc(db, 'users', user.id), updates); } catch (e) {}
-                
-                const savedLoot = localStorage.getItem('newtube_lootbox_' + user.id);
-                if (savedLoot) {
-                    try { 
-                        let parsedLoot = JSON.parse(savedLoot);
-                        parsedLoot.adsWatchedAdsgramDaily = 0;
-                        parsedLoot.adsWatchedAdsgramSpecial = 0;
-                        parsedLoot.adsWatchedMonetag = 0;
-                        parsedLoot.adsWatchedGiga = 0;
-                        localStorage.setItem('newtube_lootbox_' + user.id, JSON.stringify(parsedLoot));
-                        if (localAdData) {
-                            localAdData.adsWatchedAdsgramDaily = 0;
-                            localAdData.adsWatchedAdsgramSpecial = 0;
-                            localAdData.adsWatchedMonetag = 0;
-                            localAdData.adsWatchedGiga = 0;
-                        }
-                    } catch(e) {}
-                }
-                
-                // Reset Video Cache Daily
-                localStorage.removeItem('newtube_video_mine_' + user.id);
-                localVideoMined = 0;
-                vServerStartTime = 0;
-                vServerSignature = "";
-                
-                updateAdButtonStats(); updateVideoUI();
-                return true;
-            }
-            return false;
-        }
-
-        async function initializeUser(tgUser, referrerCode) {
-            const userId = String(tgUser.id);
-            const userRef = doc(db, 'users', userId);
-            const userSnap = await getDoc(userRef);
-            const today = getTodayDateString();
-
-            if (!userSnap.exists()) {
-                const data = {
-                    tonBalance: 0, pointBalance: 0, lifetimePointsEarned: 0, referralCount: 0, totalInvites: 0, spentReferrals: 0, completedTasks: [],
-                    createdAt: serverTimestamp(), telegramUsername: tgUser.username || 'N/A', isBanned: false, withdrawalCount: 0,
-                    lifetimeAdsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0,
-                    dailyVideoMined: 0, lastResetDate: today, welcomeBonusClaimed: false
-                };
-                if (referrerCode && referrerCode !== userId) {
-                    data.referredBy = referrerCode;
-                    try { await updateDoc(doc(db, 'users', referrerCode), { totalInvites: increment(1) }); } catch (e) {}
-                }
-                await setDoc(userRef, data);
-                currentUser = { id: userId, ...data };
-            } else {
-                currentUser = { id: userSnap.id, ...userSnap.data() };
-            }
-
-            if (currentUser.isBanned) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>`; return null; }
-            
-            await checkDailyReset(currentUser);
-
-            // Fetch Local Ad Data
-            const savedLoot = localStorage.getItem('newtube_lootbox_' + currentUser.id);
-            if (savedLoot) { try { localAdData = JSON.parse(savedLoot); } catch(e) {} }
-            updateLootboxUI();
-
-            // ── VIDEO MEMORY RESTORE ──
-            const savedVideo = localStorage.getItem('newtube_video_mine_' + currentUser.id);
-            if (savedVideo) {
-                try {
-                    let vData = JSON.parse(savedVideo);
-                    localVideoMined = vData.mined || 0;
-                    vServerStartTime = vData.startTime || 0;
-                    vServerSignature = vData.signature || "";
-                } catch(e) {}
-            } else {
-                localVideoMined = 0;
-                vServerStartTime = 0;
-                vServerSignature = "";
-            }
-            updateVideoUI();
-
-            updateBalanceUI();
-            document.querySelector('#profile-id-display span').textContent = currentUser.id;
-            document.getElementById('modalReferralLinkInput').value = `https://t.me/NewTube12_bot/TonFREE?startapp=${userId}`;
-            updateAdButtonStats();
-            fetchVideosFromFirebase();
-        }
-
-        function updateAdButtonStats() {
-            if (!currentUser) return;
-            const upd = (btnId, limitId, dbCount, localCount, max) => {
-                const btn = document.getElementById(btnId);
-                const lim = document.getElementById(limitId);
-                if(!btn || !lim) return;
-                
-                const totalCount = (dbCount || 0) + (localCount || 0);
-                lim.textContent = `${totalCount}/${max}`;
-                
-                if (btn.dataset.busy === "true") return;
-                if (totalCount >= max) { btn.disabled = true; btn.textContent = "Done"; } 
-                else { btn.disabled = false; btn.textContent = "Watch"; btn.style.background = ''; btn.style.color = ''; }
-            };
-
-            upd('btn-watch-adsgram-daily',   'limit-adsgram-daily',   currentUser.adsWatchedAdsgramDaily,   localAdData.adsWatchedAdsgramDaily,   AD_CONFIG.adsgramDaily.limit);
-            upd('btn-watch-adsgram-special', 'limit-adsgram-special', currentUser.adsWatchedAdsgramSpecial, localAdData.adsWatchedAdsgramSpecial, AD_CONFIG.adsgramSpecial.limit);
-            upd('btn-watch-monetag',         'limit-monetag',         currentUser.adsWatchedMonetag,        localAdData.adsWatchedMonetag,        AD_CONFIG.monetag.limit);
-            upd('btn-watch-giga',            'limit-giga',            currentUser.adsWatchedGiga,           localAdData.adsWatchedGiga,           AD_CONFIG.giga.limit);
-        }
-
-        function updateBalanceUI() {
-            if(!currentUser) return;
-            const pts = currentUser.pointBalance || 0;
-            const ton = pts * POINTS_TO_TON_RATE;
-            document.getElementById('home-ton').textContent = ton.toFixed(4);
-            document.getElementById('home-pts').textContent = Math.floor(pts);
-            document.getElementById('home-life').textContent = `${Math.floor(currentUser.lifetimePointsEarned || 0)}`;
-            document.getElementById('home-normal-ref').textContent = currentUser.totalInvites || 0;
-            document.getElementById('home-valid-ref').textContent = currentUser.referralCount || 0;
-            const wEl = document.getElementById('withdrawPointBalance');
-            if (wEl) wEl.textContent = `${ton.toFixed(4)} TON`;
-        }
-
-        const handleAdClick = async (type, btnId, maxLimit, adFunc) => {
-            await checkDailyReset(currentUser);
-
-            if (localAdData.unclaimedPoints >= 500) {
-                alert("⚠️ Lootbox is full (Max 500 Pts). Please claim it first!");
-                return;
-            }
-
-            const countName = `adsWatched${type.charAt(0).toUpperCase() + type.slice(1)}`;
-            const totalCount = (currentUser[countName] || 0) + (localAdData[countName] || 0);
-            
-            if (totalCount >= maxLimit) return;
-            const ok = await runAdAndVerifyTime(btnId, adFunc);
-            
-            if (ok) {
-                const min = AD_CONFIG[type].min;
-                const max = AD_CONFIG[type].max;
-                let reward = Math.floor(Math.random() * (max - min + 1)) + min;
-                
-                if (localAdData.unclaimedPoints + reward > 500) {
-                    reward = 500 - localAdData.unclaimedPoints;
-                }
-
-                localAdData.unclaimedPoints += reward;
-                localAdData.adsWatched += 1;
-                localAdData[countName] = (localAdData[countName] || 0) + 1;
-                
-                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                
-                showSuccessModal("Ad Watched! 🎁", `+${reward} Points added to Lootbox`);
-                
-                updateLootboxUI();
-                updateAdButtonStats();
-            }
-        };
-
-        const attachAdListener = (id, type, maxLimit, adFunc) => {
-            const btn = document.getElementById(id);
-            if(btn) {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleAdClick(type, id, maxLimit, adFunc);
-                });
-            }
-        };
-
-        attachAdListener('btn-watch-adsgram-daily', 'adsgramDaily', AD_CONFIG.adsgramDaily.limit, showAdsgramDailyAd);
-        attachAdListener('btn-watch-adsgram-special', 'adsgramSpecial', AD_CONFIG.adsgramSpecial.limit, showAdsgramSpecialAd);
-        attachAdListener('btn-watch-monetag', 'monetag', AD_CONFIG.monetag.limit, showMonetagAd);
-        attachAdListener('btn-watch-giga', 'giga', AD_CONFIG.giga.limit, showGigaPubAd);
-
-        // ════════════════════════════════════════════
-        // VERCEL SECURE VIDEO MINING LOGIC (UPDATED)
-        // ════════════════════════════════════════════
-
-        window.ytApiReady = false;
-        
-        // YouTube API ডাইনামিক লোড
-        const ytScriptTag = document.createElement('script');
-        ytScriptTag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(ytScriptTag, firstScriptTag);
-
-        window.onYouTubeIframeAPIReady = function() {
-            window.ytApiReady = true;
-        };
-
-        async function onPlayerStateChange(event) {
-            if (event.data == YT.PlayerState.PLAYING) {
-                isVideoPlaying = true;
-                
-                if (vServerStartTime === 0) {
-                    try {
-                        const res = await fetch(`${VERCEL_API_BASE}/api/videoStart`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ userId: currentUser.id })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            vServerStartTime = data.startTime;
-                            vServerSignature = data.signature;
-                            
-                            // ── SAVE SESSION INSTANTLY ──
-                            localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ 
-                                mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature 
-                            }));
-                        } else {
-                            isVideoPlaying = false;
-                            if(ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
-                            alert("Server error. Please reload app.");
-                        }
-                    } catch (e) {
-                        isVideoPlaying = false;
-                        if(ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
-                        alert("Connection failed.");
-                    }
-                }
-
-            } else {
-                isVideoPlaying = false;
-            }
-        }
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && isVideoPlaying && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
-                ytPlayer.pauseVideo();
-            }
-        });
-
-        // স্মার্ট ভিডিও প্লেয়ার ফাংশন (লুকানো অবস্থায় আটকে থাকবে না)
-        window.playYtVideo = function(vId) {
-            if (!window.ytApiReady) return alert("YouTube Player is loading, please wait...");
-            if (localVideoMined >= 25) return alert("Box is full! Claim your 25 points first.");
-            let dailyMined = currentUser.dailyVideoMined || 0;
-            if (dailyMined + localVideoMined >= 250) return alert("Daily limit reached! Come back tomorrow.");
-
-            if (!ytPlayer) {
-                // প্রথমবার ক্লিক করলে প্লেয়ার তৈরি হবে
-                ytPlayer = new YT.Player('ytplayer', {
-                    height: '100%', width: '100%', videoId: vId,
-                    playerVars: { 'playsinline': 1, 'rel': 0, 'modestbranding': 1 },
-                    events: { 'onStateChange': onPlayerStateChange }
-                });
-            } else {
-                // দ্বিতীয়বার ক্লিক করলে শুধু ভিডিও চেঞ্জ হবে
-                ytPlayer.loadVideoById(vId);
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        function updateVideoUI() {
-            if(!currentUser) return;
-            const display = document.getElementById('videoMinedDisplay');
-            const prog = document.getElementById('videoMiningProgress');
-            const btn = document.getElementById('claimVideoPtsBtn');
-            const limitDisplay = document.getElementById('videoDailyLimitDisplay');
-            
-            display.textContent = `${localVideoMined.toFixed(1)} Pts`;
-            prog.style.width = `${(localVideoMined / 25) * 100}%`;
-            
-            let dailyMined = currentUser.dailyVideoMined || 0;
-            limitDisplay.textContent = `Daily: ${(dailyMined + localVideoMined).toFixed(1)} / 250 Pts`;
-            
-            if (localVideoMined >= 5) {
-                btn.disabled = false;
-                btn.classList.remove('outline');
-                btn.innerHTML = '<i class="fas fa-bolt"></i> Claim';
-                if (localVideoMined >= 25) {
-                    btn.innerHTML = '<i class="fas fa-box"></i> Full! Claim';
-                    btn.style.background = 'var(--red)';
-                    btn.style.color = '#fff';
-                    btn.style.border = 'none';
-                } else {
-                    btn.style.background = 'var(--secondary)';
-                    btn.style.color = '#fff';
-                    btn.style.border = 'none';
-                }
-            } else {
-                btn.disabled = true;
-                btn.classList.add('outline');
-                btn.style.background = '';
-                btn.style.color = '';
-                btn.style.border = '';
-                btn.innerHTML = `<i class="fas fa-lock"></i> Min 5 Pts`;
-            }
-        }
-
-        // The Mining Loop
-        setInterval(() => {
-            if (!isVideoPlaying || !currentUser || vServerStartTime === 0) return;
-            
-            let dailyMined = currentUser.dailyVideoMined || 0;
-            if (dailyMined + localVideoMined >= 250) {
-                if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
-                updateVideoUI();
-                alert("Daily Video Limit (250 Pts) Reached! Come back tomorrow.");
-                return;
-            }
-
-            if (localVideoMined >= 25) {
-                if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
-                updateVideoUI();
-                return; // Box full
-            }
-
-            videoPlaySeconds++;
-            videoWatchTotalSeconds++; // মোট watch time track
-
-            // ── MONETAG INTERSTITIAL: প্রতি 10 মিনিটে একবার show করবে ──
-            if (videoWatchTotalSeconds - lastMonetagAdShownAt >= MONETAG_AD_INTERVAL_SECONDS) {
-                lastMonetagAdShownAt = videoWatchTotalSeconds;
-                try {
-                    if (typeof show_9442539 === 'function') {
-                        show_9442539({
-                            type: 'inApp',
-                            inAppSettings: {
-                                frequency: 2,
-                                capping: 0.1,
-                                interval: 30,
-                                timeout: 5,
-                                everyPage: false
-                            }
-                        });
-                    }
-                } catch(e) { /* silent fail */ }
-            }
-
-            if (videoPlaySeconds >= 15) { 
-                localVideoMined = Math.round((localVideoMined + 0.1) * 10) / 10; 
-                videoPlaySeconds = 0;
-                updateVideoUI();
-                
-                // ── SAVE TO LOCAL STORAGE EVERY 15 SECS ──
-                localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ 
-                    mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature 
-                }));
-            }
-        }, 1000);
-
-        // Vercel Secure Claim System (Video)
-        document.getElementById('claimVideoPtsBtn').addEventListener('click', async () => {
-            if (localVideoMined < 5) return;
-            if (vServerStartTime === 0 || !vServerSignature) return alert("Security token missing. Refresh app.");
-
-            const btn = document.getElementById('claimVideoPtsBtn');
-            const amtToClaim = localVideoMined;
-            
-            btn.dataset.busy = "true";
-            
-            const adFunctions = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd, showGigaPubAd];
-            const randomAdFunc = adFunctions[Math.floor(Math.random() * adFunctions.length)];
-            const ok = await runAdAndVerifyTime('claimVideoPtsBtn', randomAdFunc); 
-            
-            if (ok) {
-                btn.disabled = true; btn.textContent = "Verifying...";
-                try {
-                    const res = await fetch(`${VERCEL_API_BASE}/api/videoClaim`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            userId: currentUser.id,
-                            startTime: vServerStartTime,
-                            signature: vServerSignature,
-                            claimedPoints: amtToClaim
-                        })
-                    });
-                    
-                    const data = await res.json();
-                    
-                    if (data.success || data.ok) {
-                        currentUser.pointBalance = (currentUser.pointBalance || 0) + data.pointsAdded;
-                        currentUser.lifetimePointsEarned = (currentUser.lifetimePointsEarned || 0) + data.pointsAdded;
-                        currentUser.dailyVideoMined = (currentUser.dailyVideoMined || 0) + data.pointsAdded;
-
-                        showSuccessModal("Decrypted!", `+${data.pointsAdded} Points added securely!`);
-                        
-                        localVideoMined = 0;
-                        vServerStartTime = 0;
-                        vServerSignature = "";
-                        videoPlaySeconds = 0;
-                        
-                        // ── CLEAR CACHE AFTER CLAIM ──
-                        localStorage.removeItem('newtube_video_mine_' + currentUser.id);
-                        
-                        updateBalanceUI(); 
-                        updateVideoUI();
-                        
-                        if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
-                            ytPlayer.playVideo();
-                        }
-                    } else {
-                        alert("Verification Failed: " + (data.message || data.error));
-                        
-                        localVideoMined = 0;
-                        vServerStartTime = 0;
-                        vServerSignature = "";
-                        
-                        // ── CLEAR CACHE ON ERROR ──
-                        localStorage.removeItem('newtube_video_mine_' + currentUser.id);
-                        
-                        updateVideoUI();
-                    }
-                } catch(e) {
-                    alert("Server connection failed. Try again.");
-                }
-            }
-            btn.dataset.busy = "false";
-            updateVideoUI(); 
-        });
-
-        // Fetch Videos from Firebase directly
-        async function fetchVideosFromFirebase() {
-            const container = document.getElementById('video-list-container');
-            container.innerHTML = '<div class="loader"></div>';
-            try {
-                const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
-                container.innerHTML = '';
-                if(snap.empty) { 
-                    container.innerHTML = '<p style="text-align:center; padding:18px; color:var(--text2); font-size:0.85rem;">No videos available right now.</p>'; 
-                    return; 
-                }
-                snap.forEach(doc => {
-                    const v = doc.data();
-                    container.innerHTML += `
-                        <div class="video-table-row" onclick="window.playYtVideo('${v.videoId}')">
-                            <div class="video-row-info">
-                                <div class="video-row-thumb">
-                                    <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" alt="${v.title}">
-                                    <div class="video-row-thumb-overlay"><i class="fas fa-play"></i></div>
-                                </div>
-                                <div class="video-row-title">${v.title}</div>
-                            </div>
-                            <div class="video-row-pts"><i class="fas fa-bolt"></i> 24 Pts/Hr</div>
-                        </div>
-                    `;
-                });
-            } catch(e) { 
-                container.innerHTML = '<p style="text-align:center; padding:18px; color:var(--red); font-size:0.85rem;">Failed to load videos.</p>'; 
-            }
-        }
-
-        // ════════════════════════════════════════════
-        // WITHDRAW LOGIC
-        // ════════════════════════════════════════════
-        
-        function getRequiredRefs(amount) {
-            return Math.ceil(amount / 1500);
-        }
-
-        document.getElementById('withdraw-modal-btn').addEventListener('click', () => { 
-            document.getElementById('withdrawModalOverlay').classList.add('show'); 
-            updateBalanceUI(); 
-            
-            document.getElementById('withdrawalAmount').value = '';
-            document.getElementById('realtime-ton-display').style.display = 'none';
-            document.getElementById('requiredRefsDisplay').innerHTML = 'Enter amount to verify';
-            
-            const tierInfo = document.querySelector('.tier-info');
-            
-            tierInfo.innerHTML = `
-                <div style="font-size:0.8rem; color:var(--text2); margin-bottom:10px; font-weight:700;">REQUIREMENTS (REFERRAL MODE)</div>
-                <div class="tier-row"><span class="tier-range">Base Rule</span><span class="tier-ref">1 Ref / 1,500 Pts</span></div>
-                <div class="tier-row"><span class="tier-range">Example: 1,500 Pts</span><span class="tier-ref">1 Valid Ref</span></div>
-                <div class="tier-row"><span class="tier-range">Example: 3,000 Pts</span><span class="tier-ref">2 Valid Refs</span></div>
-                <div class="tier-row"><span class="tier-range">Example: 7,500 Pts</span><span class="tier-ref">5 Valid Refs</span></div>
-            `;
-        });
-
-        document.getElementById('withdrawalAmount').addEventListener('input', (e) => {
-            const amt = parseFloat(e.target.value);
-            const preview = document.getElementById('realtime-ton-display');
-            const refsDisplay = document.getElementById('requiredRefsDisplay');
-
-            if (amt >= 1500) {
-                document.getElementById('calc-ton-val').textContent = (amt * POINTS_TO_TON_RATE).toFixed(4);
-                preview.style.display = 'block';
-                
-                const needed = getRequiredRefs(amt);
-                const avail = (currentUser.referralCount || 0) - (currentUser.spentReferrals || 0);
-                const color = avail >= needed ? 'var(--green)' : 'var(--red)';
-                refsDisplay.innerHTML = `Need <strong style="color:${color};font-size:1.15rem;">${needed}</strong> Valid Ref${needed>1?'s':''} &nbsp;|&nbsp; You have <strong style="color:${color};">${avail}</strong>`;
-            } else {
-                preview.style.display = 'none'; 
-                refsDisplay.innerHTML = 'Enter amount to see requirements (Min: 1500)'; 
-            }
-        });
-
-        document.getElementById('submitWithdrawalBtn').addEventListener('click', async (e) => {
-            e.preventDefault(); if (isSubmittingWithdrawal) return;
-
-            const amount  = parseFloat(document.getElementById('withdrawalAmount').value);
-            const details = document.getElementById('accountDetails').value.trim();
-            const today = getTodayDateString();
-
-            if (!details || isNaN(amount) || amount < 1500) return alert('Min 1,500 Pts and Tonkeeper address required.');
-            if (amount > 50000) return alert('Maximum withdrawal limit per transaction is 50,000 Pts.');
-            if ((currentUser.pointBalance || 0) < amount) return alert('Insufficient Points.');
-            if (currentUser.lastWithdrawDate === today) return alert('You can only withdraw 1 time per day.');
-
-            let refsNeeded = getRequiredRefs(amount);
-            const refsAvail  = (currentUser.referralCount || 0) - (currentUser.spentReferrals || 0);
-            
-            if (refsAvail < refsNeeded) return alert(`Need ${refsNeeded} Valid Ref${refsNeeded>1?'s':''} for this amount.`);
-            
-            if (!confirm(`Withdraw ${amount} Pts?\nCost: ${refsNeeded} Valid Referral${refsNeeded>1?'s':''}.`)) return;
-
-            isSubmittingWithdrawal = true;
-
-            try {
-                const walletCheckSnap = await getDocs(query(collection(db, 'withdrawals'), where('details', '==', details), limit(5)));
-                let usedByAnotherUser = false;
-                walletCheckSnap.forEach(doc => {
-                    if (doc.data().userId !== currentUser.id) usedByAnotherUser = true;
-                });
-                if (usedByAnotherUser) {
-                    isSubmittingWithdrawal = false;
-                    return alert('❌ This Tonkeeper address is already used by another account. One wallet per account allowed!');
-                }
-            } catch(err) { console.error("Wallet check error", err); }
-
-            try {
-                await runTransaction(db, async (t) => {
-                    const userRef = doc(db, 'users', currentUser.id);
-                    const uData = (await t.get(userRef)).data();
-                    
-                    if (uData.lastWithdrawDate === today) throw new Error("Already withdrawn today.");
-                    if (uData.pointBalance < amount) throw new Error("Insufficient Points.");
-                    
-                    const serverAvail = (uData.referralCount || 0) - (uData.spentReferrals || 0);
-                    if (serverAvail < refsNeeded) throw new Error("Requirements not met on server (Refs).");
-                    
-                    let updates = {
-                        pointBalance: increment(-amount),
-                        withdrawalCount: increment(1),
-                        lastWithdrawDate: today,
-                        spentReferrals: increment(refsNeeded)
-                    };
-
-                    t.set(doc(collection(db, 'withdrawals')), { 
-                        userId: currentUser.id, 
-                        method: 'Tonkeeper', 
-                        details, 
-                        status: 'pending', 
-                        createdAt: serverTimestamp(), 
-                        pointAmount: amount, 
-                        tonAmount: amount * POINTS_TO_TON_RATE, 
-                        refsUsed: refsNeeded
-                    });
-                    t.update(userRef, updates);
-                });
-
-                document.getElementById('withdrawalAmount').value = ''; 
-                document.getElementById('accountDetails').value = '';
-                document.getElementById('realtime-ton-display').style.display = 'none'; 
-                document.getElementById('withdrawModalOverlay').classList.remove('show');
-                showSuccessModal("Request Sent! ✅", `Withdrawal pending review.`);
-
-                currentUser.pointBalance = (currentUser.pointBalance || 0) - amount; 
-                currentUser.withdrawalCount = (currentUser.withdrawalCount || 0) + 1;
-                currentUser.lastWithdrawDate = today;
-                currentUser.spentReferrals = (currentUser.spentReferrals || 0) + refsNeeded;
-                
-                updateBalanceUI();
-            } catch (err) { alert(err.message); } finally { isSubmittingWithdrawal = false; }
-        });
-
-        // --- HISTORY ---
-        document.getElementById('history-btn').addEventListener('click', async () => {
-            document.getElementById('historyModalOverlay').classList.add('show');
-            const container = document.getElementById('combined-history-list');
-            container.innerHTML = '<div class="loader"></div>';
-            try {
-                const [wSnap, tSnap] = await Promise.all([ getDocs(query(collection(db, "withdrawals"), where("userId", "==", currentUser.id))), getDocs(query(collection(db, "transactions"), where("userId", "==", currentUser.id))) ]);
-                let list = [];
-                wSnap.forEach(d => list.push({ ...d.data(), isW: true,  time: d.data().createdAt }));
-                tSnap.forEach(d => list.push({ ...d.data(), isW: false, time: d.data().createdAt }));
-                list.sort((a, b) => (b.time?.toMillis() || 0) - (a.time?.toMillis() || 0));
-                list = list.slice(0, 20);
-
-                if (!list.length) { container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text2);">No history yet.</p>'; return; }
-
-                container.innerHTML = list.map(d => {
-                    const date = d.time ? d.time.toDate().toLocaleDateString() : '';
-                    let title, amt, color, icon;
-                    if (d.isW || d.type === 'Withdrawal') {
-                        title = `Withdraw (${d.status || 'pending'})`; amt = `-${d.pointAmount} Pts`; color = 'var(--red)'; icon = '💸';
-                    } else {
-                        title = d.type || 'Reward'; amt = `+${d.pointAmount} Pts`; color = 'var(--green)'; icon = '✨';
-                    }
-                    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-                        <span style="font-size:1.4rem;">${icon}</span><div style="flex:1;"><strong style="display:block;color:var(--text);font-size:0.9rem;">${title}</strong><small style="color:var(--text2);font-size:0.75rem;">${date}</small></div>
-                        <strong style="color:${color};font-size:0.95rem;">${amt}</strong></div>`;
-                }).join('');
-            } catch (e) { container.innerHTML = '<p style="text-align:center;color:var(--red);">Failed to load.</p>'; }
-        });
-
-        // --- PROMO CODE ---
-        document.getElementById('claimPromoBtn').addEventListener('click', async () => {
-            const code = document.getElementById('promoCodeInput').value.trim(); if (!code) return;
-            const ok = await runAdAndVerifyTime('claimPromoBtn', showAdsgramDailyAd); if (!ok) return;
-            const btn = document.getElementById('claimPromoBtn'); btn.disabled = true; btn.textContent = "Checking...";
-            try {
-                await runTransaction(db, async (t) => {
-                    const promoRef = doc(db, 'promo_codes', code); const p = (await t.get(promoRef)).data();
-                    if (!p || !p.isActive || p.currentUses >= p.maxUses || p.usersClaimed?.includes(currentUser.id)) throw new Error("Invalid or already used code.");
-                    t.update(doc(db, 'users', currentUser.id), { pointBalance: increment(p.rewardAmount), lifetimePointsEarned: increment(p.rewardAmount) });
-                    t.update(promoRef, { currentUses: increment(1), usersClaimed: arrayUnion(currentUser.id) });
-                    return p.rewardAmount;
-                }).then(amt => {
-                    document.getElementById('promoModalOverlay').classList.remove('show');
-                    showSuccessModal("Code Claimed!", `+${amt} Points added`);
-                    document.getElementById('promoCodeInput').value = '';
-                    currentUser.pointBalance = (currentUser.pointBalance || 0) + amt; currentUser.lifetimePointsEarned = (currentUser.lifetimePointsEarned || 0) + amt;
-                    updateBalanceUI();
-                });
-            } catch (e) { alert(e.message); } finally { btn.disabled = false; btn.textContent = "Claim Reward"; }
-        });
-
-        document.getElementById('profile-id-display').addEventListener('click', () => { navigator.clipboard.writeText(currentUser.id); showSuccessModal("Copied!", "User ID copied."); });
-        document.getElementById('modalCopyReferralLinkBtn').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('modalReferralLinkInput').value); showSuccessModal("Copied!", "Referral link copied."); });
-        document.getElementById('action-invite').addEventListener('click', () => document.getElementById('inviteModalOverlay').classList.add('show'));
-        document.getElementById('action-promo-code').addEventListener('click', () => document.getElementById('promoModalOverlay').classList.add('show'));
-        document.querySelectorAll('.close-modal-btn').forEach(b => b.addEventListener('click', e => e.target.closest('.modal-overlay').classList.remove('show')));
 
         document.querySelectorAll('.nav-item').forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
-
                 const isGoingToVideo = link.dataset.tabTarget === '#video-content';
-                const isLeavingVideo = !isGoingToVideo && document.body.classList.contains('video-active');
-
-                // ── VIDEO PAUSE WHEN LEAVING VIDEO TAB ──
-                if (isLeavingVideo) {
-                    if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
-                        ytPlayer.pauseVideo();
-                    }
-                    isVideoPlaying = false;
-                }
-
+                if (!isGoingToVideo && isVideoPlaying && ytPlayer) ytPlayer.pauseVideo();
                 document.querySelectorAll('.nav-item, .content-section').forEach(el => el.classList.remove('active'));
                 link.classList.add('active'); document.querySelector(link.dataset.tabTarget).classList.add('active');
-                
-                if (link.dataset.tabTarget === '#task-content') { tasksCacheChannel = null; tasksCachePartner = null; fetchAndRenderTasks(activeTaskTab); }
-                if (link.dataset.tabTarget === '#ads-content') updateAdButtonStats();
-                document.body.classList.toggle('video-active', isGoingToVideo);
             });
         });
 
-        function showSuccessModal(title, msg) {
-            document.getElementById('successModalTitle').textContent = title;
-            document.getElementById('successModalMessage').innerHTML = msg;
-            document.getElementById('successModalOverlay').classList.add('show');
-            setTimeout(() => document.getElementById('successModalOverlay').classList.remove('show'), 3000);
-        }
+        function showSuccessModal(title, msg) { document.getElementById('successModalTitle').textContent = title; document.getElementById('successModalMessage').innerHTML = msg; document.getElementById('successModalOverlay').classList.add('show'); setTimeout(() => document.getElementById('successModalOverlay').classList.remove('show'), 3000); }
+        document.getElementById('withdraw-modal-btn').addEventListener('click', () => { document.getElementById('withdrawModalOverlay').classList.add('show'); calcWithdrawPreview(); });
+        document.getElementById('action-invite').addEventListener('click', () => document.getElementById('inviteModalOverlay').classList.add('show'));
+        document.getElementById('action-promo-code').addEventListener('click', () => document.getElementById('promoModalOverlay').classList.add('show'));
+        document.querySelectorAll('.close-modal-btn').forEach(b => b.addEventListener('click', e => e.target.closest('.modal-overlay').classList.remove('show')));
 
-        // --- TASK SYSTEM ---
-        const TASK_API_BASE = 'https://new-ton-8835.vercel.app/api'; 
-        let activeTaskTab = 'channel'; let tasksCacheChannel = null; let tasksCachePartner = null;
-
-        document.getElementById('task-content').addEventListener('click', async (e) => {
-            const tabBtn = e.target.closest('[data-task-tab]');
-            if (tabBtn) {
-                activeTaskTab = tabBtn.dataset.taskTab;
-                ['channel','partner'].forEach(t => {
-                    document.getElementById(`tab-${t}`).classList.toggle('active', t === activeTaskTab);
-                    document.getElementById(`task-list-${t}`).style.display = t === activeTaskTab ? 'grid' : 'none';
-                    if (t === activeTaskTab && !(t === 'channel' ? tasksCacheChannel : tasksCachePartner)) fetchAndRenderTasks(t);
-                }); return;
-            }
-
-            const button = e.target.closest('.task-button');
-            if (!button || button.disabled) return;
-            const { taskId, taskUrl, channelId, category, state } = button.dataset;
-
-            if (state === 'start') {
-                if (taskUrl) tg.openLink(taskUrl);
-                
-                button.disabled = true; let c = 5; button.textContent = `Wait ${c}s`;
-                
-                const iv = setInterval(() => {
-                    c--; if (c > 0) { button.textContent = `Wait ${c}s`; }
-                    else {
-                        clearInterval(iv); button.disabled = false; button.textContent = category === 'partner' ? '✅ Claim' : 'Verify';
-                        if (category === 'partner') { button.style.background = 'var(--green)'; button.style.color = '#000'; }
-                        button.dataset.state = 'claim';
-                    }
-                }, 1000);
-            } else if (state === 'claim') {
-                button.disabled = true; button.textContent = 'Checking...';
-                try {
-                    if (category === 'channel' && channelId) {
-                        try {
-                            const res = await fetch(`${TASK_API_BASE}/checkMember?userId=${currentUser.id}&channel=${encodeURIComponent(channelId)}`);
-                            const j = await res.json();
-                            if (!j.joined) { alert('⚠️ Join the channel/group first, then tap Verify!'); button.disabled = false; button.textContent = 'Verify'; return; }
-                        } catch(e) { button.disabled = false; button.textContent = 'Verify'; return; }
-                    }
-                    
-                    const reward = 12; // FIXED AT 12 POINTS
-                    
-                    const batch = writeBatch(db);
-                    batch.update(doc(db, 'users', currentUser.id), { completedTasks: arrayUnion(taskId), pointBalance: increment(reward), lifetimePointsEarned: increment(reward) });
-                    batch.update(doc(db, 'tasks', taskId), { completionCount: increment(1) });
-                    await batch.commit();
-                    
-                    currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
-                    currentUser.pointBalance = (currentUser.pointBalance || 0) + reward;
-                    updateBalanceUI(); showSuccessModal('Task Done!', `+${reward} Points`); button.closest('[data-task-card]').remove();
-                } catch (err) { button.disabled = false; button.textContent = 'Verify'; }
-            }
+        // TASKS (Simplified for API demo)
+        document.querySelectorAll('.task-button').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if(btn.dataset.state === 'start') {
+                    if(btn.dataset.taskUrl) tg.openLink(btn.dataset.taskUrl);
+                    btn.disabled = true; let c = 5; btn.textContent = `Wait ${c}s`;
+                    const iv = setInterval(() => { c--; if(c>0) btn.textContent = `Wait ${c}s`; else { clearInterval(iv); btn.disabled = false; btn.textContent = 'Verify'; btn.dataset.state = 'claim'; } }, 1000);
+                } else if(btn.dataset.state === 'claim') {
+                    btn.disabled = true; btn.textContent = 'Checking...';
+                    try {
+                        const res = await fetch(`${API_BASE}/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id, action: 'socialTask', amount: 12 }) });
+                        const data = await res.json();
+                        if(data.success) { currentUser.goldBalance = data.newGoldBalance; updateUI(); showSuccessModal('Task Done!', '+12 Gold'); btn.closest('.card').remove(); }
+                    } catch(err) { btn.disabled = false; btn.textContent = 'Verify'; }
+                }
+            });
         });
 
-        async function fetchAndRenderTasks(category = 'channel') {
-            const container = document.getElementById(`task-list-${category}`);
-            container.innerHTML = '<div class="loader"></div>';
-            try {
-                const q = query(collection(db,'tasks'), where('isApproved','==',true), where('category','==',category), orderBy('createdAt','desc'), limit(30));
-                const snap = await getDocs(q);
-                if (category === 'channel') tasksCacheChannel = snap; else tasksCachePartner = snap;
-                container.innerHTML = ''; let count = 0;
-                snap.forEach(docSnap => {
-                    const task = docSnap.data();
-                    if (currentUser.completedTasks?.includes(docSnap.id) || ((task.limit||0)>0 && (task.completionCount||0)>=task.limit)) return;
-                    
-                    const card = document.createElement('div'); card.setAttribute('data-task-card', docSnap.id);
-                    card.className = 'card'; card.style.padding = '18px';
-                    
-                    if (category === 'channel') {
-                        card.innerHTML = `
-                            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-                                <div style="flex:1;"><div style="font-weight:700;font-size:0.95rem;color:#fff;"><i class="fab fa-telegram-plane" style="color:var(--primary);"></i> ${task.title}</div><div style="color:var(--green);font-size:0.85rem;margin-top:4px;">+12 Points</div></div>
-                                <button class="btn outline task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-channel-id="${task.channelId||''}" data-category="${category}" data-state="start" style="padding:10px 14px;width:auto;">Join</button>
-                            </div>`;
-                    } else {
-                        card.innerHTML = `
-                            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                                <div style="width:40px;height:40px;background:var(--primary-dim);border-radius:12px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-robot" style="color:var(--primary);font-size:1.1rem;"></i></div>
-                                <div><div style="font-weight:800;color:#fff;font-size:1rem;">${task.title}</div><div style="color:var(--green);font-size:0.85rem;margin-top:2px;">+12 Points</div></div>
-                            </div>
-                            <button class="btn task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-category="${category}" data-state="start">🚀 Complete Task</button>`;
-                    }
-                    container.appendChild(card); count++;
-                });
-                if (!count) container.innerHTML = '<p style="text-align:center;color:var(--text2);">No tasks available.</p>';
-            } catch (err) { container.innerHTML = `<p style="text-align:center;color:var(--red);">Failed to load.</p>`; }
-        }
+        window.onload = initApp;
 
-        // --- VERIFICATION ---
-        async function checkMembershipAndEnforce() {
-            try {
-                const res  = await fetch(`https://new-ton-8835.vercel.app/api/checkJoin?userId=${currentUser.id}`);
-                const data = await res.json();
-                
-                if (!data.joined) {
-                    document.getElementById('activationModalOverlay').classList.add('show');
-                }
-            } catch (e) { document.getElementById('activationModalOverlay').classList.add('show'); }
-        }
-
-        document.getElementById('activateAccountBtn').addEventListener('click', async () => {
-            document.getElementById('activateAccountBtn').textContent = "Verifying...";
-            try {
-                const res  = await fetch(`https://new-ton-8835.vercel.app/api/checkJoin?userId=${currentUser.id}`);
-                const data = await res.json();
-                
-                if (data.joined) {
-                    alert("Verified ✅");
-                    document.getElementById('activationModalOverlay').classList.remove('show');
-                    
-                    if (!currentUser.welcomeBonusClaimed) {
-                        try {
-                            await updateDoc(doc(db, 'users', currentUser.id), { pointBalance: increment(10), lifetimePointsEarned: increment(10), welcomeBonusClaimed: true });
-                            currentUser.pointBalance = (currentUser.pointBalance || 0) + 10; 
-                            currentUser.welcomeBonusClaimed = true; 
-                            updateBalanceUI();
-                            showSuccessModal('🎁 Welcome Bonus!', `+10 Points added!`);
-                        } catch (e) {}
-                    }
-                } else {
-                    alert("Join required ❌\nPlease join the Channel & Group.");
-                }
-            } catch (e) {
-                alert("Error verifying account! Try again.");
-            }
-            document.getElementById('activateAccountBtn').textContent = "Verify Access";
-        });
-
-        // --- MAIN INIT ---
-        async function main() {
-            if (!tg.initDataUnsafe?.user) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;">Open in Telegram.</h3>`; return; }
-            tg.ready(); tg.expand(); tg.setHeaderColor('#090310');
-            await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
-            if(currentUser && !currentUser.isBanned) {
-                await checkMembershipAndEnforce();
-            }
-        }
-        main();
-
-        (function spawnParticles() {
-            const container = document.getElementById('particles');
-            const colors = ['rgba(253,224,71,0.4)', 'rgba(217,70,239,0.3)', 'rgba(45,212,191,0.3)'];
-            for (let i = 0; i < 20; i++) {
-                const p = document.createElement('div'); p.className = 'particle';
-                const size = Math.random() * 3 + 1.5;
-                p.style.cssText = `width:${size}px; height:${size}px; left:${Math.random()*100}%; background:${colors[Math.floor(Math.random()*colors.length)]}; animation-duration:${Math.random()*15+10}s; animation-delay:${Math.random()*-20}s; box-shadow: 0 0 ${size*4}px ${colors[Math.floor(Math.random()*colors.length)]};`;
-                container.appendChild(p);
-            }
-        })();
+        (function spawnParticles() { const container = document.getElementById('particles'); const colors = ['rgba(253,224,71,0.4)', 'rgba(217,70,239,0.3)', 'rgba(45,212,191,0.3)']; for (let i = 0; i < 20; i++) { const p = document.createElement('div'); p.className = 'particle'; const size = Math.random() * 3 + 1.5; p.style.cssText = `width:${size}px; height:${size}px; left:${Math.random()*100}%; background:${colors[Math.floor(Math.random()*colors.length)]}; animation-duration:${Math.random()*15+10}s; animation-delay:${Math.random()*-20}s; box-shadow: 0 0 ${size*4}px ${colors[Math.floor(Math.random()*colors.length)]};`; container.appendChild(p); } })();
     </script>
 </body>
 </html>
