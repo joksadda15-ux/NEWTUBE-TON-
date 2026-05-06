@@ -3,188 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NEWTUBE TON</title>
+    <title>NEWTUBE TON - Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
     <style>
-        :root {
-            --bg: #121212; --card: #1e1e24; --primary: #FDE047; --diamond: #00e5ff;
-            --text: #ffffff; --text2: #a0a0a0; --border: #333;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 60px 0 80px; }
-        
-        .header { position: fixed; top: 0; width: 100%; height: 60px; background: var(--card); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--border); z-index: 100; font-weight: bold; color: var(--primary); font-size: 1.2rem; }
-        .container { padding: 0 16px; max-width: 500px; margin: 0 auto; }
-        
-        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        
-        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-        .btn-gold { background: var(--primary); color: #000; }
-        .btn-dia { background: var(--diamond); color: #000; }
-        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
-        
-        .bal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; text-align: center; }
-        .bal-box { background: #000; padding: 15px; border-radius: 10px; border: 1px solid var(--border); }
-        
-        /* Bottom Nav */
-        .nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid var(--border); }
-        .nav-item { color: var(--text2); text-align: center; font-size: 0.8rem; cursor: pointer; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 1.2rem; display: block; margin-bottom: 3px; }
-        
-        .section { display: none; } .section.active { display: block; }
-        
-        /* Modals & Overlays */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .overlay-box { background: var(--card); width: 100%; max-width: 350px; padding: 20px; border-radius: 12px; text-align: center; }
-        input { width: 100%; padding: 12px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 8px; margin-bottom: 10px; outline: none; }
+        :root { --bg:#0f0f13; --card:#1c1c24; --gold:#FDE047; --dia:#00e5ff; --text:#fff; --text2:#9ca3af; --border:#2d2d3a; }
+        * { box-sizing:border-box; margin:0; padding:0; font-family:'Inter',sans-serif; }
+        body { background:var(--bg); color:var(--text); padding:70px 0 90px; }
+        .header { position:fixed; top:0; width:100%; height:60px; background:var(--card); display:flex; align-items:center; justify-content:center; border-bottom:1px solid var(--border); z-index:100; font-size:1.2rem; font-weight:800; color:var(--gold); }
+        .container { max-width:500px; margin:0 auto; padding:0 16px; }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:16px; }
+        .bal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:20px 0; text-align:center; }
+        .bal-box { background:#13131a; padding:15px; border-radius:12px; border:1px solid var(--border); }
+        .btn { width:100%; padding:14px; border:none; border-radius:10px; font-weight:600; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; }
+        .btn-gold { background:var(--gold); color:#000; }
+        .btn-dia { background:var(--dia); color:#000; }
+        .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+        .nav { position:fixed; bottom:0; width:100%; height:70px; background:var(--card); border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; z-index:100; }
+        .nav-item { color:var(--text2); text-align:center; font-size:0.75rem; display:flex; flex-direction:column; align-items:center; gap:5px; }
+        .nav-item.active { color:var(--gold); }
+        .nav-item i { font-size:1.3rem; }
+        .section { display:none; } .section.active { display:block; }
+        .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:200; display:none; align-items:center; justify-content:center; padding:20px; }
+        .overlay-box { background:var(--card); width:100%; max-width:350px; padding:20px; border-radius:16px; text-align:center; border:1px solid var(--border); }
+        input, select { width:100%; padding:14px; background:#13131a; border:1px solid var(--border); color:#fff; border-radius:10px; margin-bottom:12px; outline:none; }
+        .rate-box { background:rgba(0,229,255,0.1); padding:12px; border-radius:10px; margin-bottom:15px; font-size:0.85rem; color:var(--dia); }
     </style>
 </head>
 <body>
-
     <div class="header"><i class="fas fa-play-circle"></i> NEWTUBE TON</div>
 
-    <!-- Mandatory Join Overlay -->
+    <!-- Join Verification Overlay -->
     <div id="joinOverlay" class="overlay">
         <div class="overlay-box">
-            <i class="fab fa-telegram" style="font-size: 3rem; color: #0088cc; margin-bottom: 15px;"></i>
-            <h3>Join to Continue</h3>
-            <p style="color: var(--text2); font-size: 0.9rem; margin-bottom: 15px;">You must join our official channel to use this app.</p>
-            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" style="text-decoration: none;">
-                <button class="btn btn-outline">1. Join Channel</button>
-            </a>
-            <button class="btn btn-gold" onclick="verifyJoin()" id="verifyJoinBtn">2. Verify & Enter</button>
+            <i class="fas fa-shield-alt" style="font-size:3rem; color:var(--gold); margin-bottom:15px;"></i>
+            <h3>Security Verification</h3>
+            <p style="color:var(--text2); font-size:0.85rem; margin-bottom:20px;">Please join our Channel & Group to start earning.</p>
+            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" style="text-decoration:none;"><button class="btn btn-outline"><i class="fas fa-bullhorn"></i> 1. Join Channel</button></a>
+            <a href="https://t.me/newTon_Gc" target="_blank" style="text-decoration:none;"><button class="btn btn-outline"><i class="fas fa-users"></i> 2. Join Group</button></a>
+            <button class="btn btn-gold" onclick="verifyJoin()" id="verifyBtn" style="margin-top:10px;">Check Status</button>
         </div>
     </div>
 
     <div class="container">
-        <!-- 1. HOME SECTION -->
+        <!-- HOME SECTION -->
         <div id="home-sec" class="section active">
-            <div class="card flex-between">
-                <div>
-                    <h3 id="userName">Loading...</h3>
-                    <small style="color: var(--text2);" id="userId">UID: ...</small>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><h3 id="userName">Loading...</h3><small id="userId" style="color:var(--text2);">UID: ...</small></div>
+                    <button class="btn btn-dia" style="width:auto; padding:8px 15px;" onclick="openWithdrawModal()">Withdraw</button>
                 </div>
-                <button class="btn btn-dia" style="width: auto; padding: 8px 15px;" onclick="document.getElementById('withdrawModal').style.display='flex'">Withdraw</button>
+
+                <div class="bal-grid">
+                    <div class="bal-box" style="border-color:rgba(253,224,71,0.3);"><h2 id="balGold" style="color:var(--gold);">0</h2><small style="color:var(--text2);">Gold</small></div>
+                    <div class="bal-box" style="border-color:rgba(0,229,255,0.3);"><h2 id="balDiamond" style="color:var(--dia);">0</h2><small style="color:var(--text2);">Diamonds</small></div>
+                </div>
+
+                <button class="btn btn-gold" onclick="openExchangeModal()"><i class="fas fa-sync-alt"></i> Exchange Gold to Diamond</button>
             </div>
 
-            <div class="bal-grid">
-                <div class="bal-box" style="border-color: var(--primary);">
-                    <h2 id="balGold" style="color: var(--primary);">0</h2>
-                    <small>Total Gold</small>
-                </div>
-                <div class="bal-box" style="border-color: var(--diamond);">
-                    <h2 id="balDiamond" style="color: var(--diamond);">0</h2>
-                    <small>Diamonds</small>
-                </div>
-            </div>
-
-            <button class="btn btn-gold" onclick="exchangeGold()"><i class="fas fa-sync-alt"></i> Exchange (1k Gold = 1 Dia)</button>
-            
-            <div class="card" style="margin-top: 15px;">
-                <h4><i class="fas fa-users" style="color: var(--primary);"></i> Refer to Earn</h4>
-                <p style="font-size: 0.8rem; color: var(--text2); margin: 5px 0 10px;">Get 300 Gold for every valid invite!</p>
+            <div class="card">
+                <h4 style="margin-bottom:10px;"><i class="fas fa-gift" style="color:var(--gold);"></i> Invite Friends</h4>
+                <p style="font-size:0.8rem; color:var(--text2); margin-bottom:15px;">Get 1500 Gold instantly + 10% commission on their earnings!</p>
                 <input type="text" id="refLink" readonly>
                 <button class="btn btn-outline" onclick="copyRef()"><i class="fas fa-copy"></i> Copy Link</button>
             </div>
         </div>
 
-        <!-- 2. EARN (Ads & Lootbox) -->
+        <!-- TASKS / VIDEO SECTION -->
         <div id="earn-sec" class="section">
-            <div class="card" style="text-align: center; border-color: var(--primary);">
-                <h3><i class="fas fa-box-open" style="color: var(--primary);"></i> Ad Lootbox</h3>
-                <h1 id="lootboxPoints" style="margin: 10px 0; color: var(--primary);">0 / 500</h1>
-                <p style="font-size: 0.8rem; color: var(--text2); margin-bottom: 10px;">Watch ads to fill. Claim at 500 Gold.</p>
-                <button class="btn btn-outline" onclick="watchAd()"><i class="fas fa-video"></i> Watch Ad (+50 Gold)</button>
-                <button class="btn btn-gold" id="claimLootBtn" onclick="claimLootbox()" disabled>Claim Lootbox</button>
+            <div class="card" style="text-align:center;">
+                <h3><i class="fas fa-box" style="color:var(--gold);"></i> Ad Lootbox</h3>
+                <h1 id="lootPts" style="margin:10px 0; color:var(--gold);">0</h1>
+                <p style="font-size:0.8rem; color:var(--text2); margin-bottom:15px;">Watch ads to earn Gold.</p>
+                <button class="btn btn-outline" onclick="runTask('ad', 50, this)"><i class="fas fa-video"></i> Watch Ad (+50 Gold)</button>
             </div>
-        </div>
 
-        <!-- 3. VIDEO SECTION -->
-        <div id="video-sec" class="section">
             <div class="card">
-                <div style="width: 100%; height: 180px; background: #000; border-radius: 8px; margin-bottom: 10px; position: relative;">
-                    <img src="https://img.youtube.com/vi/ScMzIvxBSi4/mqdefault.jpg" style="width:100%; height:100%; object-fit: cover; border-radius: 8px;">
-                    <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items:center; justify-content:center;">
-                        <i class="fas fa-play-circle" style="font-size: 3rem; color: var(--primary);"></i>
-                    </div>
+                <h4 style="margin-bottom:10px;"><i class="fab fa-youtube" style="color:red;"></i> Watch Video</h4>
+                <div style="width:100%; height:160px; background:#000; border-radius:10px; margin-bottom:10px; position:relative; overflow:hidden;">
+                    <img src="https://img.youtube.com/vi/ScMzIvxBSi4/mqdefault.jpg" style="width:100%; height:100%; object-fit:cover; opacity:0.6;">
                 </div>
-                <h4>Watch & Earn</h4>
-                <p style="font-size: 0.8rem; color: var(--text2); margin: 5px 0 10px;">Watch for 1 minute to earn 100 Gold.</p>
-                <button class="btn btn-gold" onclick="claimTask('video', 100, this)"><i class="fas fa-play"></i> Watch Now</button>
-            </div>
-        </div>
-
-        <!-- 4. TASKS SECTION -->
-        <div id="task-sec" class="section">
-            <div class="card flex-between">
-                <div>
-                    <h4>Join Partner Channel</h4>
-                    <small style="color: var(--primary);">+200 Gold</small>
-                </div>
-                <button class="btn btn-outline" style="width: auto; padding: 8px 15px;" onclick="claimTask('social', 200, this)">Claim</button>
+                <button class="btn btn-gold" onclick="runTask('video', 200, this)"><i class="fas fa-play"></i> Watch (+200 Gold)</button>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
     <div class="nav">
         <div class="nav-item active" onclick="switchTab('home-sec', this)"><i class="fas fa-home"></i> Home</div>
         <div class="nav-item" onclick="switchTab('earn-sec', this)"><i class="fas fa-bolt"></i> Earn</div>
-        <div class="nav-item" onclick="switchTab('video-sec', this)"><i class="fab fa-youtube"></i> Video</div>
-        <div class="nav-item" onclick="switchTab('task-sec', this)"><i class="fas fa-tasks"></i> Tasks</div>
+    </div>
+
+    <!-- Exchange Modal -->
+    <div id="exchangeModal" class="overlay">
+        <div class="overlay-box">
+            <h3 style="color:var(--gold); margin-bottom:15px;">Exchange</h3>
+            <p style="font-size:0.85rem; color:var(--text2); margin-bottom:15px;">Rate: 1,000 Gold = 1 Diamond</p>
+            <input type="number" id="exAmount" placeholder="Enter Gold (Min 1000)" oninput="calcEx()">
+            <div class="rate-box" id="exPreview">You get: 0 Diamonds</div>
+            <button class="btn btn-gold" onclick="submitExchange()">Exchange Now</button>
+            <button class="btn btn-outline" onclick="closeModals()">Cancel</button>
+        </div>
     </div>
 
     <!-- Withdraw Modal -->
     <div id="withdrawModal" class="overlay">
         <div class="overlay-box">
-            <h3 style="color: var(--diamond); margin-bottom: 15px;">Withdraw Diamonds</h3>
-            <select id="wMethod" style="width: 100%; padding: 10px; background: #000; color: #fff; margin-bottom: 10px;">
+            <h3 style="color:var(--dia); margin-bottom:15px;">Withdraw</h3>
+            <select id="wMethod" onchange="calcWd()">
                 <option value="tonkeeper">Tonkeeper (Min 50 Dia)</option>
                 <option value="binance">Binance UID (Min 100 Dia)</option>
             </select>
-            <input type="number" id="wAmount" placeholder="Amount (Diamonds)">
-            <input type="text" id="wAddress" placeholder="Address / UID">
-            <button class="btn btn-dia" onclick="submitWithdraw()">Submit Request</button>
-            <button class="btn btn-outline" onclick="document.getElementById('withdrawModal').style.display='none'">Cancel</button>
+            <input type="number" id="wAmount" placeholder="Amount of Diamonds" oninput="calcWd()">
+            <input type="text" id="wAddress" placeholder="Address or UID">
+            <div class="rate-box" id="wdPreview">Value: 0.00 USDT | 0.00 TON</div>
+            <button class="btn btn-dia" onclick="submitWithdraw()">Submit</button>
+            <button class="btn btn-outline" onclick="closeModals()">Cancel</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        const API_BASE = '/api'; 
+        const API = '/api'; 
         let user = null;
-        let localLoot = 0;
 
-        async function init() {
+        async function initApp() {
             tg.ready(); tg.expand();
             const tgUser = tg.initDataUnsafe?.user;
             const startParam = tg.initDataUnsafe?.start_param || "";
-            
-            if(!tgUser) { document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>Open in Telegram</h2>"; return; }
+            if(!tgUser) return;
 
             document.getElementById('userName').innerText = tgUser.first_name;
             document.getElementById('userId').innerText = `UID: ${tgUser.id}`;
-            document.getElementById('refLink').value = `https://t.me/YourBotUsername?start=${tgUser.id}`;
+            document.getElementById('refLink').value = `https://t.me/NewTube12_bot/WatchTo_Earn?startapp=${tgUser.id}`;
 
             try {
-                // Initialize user (and handle refer logic inside API)
-                const res = await fetch(`${API_BASE}/init`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                const res = await fetch(`${API}/init`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
                     body: JSON.stringify({ userId: tgUser.id, username: tgUser.first_name, referrer: startParam })
                 });
                 user = await res.json();
                 updateUI();
-
-                // Check Mandatory Join
-                if(!user.isVerified) {
-                    document.getElementById('joinOverlay').style.display = 'flex';
-                }
-            } catch(e) { alert("Server connection failed."); }
+                if(!user.isVerified) document.getElementById('joinOverlay').style.display = 'flex';
+            } catch(e) { alert("Server error."); }
         }
 
         function updateUI() {
@@ -192,103 +154,95 @@
             document.getElementById('balDiamond').innerText = user.diamondBalance;
         }
 
-        function switchTab(id, el) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
-        }
-
         async function verifyJoin() {
-            const btn = document.getElementById('verifyJoinBtn');
-            btn.innerText = "Checking...";
+            const btn = document.getElementById('verifyBtn'); btn.innerText = "Checking...";
             try {
-                const res = await fetch(`${API_BASE}/verifyJoin?userId=${user.id}`);
+                const res = await fetch(`${API}/verifyJoin?userId=${user.id}`);
                 const data = await res.json();
                 if(data.success) {
                     document.getElementById('joinOverlay').style.display = 'none';
-                    user.isVerified = true;
-                    alert("Verified successfully!");
-                } else {
-                    alert("Please join the channel first!");
-                }
-            } catch(e) { alert("Error checking status."); }
-            btn.innerText = "2. Verify & Enter";
+                    user.isVerified = true; alert("Access Granted!");
+                } else alert("Please join BOTH the Channel and the Group!");
+            } catch(e) {}
+            btn.innerText = "Check Status";
         }
 
-        // --- LOOTBOX SYSTEM (Frontend Logic to save DB Writes) ---
-        function watchAd() {
-            if(localLoot >= 500) return alert("Lootbox is full! Claim it first.");
-            // Here you can integrate your actual Ad network code later.
-            // For now, simulating Ad view:
-            setTimeout(() => {
-                localLoot += 50;
-                document.getElementById('lootboxPoints').innerText = `${localLoot} / 500`;
-                if(localLoot >= 500) document.getElementById('claimLootBtn').disabled = false;
-                alert("Ad watched! +50 Gold added to Lootbox.");
-            }, 1000);
-        }
-
-        async function claimLootbox() {
-            if(localLoot < 500) return;
-            const btn = document.getElementById('claimLootBtn');
-            btn.disabled = true; btn.innerText = "Claiming...";
-            
-            await executeTask('lootbox', localLoot);
-            localLoot = 0;
-            document.getElementById('lootboxPoints').innerText = `0 / 500`;
-            btn.innerText = "Claim Lootbox";
-        }
-
-        // --- MASTER TASK FUNCTION ---
-        async function claimTask(type, reward, btnElement) {
-            if(btnElement) { btnElement.disabled = true; btnElement.innerText = "Processing..."; }
-            // Simulating watch/task delay
+        async function runTask(type, amt, btn) {
+            btn.disabled = true; btn.innerText = "Processing...";
             setTimeout(async () => {
-                await executeTask(type, reward);
-                if(btnElement) btnElement.innerText = "Completed ✅";
-            }, 2000);
-        }
-
-        async function executeTask(actionType, reward) {
-            try {
-                const res = await fetch(`${API_BASE}/tasks`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: user.id, action: actionType, amount: reward })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    user.goldBalance = data.newGoldBalance;
-                    updateUI();
-                }
-            } catch(e) { alert("Task failed. Check internet."); }
-        }
-
-        // --- EXCHANGE ---
-        async function exchangeGold() {
-            if(user.goldBalance < 1000) return alert("You need at least 1,000 Gold!");
-            if(confirm("Exchange 1,000 Gold for 1 Diamond?")) {
                 try {
-                    const res = await fetch(`${API_BASE}/exchange`, {
-                        method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ userId: user.id, goldAmount: 1000 })
+                    const res = await fetch(`${API}/tasks`, {
+                        method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({ userId: user.id, action: type, amount: amt })
                     });
                     const data = await res.json();
-                    if(data.success) {
-                        user.goldBalance -= 1000; user.diamondBalance += 1;
-                        updateUI(); alert("Exchanged successfully!");
-                    } else alert(data.error);
-                } catch(e) { alert("Error exchanging."); }
-            }
+                    if(data.success) { user.goldBalance = data.newGoldBalance; updateUI(); }
+                } catch(e) {}
+                btn.innerText = "Done ✅"; setTimeout(()=> { btn.disabled=false; btn.innerHTML=`<i class="fas fa-play"></i> Watch again`; }, 3000);
+            }, 1500);
+        }
+
+        // EXCHANGE CALC
+        function calcEx() {
+            let val = parseInt(document.getElementById('exAmount').value) || 0;
+            document.getElementById('exPreview').innerText = `You get: ${Math.floor(val/1000)} Diamonds`;
+        }
+        async function submitExchange() {
+            let amt = parseInt(document.getElementById('exAmount').value) || 0;
+            if(amt < 1000 || amt % 1000 !== 0) return alert('Enter Gold in multiples of 1000');
+            try {
+                const res = await fetch(`${API}/exchange`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ userId: user.id, goldAmount: amt })
+                });
+                const data = await res.json();
+                if(data.success) { user.goldBalance -= amt; user.diamondBalance += (amt/1000); updateUI(); closeModals(); alert("Exchanged!"); }
+                else alert(data.error);
+            } catch(e) { alert("Error."); }
+        }
+
+        // WITHDRAW CALC (1k Dia = 1 USDT | 1k Dia = 0.6 TON) -> 1 Dia = 0.001 USDT | 1 Dia = 0.0006 TON
+        function calcWd() {
+            let method = document.getElementById('wMethod').value;
+            let amt = parseInt(document.getElementById('wAmount').value) || 0;
+            document.getElementById('wAddress').placeholder = method === 'binance' ? "Enter Binance UID" : "Enter Tonkeeper Address";
+            
+            let usdt = (amt * 0.001).toFixed(3);
+            let ton = (amt * 0.0006).toFixed(4);
+            document.getElementById('wdPreview').innerText = `Value: ${usdt} USDT | ${ton} TON`;
+        }
+        async function submitWithdraw() {
+            let method = document.getElementById('wMethod').value;
+            let amt = parseInt(document.getElementById('wAmount').value) || 0;
+            let address = document.getElementById('wAddress').value.trim();
+            if(!address || amt <= 0) return alert("Fill all fields.");
+            try {
+                const res = await fetch(`${API}/withdraw`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ userId: user.id, method, amount: amt, address })
+                });
+                const data = await res.json();
+                if(data.success) { user.diamondBalance -= amt; updateUI(); closeModals(); alert("Withdrawal Pending!"); }
+                else alert(data.error);
+            } catch(e) { alert("Error."); }
         }
 
         function copyRef() {
-            const link = document.getElementById('refLink');
-            link.select(); document.execCommand("copy");
+            document.getElementById('refLink').select(); document.execCommand("copy");
             alert("Referral Link Copied!");
         }
 
-        window.onload = init;
+        function switchTab(id, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active'); el.classList.add('active');
+        }
+
+        function openExchangeModal() { document.getElementById('exchangeModal').style.display='flex'; }
+        function openWithdrawModal() { document.getElementById('withdrawModal').style.display='flex'; calcWd(); }
+        function closeModals() { document.querySelectorAll('.overlay').forEach(m => m.style.display='none'); }
+
+        window.onload = initApp;
     </script>
 </body>
 </html>
