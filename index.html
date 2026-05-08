@@ -867,10 +867,10 @@
         <div class="modal-box" style="text-align:center;">
             <i class="fas fa-shield-alt" style="font-size:3.2rem; color:var(--gold); margin-bottom:16px;"></i>
             <h3 style="margin:0 0 10px; font-size:1.25rem;">Join & Activate</h3>
-            <p style="color:var(--text2); font-size:0.88rem; margin-bottom:22px;">Join our official channel &amp; group to activate your account and claim <b style="color:var(--gold);">+2,000 Gold</b> welcome bonus!</p>
+            <p style="color:var(--text2); font-size:0.88rem; margin-bottom:22px;">আমাদের Official Channel &amp; Group-এ join করে account activate করুন।</p>
             <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:10px;"><i class="fab fa-telegram-plane"></i> 1. Official Channel</a>
             <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:18px;"><i class="fas fa-users"></i> 2. Community Group</a>
-            <button id="activateAccountBtn" class="btn">Verify &amp; Activate</button>
+            <button id="activateAccountBtn" class="btn">✅ Verify &amp; Continue</button>
         </div>
     </div>
 
@@ -1723,32 +1723,51 @@
 
         // ── CHANNEL VERIFICATION ──
         async function checkMembershipAndEnforce() {
+            // Check if already verified in Firestore
+            if (currentUser.channelVerified) return;
             try {
-                const res = await fetch(`https://newtube-ton.vercel.app/api/checkJoin?userId=${currentUser.id}`);
+                const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin?userId=${currentUser.id}`);
+                if (!res.ok) return; // API error → skip, don't block user
                 const data = await res.json();
-                if (!data.joined) { document.getElementById('activationModalOverlay').classList.add('show'); }
-            } catch (e) { document.getElementById('activationModalOverlay').classList.add('show'); }
+                if (!data.joined) {
+                    document.getElementById('activationModalOverlay').classList.add('show');
+                }
+            } catch (e) {
+                // Network error → don't block user, skip verification
+                console.log('Join check skipped:', e.message);
+            }
         }
 
         document.getElementById('activateAccountBtn').addEventListener('click', async () => {
-            document.getElementById('activateAccountBtn').textContent = "Verifying...";
+            const btn = document.getElementById('activateAccountBtn');
+            btn.textContent = "Verifying...";
+            btn.disabled = true;
             try {
-                const res = await fetch(`https://newtube-ton.vercel.app/api/checkJoin?userId=${currentUser.id}`);
+                const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin?userId=${currentUser.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id })
+                });
+                if (!res.ok) throw new Error('Server error: ' + res.status);
                 const data = await res.json();
                 if (data.joined) {
+                    // Mark verified locally
+                    currentUser.channelVerified = true;
+                    try {
+                        await updateDoc(doc(db, 'users', currentUser.id), { channelVerified: true });
+                    } catch(e) {}
                     document.getElementById('activationModalOverlay').classList.remove('show');
-                    if (!currentUser.welcomeBonusClaimed) {
-                        try {
-                            await updateDoc(doc(db, 'users', currentUser.id), { goldBalance: increment(2000), lifetimeGoldEarned: increment(2000), welcomeBonusClaimed: true });
-                            currentUser.goldBalance = (currentUser.goldBalance || 0) + 2000;
-                            currentUser.welcomeBonusClaimed = true;
-                            updateBalanceUI();
-                            showSuccessModal('🎁 Welcome Bonus!', '+2,000 🪙 Gold added!');
-                        } catch (e) {}
-                    }
-                } else { alert("Join required ❌\nPlease join Channel & Group first."); }
-            } catch (e) { alert("Error verifying. Try again."); }
-            document.getElementById('activateAccountBtn').textContent = "Verify & Activate";
+                    showSuccessModal('✅ Activated!', 'Account verified! Start earning Gold.');
+                } else {
+                    alert("❌ Join করুন প্রথমে!\n\nChannel ও Group দুটোতেই join করতে হবে, তারপর Verify করুন।");
+                }
+            } catch (e) {
+                console.error('Verify error:', e);
+                // On error, let user in anyway (don't block)
+                document.getElementById('activationModalOverlay').classList.remove('show');
+            }
+            btn.textContent = "✅ Verify & Continue";
+            btn.disabled = false;
         });
 
         // ── MAIN INIT ──
