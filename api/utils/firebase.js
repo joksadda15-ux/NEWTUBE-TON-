@@ -1,15 +1,23 @@
+// api/utils/firebase.js
+// Shared Firebase Admin SDK initializer
+
 const admin = require('firebase-admin');
 
-if (!admin.apps.length) {
-    try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
-    } catch (error) {
-        console.error('Firebase Setup Error:', error);
+let db;
+
+function getDb() {
+    if (!db) {
+        if (!admin.apps.length) {
+            const serviceAccount = JSON.parse(
+                Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf8')
+            );
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+        }
+        db = admin.firestore();
     }
+    return db;
 }
 
-const db = admin.firestore();
-module.exports = { db };
+module.exports = { getDb, admin };
