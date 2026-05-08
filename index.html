@@ -408,6 +408,40 @@
 </head>
 <body>
 
+    <!-- ══ GLOBAL APP LOADER ══ -->
+    <div id="app-global-loader" style="
+        position:fixed; inset:0; z-index:9999;
+        background:#050508;
+        display:flex; flex-direction:column;
+        align-items:center; justify-content:center; gap:20px;
+        transition: opacity 0.4s ease;
+    ">
+        <div style="position:relative; width:64px; height:64px;">
+            <div style="
+                position:absolute; inset:0; border-radius:18px;
+                background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(168,237,255,0.08));
+                border:2px solid var(--gold);
+                display:flex; align-items:center; justify-content:center;
+                font-size:1.8rem;
+                box-shadow: 0 0 24px rgba(245,166,35,0.4);
+                animation: loaderPulse 1.5s ease-in-out infinite;
+            ">💎</div>
+        </div>
+        <div style="text-align:center;">
+            <div style="font-size:1.2rem; font-weight:800; color:#F5A623; letter-spacing:1px; margin-bottom:6px;">NEWTUBE</div>
+            <div style="font-size:0.75rem; color:#666688; font-weight:500;">Loading your account...</div>
+        </div>
+        <div style="display:flex; gap:7px; margin-top:4px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite 0s;"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite 0.2s;"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite 0.4s;"></div>
+        </div>
+    </div>
+    <style>
+        @keyframes loaderPulse { 0%,100%{box-shadow:0 0 18px rgba(245,166,35,0.3);} 50%{box-shadow:0 0 32px rgba(245,166,35,0.7);} }
+        @keyframes dotBounce { 0%,100%{transform:translateY(0);opacity:0.4;} 50%{transform:translateY(-8px);opacity:1;} }
+    </style>
+
     <div class="bg-canvas"></div>
     <div class="bg-grid"></div>
     <div class="particles" id="particles"></div>
@@ -547,7 +581,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward">🪙 10-15 Gold</div>
+                    <div class="ad-reward">🪙 120 Gold</div>
                     <button id="btn-watch-adsgram-daily" class="btn outline task-btn">Watch</button>
                 </div>
             </div>
@@ -565,7 +599,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:#FFD166;">🪙 15-25 Gold</div>
+                    <div class="ad-reward" style="color:#FFD166;">🪙 250 Gold</div>
                     <button id="btn-watch-adsgram-special" class="btn task-btn" style="background:linear-gradient(135deg,#FFD166,#e8b930);color:#000;">Watch</button>
                 </div>
             </div>
@@ -579,11 +613,11 @@
                     </div>
                     <div style="text-align:right;">
                         <div class="ad-badge">MONETAG</div>
-                        <div class="ad-limit-text" id="limit-monetag">0/10</div>
+                        <div class="ad-limit-text" id="limit-monetag">0/20</div>
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--blue);">🪙 10-18 Gold</div>
+                    <div class="ad-reward" style="color:var(--blue);">🪙 120 Gold</div>
                     <button id="btn-watch-monetag" class="btn outline task-btn" style="border-color:var(--blue);color:var(--blue);">Watch</button>
                 </div>
             </div>
@@ -597,11 +631,11 @@
                     </div>
                     <div style="text-align:right;">
                         <div class="ad-badge">GIGAPUB</div>
-                        <div class="ad-limit-text" id="limit-giga">0/10</div>
+                        <div class="ad-limit-text" id="limit-giga">0/20</div>
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--text);">🪙 10-18 Gold</div>
+                    <div class="ad-reward" style="color:var(--text);">🪙 120 Gold</div>
                     <button id="btn-watch-giga" class="btn outline task-btn" style="border-color:var(--red);color:var(--red);">Watch</button>
                 </div>
             </div>
@@ -718,8 +752,10 @@
 
             <div class="tier-info" id="withdraw-method-info">
                 <div class="tier-row"><span class="tier-range">Method</span><span class="tier-ref" id="method-label">Binance UID</span></div>
-                <div class="tier-row"><span class="tier-range">Minimum Withdraw</span><span class="tier-ref" id="method-min">100 💎</span></div>
-                <div class="tier-row"><span class="tier-range">Requirements</span><span class="tier-ref" style="color:var(--green); font-size:0.78rem;">5 Tasks + 20 Ads (24h)</span></div>
+                <div class="tier-row"><span class="tier-range">Rate</span><span class="tier-ref" id="method-rate" style="color:var(--diamond);">1,000 💎 = 1 USDT</span></div>
+                <div class="tier-row"><span class="tier-range">Min Withdraw</span><span class="tier-ref" id="method-min">1,000 💎</span></div>
+                <div class="tier-row"><span class="tier-range">1st Withdraw</span><span class="tier-ref" style="color:var(--green); font-size:0.75rem;">5 Tasks + 20 Ads</span></div>
+                <div class="tier-row"><span class="tier-range">Next Withdraw</span><span class="tier-ref" style="color:var(--blue); font-size:0.75rem;">20 Ads only</span></div>
             </div>
 
             <div class="form-group">
@@ -728,9 +764,11 @@
             </div>
 
             <div class="form-group">
-                <label>Amount (Diamonds)</label>
-                <input type="number" id="withdrawalAmount" placeholder="Min: see above">
-                <div class="ton-preview" id="realtime-diamond-display">💎 <span id="calc-diamond-val">0</span> Diamond</div>
+                <label>Diamond Amount</label>
+                <input type="number" id="withdrawalAmount" placeholder="Min: 1,000 Diamonds">
+                <div id="realtime-diamond-display" style="margin-top:8px; padding:10px 12px; background:rgba(168,237,255,0.07); border:1px solid rgba(168,237,255,0.2); border-radius:9px; font-size:0.85rem; color:var(--diamond); font-weight:800; display:none;">
+                    ≈ <span id="calc-currency-val">0</span> <span id="calc-currency-unit">USDT</span>
+                </div>
             </div>
 
             <div style="display:flex; gap:10px;">
@@ -908,9 +946,9 @@
         const DAILY_VIDEO_MAX = 200;
 
         const WITHDRAW_METHODS = {
-            binance:    { label: 'Binance UID',    min: 100, placeholder: 'Enter your Binance UID' },
-            tonkeeper:  { label: 'Tonkeeper Address', min: 50, placeholder: 'UQ... Address' },
-            bkash:      { label: 'bKash Number',   min: 100, placeholder: '01XXXXXXXXX' }
+            binance:    { label: 'Binance UID',       min: 1000, placeholder: 'Enter your Binance UID',  rate: '1,000 💎 = 1 USDT',   currency: 'USDT'  },
+            tonkeeper:  { label: 'Tonkeeper Address', min: 1000, placeholder: 'UQ... Wallet Address',    rate: '1,000 💎 = 0.45 TON',  currency: 'TON'   },
+            bkash:      { label: 'bKash Number',      min: 1000, placeholder: '01XXXXXXXXX',             rate: '1,000 💎 = 120 BDT',   currency: 'BDT'   }
         };
 
         let localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
@@ -974,7 +1012,7 @@
 
         document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
             if (localAdData.unclaimedGold < 100) return;
-            if (localAdData.unclaimedGold > 550) {
+            if (localAdData.unclaimedGold > 5500) {
                 alert("⚠️ Security Error.");
                 localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
                 localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
@@ -1020,10 +1058,10 @@
 
         // ── AD CONFIG ──
         const AD_CONFIG = {
-            adsgramDaily:   { limit: 10, min: 10, max: 15 },
-            adsgramSpecial: { limit: 5,  min: 15, max: 25 },
-            monetag:        { limit: 10, min: 10, max: 18 },
-            giga:           { limit: 10, min: 10, max: 18 }
+            adsgramDaily:   { limit: 10, min: 120, max: 120 },
+            adsgramSpecial: { limit: 5,  min: 250, max: 250 },
+            monetag:        { limit: 20, min: 120, max: 120 },
+            giga:           { limit: 20, min: 120, max: 120 }
         };
 
         async function runAdAndVerifyTime(btnId, adFunc) {
@@ -1389,10 +1427,14 @@
             el.classList.add('active');
             const m = WITHDRAW_METHODS[method];
             document.getElementById('method-label').textContent = m.label;
-            document.getElementById('method-min').textContent = `${m.min} 💎`;
+            document.getElementById('method-min').textContent = `${m.min.toLocaleString()} 💎`;
+            const rateEl = document.getElementById('method-rate');
+            if (rateEl) rateEl.textContent = m.rate;
             document.getElementById('account-label').textContent = m.label;
             document.getElementById('accountDetails').placeholder = m.placeholder;
-            document.getElementById('withdrawalAmount').placeholder = `Min: ${m.min} Diamonds`;
+            document.getElementById('withdrawalAmount').placeholder = `Min: ${m.min.toLocaleString()} Diamonds`;
+            document.getElementById('realtime-diamond-display').style.display = 'none';
+            document.getElementById('withdrawalAmount').value = '';
         };
 
         document.getElementById('withdraw-modal-btn').addEventListener('click', () => {
@@ -1406,9 +1448,14 @@
         document.getElementById('withdrawalAmount').addEventListener('input', (e) => {
             const amt = parseFloat(e.target.value);
             const preview = document.getElementById('realtime-diamond-display');
-            const minReq = WITHDRAW_METHODS[selectedWithdrawMethod].min;
-            if (amt >= minReq) {
-                document.getElementById('calc-diamond-val').textContent = amt;
+            const m = WITHDRAW_METHODS[selectedWithdrawMethod];
+            if (amt >= m.min) {
+                let converted = '';
+                if (selectedWithdrawMethod === 'binance')   converted = (amt / 1000).toFixed(4) + ' USDT';
+                if (selectedWithdrawMethod === 'tonkeeper') converted = (amt / 1000 * 0.45).toFixed(4) + ' TON';
+                if (selectedWithdrawMethod === 'bkash')     converted = (amt / 1000 * 120).toFixed(2) + ' BDT';
+                document.getElementById('calc-currency-val').textContent = converted;
+                document.getElementById('calc-currency-unit').textContent = '';
                 preview.style.display = 'block';
             } else {
                 preview.style.display = 'none';
@@ -1427,11 +1474,18 @@
             if ((currentUser.diamondBalance || 0) < amount) return alert('Insufficient Diamonds.');
             if (currentUser.lastWithdrawDate === today) return alert('1 withdrawal per day only.');
 
-            // Withdraw requirements: 5 tasks + 20 ads in 24hr
-            const tasksToday = currentUser.tasksCompletedToday || 0;
+            // Withdraw requirements
             const adsToday = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-            if (tasksToday < 5) return alert(`❌ You need to complete 5 tasks today. Done: ${tasksToday}/5`);
-            if (adsToday < 20) return alert(`❌ You need to watch 20 ads today. Done: ${adsToday}/20`);
+            const isFirstWithdraw = (currentUser.withdrawalCount || 0) === 0;
+            if (isFirstWithdraw) {
+                // 1st time: 5 tasks + 20 ads
+                const tasksToday = currentUser.tasksCompletedToday || 0;
+                if (tasksToday < 5) return alert(`❌ 1st withdraw: 5 task complete করতে হবে।\nDone: ${tasksToday}/5`);
+                if (adsToday < 20) return alert(`❌ 1st withdraw: 20 ads দেখতে হবে।\nDone: ${adsToday}/20`);
+            } else {
+                // 2nd+ time: only 20 ads
+                if (adsToday < 20) return alert(`❌ Withdraw করতে 20 ads দেখুন।\nDone: ${adsToday}/20`);
+            }
 
             if (!confirm(`Withdraw ${amount} 💎 via ${WITHDRAW_METHODS[method].label}?`)) return;
 
@@ -1668,7 +1722,7 @@
                             if (!j.joined) { alert('⚠️ Join the channel/group first!'); button.disabled = false; button.textContent = 'Verify'; return; }
                         } catch(e) { button.disabled = false; button.textContent = 'Verify'; return; }
                     }
-                    const reward = 500; // 500 gold per task
+                    const reward = 250; // 250 gold per task
                     const batch = writeBatch(db);
                     batch.update(doc(db, 'users', currentUser.id), {
                         completedTasks: arrayUnion(taskId),
@@ -1771,11 +1825,47 @@
         });
 
         // ── MAIN INIT ──
+        // Show loader immediately
+        function showAppLoader() {
+            const loader = document.getElementById('app-global-loader');
+            if (loader) loader.style.display = 'flex';
+        }
+        function hideAppLoader() {
+            const loader = document.getElementById('app-global-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; }, 400);
+            }
+        }
+
         async function main() {
-            if (!tg.initDataUnsafe?.user) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--text2);">Open in Telegram.</h3>`; return; }
-            tg.ready(); tg.expand(); tg.setHeaderColor('#050508');
-            await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
-            if(currentUser && !currentUser.isBanned) { await checkMembershipAndEnforce(); }
+            showAppLoader();
+            tg.ready();
+            tg.expand();
+            tg.setHeaderColor('#050508');
+
+            // Wait for Telegram to be fully ready
+            await new Promise(r => setTimeout(r, 600));
+
+            if (!tg.initDataUnsafe?.user) {
+                hideAppLoader();
+                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:var(--bg);"><i class="fas fa-telegram-plane" style="font-size:3rem;color:var(--gold);"></i><h3 style="color:var(--text2);font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
+                return;
+            }
+
+            try {
+                await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
+            } catch(e) {
+                console.error('Init error:', e);
+            }
+
+            // Hide loader - show app
+            hideAppLoader();
+
+            // Non-blocking: check channel membership after UI is visible
+            if (currentUser && !currentUser.isBanned) {
+                setTimeout(() => checkMembershipAndEnforce(), 1500);
+            }
         }
         main();
 
