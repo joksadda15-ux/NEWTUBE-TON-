@@ -10,7 +10,7 @@ const { getDb, admin } = require('./utils/firebase');
 const { handleCors }   = require('./utils/cors');
 
 const BOT_TOKEN      = process.env.BOT_TOKEN;
-const TASK_REWARD_GOLD = 500; // Gold per task
+const TASK_REWARD_GOLD = 250; // Gold per task
 
 module.exports = async function handler(req, res) {
     if (handleCors(req, res)) return;
