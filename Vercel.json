@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/init",          "dest": "/api/init.js"          },
+    { "src": "/api/verifyJoin",    "dest": "/api/verifyJoin.js"    },
+    { "src": "/api/checkJoin",     "dest": "/api/verifyJoin.js"    },
+    { "src": "/api/checkMember",   "dest": "/api/checkMember.js"   },
+    { "src": "/api/claimLootbox",  "dest": "/api/claimLootbox.js"  },
+    { "src": "/api/videoStart",    "dest": "/api/videoStart.js"    },
+    { "src": "/api/videoClaim",    "dest": "/api/videoClaim.js"    },
+    { "src": "/api/exchange",      "dest": "/api/exchange.js"      },
+    { "src": "/api/tasks",         "dest": "/api/tasks.js"         },
+    { "src": "/api/withdraw",      "dest": "/api/withdraw.js"      },
+    { "src": "/api/promo",         "dest": "/api/promo.js"         },
+    { "src": "/(.*)",              "dest": "/index.html"           }
+  ]
+}
