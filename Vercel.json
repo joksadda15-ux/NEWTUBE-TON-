@@ -15,6 +15,7 @@
     { "src": "/api/tasks",         "dest": "/api/tasks.js"         },
     { "src": "/api/withdraw",      "dest": "/api/withdraw.js"      },
     { "src": "/api/promo",         "dest": "/api/promo.js"         },
+    { "src": "/api/broadcast",    "dest": "/api/broadcast.js"     },
     { "src": "/(.*)",              "dest": "/index.html"           }
   ]
 }
