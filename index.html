@@ -797,24 +797,47 @@
     <!-- Invite Modal -->
     <div id="inviteModalOverlay" class="modal-overlay">
         <div class="modal-box" style="text-align:center;">
-            <i class="fas fa-user-plus" style="font-size:3.2rem; color:var(--gold); margin-bottom:16px;"></i>
-            <h3 style="margin:0 0 10px; font-size:1.25rem;">Referral Network</h3>
-            <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(245,166,35,0.15); border-radius:13px; padding:15px; margin-bottom:18px; text-align:left;">
-                <div style="font-size:0.72rem; font-weight:800; color:var(--gold); letter-spacing:1px; margin-bottom:9px; text-transform:uppercase;">📋 How Referral Works</div>
-                <div style="font-size:0.83rem; color:var(--text2); line-height:1.8;">
-                    <div style="margin-bottom:5px;">👥 <b style="color:#fff;">Step 1:</b> Share your referral link with friends.</div>
-                    <div style="margin-bottom:5px;">🎮 <b style="color:#fff;">Step 2:</b> Friend opens the app &amp; joins channels.</div>
-                    <div style="margin-bottom:5px;">✅ <b style="color:#fff;">Step 3:</b> Referral activates instantly.</div>
-                    <div style="padding:9px; background:rgba(245,166,35,0.08); border:1px solid rgba(245,166,35,0.25); border-radius:9px; margin-top:7px;">
-                        🎁 <b style="color:var(--gold);">Reward: +2,000 Gold</b> per valid refer!
-                    </div>
+            <i class="fas fa-user-plus" style="font-size:3rem; color:var(--gold); margin-bottom:14px;"></i>
+            <h3 style="margin:0 0 5px; font-size:1.2rem;">Referral Network</h3>
+            <p style="font-size:0.82rem; color:var(--text2); margin-bottom:16px;">Earn <strong style="color:var(--gold);">+2,000 🪙 Gold</strong> per valid referral!</p>
+
+            <!-- Stats -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(245,166,35,0.2); border-radius:11px; padding:11px;">
+                    <div style="font-size:0.62rem; color:var(--text2); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Invited</div>
+                    <div style="font-size:1.4rem; font-weight:800; color:var(--gold);" id="modal-total-invites">0</div>
+                </div>
+                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(0,229,160,0.2); border-radius:11px; padding:11px;">
+                    <div style="font-size:0.62rem; color:var(--text2); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Gold Earned</div>
+                    <div style="font-size:1.2rem; font-weight:800; color:var(--green);" id="modal-ref-gold">0 🪙</div>
                 </div>
             </div>
-            <div class="input-row">
-                <input type="text" id="modalReferralLinkInput" readonly value="...">
-                <button id="modalCopyReferralLinkBtn" class="btn" style="padding:0 16px;"><i class="fas fa-copy"></i></button>
+
+            <!-- How it works -->
+            <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(245,166,35,0.12); border-radius:12px; padding:13px; margin-bottom:14px; text-align:left;">
+                <div style="font-size:0.68rem; font-weight:800; color:var(--gold); letter-spacing:1px; margin-bottom:8px; text-transform:uppercase;">📋 How It Works</div>
+                <div style="font-size:0.8rem; color:var(--text2); line-height:1.9;">
+                    <div>👥 <b style="color:#fff;">Step 1:</b> Share your link below</div>
+                    <div>🎮 <b style="color:#fff;">Step 2:</b> Friend joins &amp; completes setup</div>
+                    <div>✅ <b style="color:#fff;">Step 3:</b> You get <b style="color:var(--gold);">+2,000 Gold</b> instantly!</div>
+                </div>
             </div>
+
+            <!-- Link display -->
+            <div style="background:rgba(0,0,0,0.5); border:1px solid rgba(245,166,35,0.25); border-radius:10px; padding:11px 13px; margin-bottom:14px; word-break:break-all; font-size:0.72rem; color:var(--gold); font-family:'Roboto Mono',monospace; text-align:left; line-height:1.5;" id="referralLinkDisplay">Loading...</div>
+
+            <!-- Share on Telegram button -->
+            <button id="telegramShareBtn" class="btn" style="margin-bottom:9px; background:linear-gradient(135deg,#229ED9,#1680b8); box-shadow:0 4px 14px rgba(34,158,217,0.35);">
+                <i class="fab fa-telegram-plane"></i>&nbsp; Share on Telegram
+            </button>
+            <!-- Copy Link button -->
+            <button id="modalCopyReferralLinkBtn" class="btn outline" style="margin-bottom:9px;">
+                <i class="fas fa-copy"></i>&nbsp; Copy Link
+            </button>
             <button class="btn ghost close-modal-btn">Close</button>
+
+            <!-- Hidden input for fallback copy -->
+            <input type="text" id="modalReferralLinkInput" readonly style="position:absolute;opacity:0;pointer-events:none;width:1px;">
         </div>
     </div>
 
@@ -899,7 +922,7 @@
         let videoPlaySeconds = 0;
         let vServerStartTime = 0;
         let vServerSignature = "";
-        const VERCEL_API_BASE = "https://new-ton-8835.vercel.app";
+        const VERCEL_API_BASE = "https://newtube-ton.vercel.app";
 
         // Monetag timer
         let videoWatchTotalSeconds = 0;
@@ -1109,7 +1132,7 @@
 
             document.getElementById('uid-text').textContent = currentUser.id;
             document.getElementById('profile-name-display').textContent = currentUser.firstName || currentUser.telegramUsername || 'User';
-            document.getElementById('modalReferralLinkInput').value = `https://t.me/NewTube12_bot/TonFREE?startapp=${userId}`;
+            document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`;
             updateAdButtonStats();
             fetchVideosFromFirebase();
             loadHomeRecentVideos();
@@ -1536,8 +1559,48 @@
 
         // ── UI EVENTS ──
         document.getElementById('profile-id-display').addEventListener('click', () => { navigator.clipboard.writeText(currentUser.id); showSuccessModal("Copied!", "User ID copied."); });
-        document.getElementById('modalCopyReferralLinkBtn').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('modalReferralLinkInput').value); showSuccessModal("Copied!", "Referral link copied."); });
-        document.getElementById('action-invite').addEventListener('click', () => document.getElementById('inviteModalOverlay').classList.add('show'));
+
+        // ── INVITE / REFERRAL ──
+        function getMyReferralLink() {
+            return `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`;
+        }
+        function openInviteModal() {
+            const link = getMyReferralLink();
+            // Update hidden input for copy fallback
+            document.getElementById('modalReferralLinkInput').value = link;
+            // Update visible link display
+            const disp = document.getElementById('referralLinkDisplay');
+            if (disp) disp.textContent = link;
+            // Update stats
+            const ti = document.getElementById('modal-total-invites');
+            const rg = document.getElementById('modal-ref-gold');
+            if (ti) ti.textContent = currentUser.totalInvites || 0;
+            if (rg) rg.textContent = ((currentUser.totalInvites || 0) * 2000).toLocaleString() + ' 🪙';
+            document.getElementById('inviteModalOverlay').classList.add('show');
+        }
+        document.getElementById('action-invite').addEventListener('click', openInviteModal);
+
+        document.getElementById('modalCopyReferralLinkBtn').addEventListener('click', () => {
+            const link = getMyReferralLink();
+            navigator.clipboard.writeText(link).then(() => {
+                showSuccessModal("Copied! 📋", "Referral link copied to clipboard.");
+            }).catch(() => {
+                // fallback
+                const inp = document.getElementById('modalReferralLinkInput');
+                inp.style.position = 'static'; inp.style.opacity = '1';
+                inp.select(); document.execCommand('copy');
+                inp.style.position = 'absolute'; inp.style.opacity = '0';
+                showSuccessModal("Copied! 📋", "Referral link copied.");
+            });
+        });
+
+        document.getElementById('telegramShareBtn').addEventListener('click', () => {
+            const link = getMyReferralLink();
+            const text = encodeURIComponent(`🎁 Join NEWTUBE and earn Gold & Diamonds!\n\nWatch videos, complete tasks, and withdraw real rewards.\n\n👉 Join here:`);
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
+            tg.openTelegramLink(shareUrl);
+        });
+
         document.getElementById('action-promo-code').addEventListener('click', () => document.getElementById('promoModalOverlay').classList.add('show'));
         document.querySelectorAll('.close-modal-btn').forEach(b => b.addEventListener('click', e => e.target.closest('.modal-overlay').classList.remove('show')));
 
@@ -1565,7 +1628,7 @@
         }
 
         // ── TASK SYSTEM ──
-        const TASK_API_BASE = 'https://new-ton-8835.vercel.app/api';
+        const TASK_API_BASE = 'https://newtube-ton.vercel.app/api';
         let activeTaskTab = 'channel'; let tasksCacheChannel = null; let tasksCachePartner = null;
 
         document.getElementById('task-content').addEventListener('click', async (e) => {
@@ -1661,7 +1724,7 @@
         // ── CHANNEL VERIFICATION ──
         async function checkMembershipAndEnforce() {
             try {
-                const res = await fetch(`https://new-ton-8835.vercel.app/api/checkJoin?userId=${currentUser.id}`);
+                const res = await fetch(`https://newtube-ton.vercel.app/api/checkJoin?userId=${currentUser.id}`);
                 const data = await res.json();
                 if (!data.joined) { document.getElementById('activationModalOverlay').classList.add('show'); }
             } catch (e) { document.getElementById('activationModalOverlay').classList.add('show'); }
@@ -1670,7 +1733,7 @@
         document.getElementById('activateAccountBtn').addEventListener('click', async () => {
             document.getElementById('activateAccountBtn').textContent = "Verifying...";
             try {
-                const res = await fetch(`https://new-ton-8835.vercel.app/api/checkJoin?userId=${currentUser.id}`);
+                const res = await fetch(`https://newtube-ton.vercel.app/api/checkJoin?userId=${currentUser.id}`);
                 const data = await res.json();
                 if (data.joined) {
                     document.getElementById('activationModalOverlay').classList.remove('show');
