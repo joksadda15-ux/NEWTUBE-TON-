@@ -16,13 +16,13 @@ const { getDb, admin } = require('./utils/firebase');
 const { handleCors }   = require('./utils/cors');
 
 const METHODS = {
-    binance:   { label: 'Binance UID',       minDiamond: 100 },
-    tonkeeper: { label: 'Tonkeeper Address', minDiamond: 50  },
-    bkash:     { label: 'bKash Number',      minDiamond: 100 },
+    binance:   { label: 'Binance UID',       minDiamond: 1000, rate: '1000 Diamond = 1 USDT'   },
+    tonkeeper: { label: 'Tonkeeper Address', minDiamond: 1000, rate: '1000 Diamond = 0.45 TON' },
+    bkash:     { label: 'bKash Number',      minDiamond: 1000, rate: '1000 Diamond = 120 BDT'  },
 };
 
-const REQUIRED_TASKS_TODAY = 5;
-const REQUIRED_ADS_TODAY   = 20;
+const REQUIRED_TASKS_FIRST = 5;   // 1st withdraw only
+const REQUIRED_ADS_TODAY   = 20;  // every withdraw
 
 module.exports = async function handler(req, res) {
     if (handleCors(req, res)) return;
@@ -88,16 +88,19 @@ module.exports = async function handler(req, res) {
                 throw new Error(`Insufficient Diamonds. You have ${currentDiamond}, need ${diamondAmount}`);
             }
 
-            // Requirement: 5 tasks today
-            const tasksToday = user.tasksCompletedToday || 0;
-            if (tasksToday < REQUIRED_TASKS_TODAY) {
-                throw new Error(`Complete ${REQUIRED_TASKS_TODAY} tasks today first. Done: ${tasksToday}/${REQUIRED_TASKS_TODAY}`);
-            }
-
-            // Requirement: 20 ads today
+            // Requirement: 20 ads today (every withdrawal)
             const adsToday = user.adsWatchedToday || 0;
             if (adsToday < REQUIRED_ADS_TODAY) {
                 throw new Error(`Watch ${REQUIRED_ADS_TODAY} ads today first. Done: ${adsToday}/${REQUIRED_ADS_TODAY}`);
+            }
+
+            // 1st withdrawal extra: 5 tasks
+            const isFirstWithdraw = (user.withdrawalCount || 0) === 0;
+            if (isFirstWithdraw) {
+                const tasksToday = user.tasksCompletedToday || 0;
+                if (tasksToday < REQUIRED_TASKS_FIRST) {
+                    throw new Error(`1st withdrawal: Complete ${REQUIRED_TASKS_FIRST} tasks first. Done: ${tasksToday}/${REQUIRED_TASKS_FIRST}`);
+                }
             }
 
             // Create withdrawal request
