@@ -71,6 +71,8 @@ module.exports = async function handler(req, res) {
                             lifetimeGoldEarned: admin.firestore.FieldValue.increment(REFERRAL_REWARD_GOLD),
                             referralCount:      admin.firestore.FieldValue.increment(1),
                         });
+                        // Send Telegram notification to referrer
+                        sendReferralNotification(referrerCode, tgUser.first_name || 'A user', REFERRAL_REWARD_GOLD);
                     }
                 } catch (refErr) {
                     console.error('Referral update error:', refErr.message);
@@ -126,4 +128,4 @@ function getTodayString() {
         month: '2-digit',
         day:   '2-digit',
     });
-                                }
+}
