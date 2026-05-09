@@ -7,6 +7,27 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
 
+    <!-- Adexium Ads (auto interstitial) -->
+    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            const adexiumWidget = new AdexiumWidget({
+                wid: '165512cc-372e-4fb0-98d2-552219c72799',
+                adFormat: 'interstitial'
+            });
+            adexiumWidget.autoMode();
+        });
+    </script>
+
+    <!-- Adexium Ads -->
+    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            const adexiumWidget = new AdexiumWidget({wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial'});
+            adexiumWidget.autoMode();
+        });
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
@@ -765,7 +786,7 @@
 
             <div class="form-group">
                 <label>Diamond Amount</label>
-                <input type="number" id="withdrawalAmount" placeholder="Min: 1,000 Diamonds">
+                <input type="number" id="withdrawalAmount" placeholder="Min: see above">
                 <div id="realtime-diamond-display" style="margin-top:8px; padding:10px 12px; background:rgba(168,237,255,0.07); border:1px solid rgba(168,237,255,0.2); border-radius:9px; font-size:0.85rem; color:var(--diamond); font-weight:800; display:none;">
                     ≈ <span id="calc-currency-val">0</span> <span id="calc-currency-unit">USDT</span>
                 </div>
@@ -946,9 +967,9 @@
         const DAILY_VIDEO_MAX = 200;
 
         const WITHDRAW_METHODS = {
-            binance:    { label: 'Binance UID',       min: 1000, placeholder: 'Enter your Binance UID',  rate: '1,000 💎 = 1 USDT',   currency: 'USDT'  },
-            tonkeeper:  { label: 'Tonkeeper Address', min: 1000, placeholder: 'UQ... Wallet Address',    rate: '1,000 💎 = 0.45 TON',  currency: 'TON'   },
-            bkash:      { label: 'bKash Number',      min: 1000, placeholder: '01XXXXXXXXX',             rate: '1,000 💎 = 120 BDT',   currency: 'BDT'   }
+            binance:    { label: 'Binance UID',       min: 100, placeholder: 'Enter your Binance UID',  rate: '1,000 💎 = 1 USDT',   currency: 'USDT'  },
+            tonkeeper:  { label: 'Tonkeeper Address', min: 50,  placeholder: 'UQ... Wallet Address',    rate: '1,000 💎 = 0.45 TON',  currency: 'TON'   },
+            bkash:      { label: 'bKash Number',      min: 80,  placeholder: '01XXXXXXXXX',             rate: '1,000 💎 = 120 BDT',   currency: 'BDT'   }
         };
 
         const LOOTBOX_MIN  = 600;
@@ -1441,7 +1462,7 @@
             el.classList.add('active');
             const m = WITHDRAW_METHODS[method];
             document.getElementById('method-label').textContent = m.label;
-            document.getElementById('method-min').textContent = `${m.min.toLocaleString()} 💎`;
+            document.getElementById('method-min').textContent = `${m.min} 💎`;
             const rateEl = document.getElementById('method-rate');
             if (rateEl) rateEl.textContent = m.rate;
             document.getElementById('account-label').textContent = m.label;
@@ -1488,18 +1509,11 @@
             if ((currentUser.diamondBalance || 0) < amount) return alert('Insufficient Diamonds.');
             if (currentUser.lastWithdrawDate === today) return alert('1 withdrawal per day only.');
 
-            // Withdraw requirements
+            // Withdraw requirements: always 5 tasks + 20 ads
             const adsToday = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-            const isFirstWithdraw = (currentUser.withdrawalCount || 0) === 0;
-            if (isFirstWithdraw) {
-                // 1st time: 5 tasks + 20 ads
-                const tasksToday = currentUser.tasksCompletedToday || 0;
-                if (tasksToday < 5) return alert(`❌ 1st withdraw: 5 task complete করতে হবে।\nDone: ${tasksToday}/5`);
-                if (adsToday < 20) return alert(`❌ 1st withdraw: 20 ads দেখতে হবে।\nDone: ${adsToday}/20`);
-            } else {
-                // 2nd+ time: only 20 ads
-                if (adsToday < 20) return alert(`❌ Withdraw করতে 20 ads দেখুন।\nDone: ${adsToday}/20`);
-            }
+            const tasksTotal = currentUser.completedTasks?.length || 0;
+            if (tasksTotal < 5) return alert(`❌ Withdraw করতে minimum 5টি task complete করতে হবে।\nCompleted: ${tasksTotal}/5`);
+            if (adsToday < 20) return alert(`❌ Withdraw করতে আজকে 20টি ads দেখতে হবে।\nDone: ${adsToday}/20`);
 
             if (!confirm(`Withdraw ${amount} 💎 via ${WITHDRAW_METHODS[method].label}?`)) return;
 
