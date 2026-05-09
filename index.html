@@ -554,11 +554,11 @@
             <!-- AD LOOTBOX (ADS SECTION) -->
             <div class="lootbox-card">
                 <h3 style="margin:0 0 10px; color:var(--text); font-size:1.1rem;"><i class="fas fa-box-open" style="color:var(--gold);"></i> Ad Lootbox</h3>
-                <p style="font-size:0.82rem; color:var(--text2); margin-bottom:14px;">Watch ads to fill lootbox. Claim when ready. Max 500 Gold.</p>
+                <p style="font-size:0.82rem; color:var(--text2); margin-bottom:14px;">Watch ads to fill lootbox. Claim when ready. Max 3,000 Gold.</p>
                 <div style="font-size:2.2rem; font-weight:800; color:var(--gold); font-family:monospace; margin-bottom:14px; text-shadow: 0 0 14px var(--gold-glow);" id="lootboxGoldDisplay">0 🪙</div>
                 <div class="lootbox-progress-wrap">
                     <div class="lootbox-bar-bg"><div class="lootbox-bar-fill" id="lootboxProgressBar" style="width:0%"></div></div>
-                    <div class="lootbox-range-text"><span>Min: 100 Gold</span><span>Max: 500 Gold</span></div>
+                    <div class="lootbox-range-text"><span>Min: 600 Gold</span><span>Max: 3,000 Gold</span></div>
                 </div>
                 <button id="claimLootboxBtn" class="btn" disabled style="margin-top:10px;"><i class="fas fa-download"></i> Claim Lootbox</button>
             </div>
@@ -951,6 +951,8 @@
             bkash:      { label: 'bKash Number',      min: 1000, placeholder: '01XXXXXXXXX',             rate: '1,000 💎 = 120 BDT',   currency: 'BDT'   }
         };
 
+        const LOOTBOX_MIN  = 600;
+        const LOOTBOX_MAX  = 3000;
         let localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
 
         // Video mining variables
@@ -995,24 +997,24 @@
             const btn = document.getElementById('claimLootboxBtn');
             const bar = document.getElementById('lootboxProgressBar');
             const g = localAdData.unclaimedGold;
-            display.textContent = `${g} 🪙`;
-            const pct = Math.min(100, (g / 500) * 100);
+            display.textContent = `${g.toLocaleString()} 🪙`;
+            const pct = Math.min(100, (g / LOOTBOX_MAX) * 100);
             if (bar) bar.style.width = pct + '%';
             if (btn.dataset.busy === "true") return;
-            if (g >= 100) {
+            if (g >= LOOTBOX_MIN) {
                 btn.disabled = false;
                 btn.classList.remove('outline');
-                btn.innerHTML = '<i class="fas fa-download"></i> Claim Lootbox';
+                btn.innerHTML = `<i class="fas fa-download"></i> Claim ${g.toLocaleString()} 🪙`;
             } else {
                 btn.disabled = true;
                 btn.classList.add('outline');
-                btn.innerHTML = `<i class="fas fa-lock"></i> Min 100 Gold (${g}/100)`;
+                btn.innerHTML = `<i class="fas fa-lock"></i> Min 600 Gold (${g}/${LOOTBOX_MIN})`;
             }
         }
 
         document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
-            if (localAdData.unclaimedGold < 100) return;
-            if (localAdData.unclaimedGold > 5500) {
+            if (localAdData.unclaimedGold < LOOTBOX_MIN) return;
+            if (localAdData.unclaimedGold > LOOTBOX_MAX + 500) {
                 alert("⚠️ Security Error.");
                 localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
                 localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
@@ -1051,7 +1053,7 @@
                 } else {
                     alert("Error: " + (data.message || "Try again"));
                 }
-            } catch(e) { alert("Server connection failed."); }
+            } catch(e) { console.error(e); alert("Connection failed. Check your internet & try again."); }
             btn.dataset.busy = "false";
             updateLootboxUI();
         });
@@ -1216,7 +1218,7 @@
         // ── AD HANDLERS ──
         const handleAdClick = async (type, btnId, maxLimit, adFunc) => {
             await checkDailyReset(currentUser);
-            if (localAdData.unclaimedGold >= 500) { alert("⚠️ Lootbox is full (Max 500 Gold). Claim first!"); return; }
+            if (localAdData.unclaimedGold >= LOOTBOX_MAX) { alert(`⚠️ Lootbox full (Max ${LOOTBOX_MAX} Gold). Claim first!`); return; }
             const countName = `adsWatched${type.charAt(0).toUpperCase() + type.slice(1)}`;
             const totalCount = (currentUser[countName] || 0) + (localAdData[countName] || 0);
             if (totalCount >= maxLimit) return;
@@ -1224,7 +1226,7 @@
             if (ok) {
                 const min = AD_CONFIG[type].min; const max = AD_CONFIG[type].max;
                 let reward = Math.floor(Math.random() * (max - min + 1)) + min;
-                if (localAdData.unclaimedGold + reward > 500) reward = 500 - localAdData.unclaimedGold;
+                if (localAdData.unclaimedGold + reward > LOOTBOX_MAX) reward = LOOTBOX_MAX - localAdData.unclaimedGold;
                 localAdData.unclaimedGold += reward;
                 localAdData.adsWatched += 1;
                 localAdData[countName] = (localAdData[countName] || 0) + 1;
@@ -1369,7 +1371,7 @@
                         localStorage.removeItem('newtube_video_mine_' + currentUser.id);
                         updateVideoUI();
                     }
-                } catch(e) { alert("Server connection failed."); }
+                } catch(e) { console.error(e); alert("Connection failed. Check your internet & try again."); }
             }
             btn.dataset.busy = "false";
             updateVideoUI();
@@ -1722,7 +1724,8 @@
                             if (!j.joined) { alert('⚠️ Join the channel/group first!'); button.disabled = false; button.textContent = 'Verify'; return; }
                         } catch(e) { button.disabled = false; button.textContent = 'Verify'; return; }
                     }
-                    const reward = 250; // 250 gold per task
+                    // Get reward from button dataset (set dynamically from Firestore)
+                    const reward = parseInt(button.dataset.reward || '250');
                     const batch = writeBatch(db);
                     batch.update(doc(db, 'users', currentUser.id), {
                         completedTasks: arrayUnion(taskId),
@@ -1736,7 +1739,7 @@
                     currentUser.goldBalance = (currentUser.goldBalance || 0) + reward;
                     currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
                     updateBalanceUI();
-                    showSuccessModal('Task Done! ✅', `+${reward} 🪙 Gold earned!`);
+                    showSuccessModal('Task Done! ✅', `+${reward.toLocaleString()} 🪙 Gold earned!`);
                     button.closest('[data-task-card]').remove();
                 } catch (err) { button.disabled = false; button.textContent = 'Verify'; }
             }
@@ -1753,21 +1756,24 @@
                 snap.forEach(docSnap => {
                     const task = docSnap.data();
                     if (currentUser.completedTasks?.includes(docSnap.id) || ((task.limit||0)>0 && (task.completionCount||0)>=task.limit)) return;
+                    // Dynamic reward from Firestore (set by admin panel)
+                    const taskReward = task.rewardGold || task.rewardPoints || 250;
                     const card = document.createElement('div'); card.setAttribute('data-task-card', docSnap.id);
+                    card.setAttribute('data-task-reward', taskReward);
                     card.className = 'card'; card.style.padding = '16px';
                     if (category === 'channel') {
                         card.innerHTML = `
                             <div style="display:flex;justify-content:space-between;align-items:center;gap:9px;">
-                                <div style="flex:1;"><div style="font-weight:700;font-size:0.92rem;color:#fff;"><i class="fab fa-telegram-plane" style="color:var(--gold);"></i> ${task.title}</div><div style="color:var(--gold);font-size:0.82rem;margin-top:3px;">+500 🪙 Gold</div></div>
-                                <button class="btn outline task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-channel-id="${task.channelId||''}" data-category="${category}" data-state="start" style="padding:9px 13px;width:auto;font-size:0.78rem;">Join</button>
+                                <div style="flex:1;"><div style="font-weight:700;font-size:0.92rem;color:#fff;"><i class="fab fa-telegram-plane" style="color:var(--gold);"></i> ${task.title}</div><div style="color:var(--gold);font-size:0.82rem;margin-top:3px;">+${taskReward.toLocaleString()} 🪙 Gold</div></div>
+                                <button class="btn outline task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-channel-id="${task.channelId||''}" data-category="${category}" data-state="start" data-reward="${taskReward}" style="padding:9px 13px;width:auto;font-size:0.78rem;">Join</button>
                             </div>`;
                     } else {
                         card.innerHTML = `
                             <div style="display:flex;align-items:center;gap:11px;margin-bottom:11px;">
                                 <div style="width:38px;height:38px;background:var(--gold-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-robot" style="color:var(--gold);font-size:1rem;"></i></div>
-                                <div><div style="font-weight:800;color:#fff;font-size:0.95rem;">${task.title}</div><div style="color:var(--gold);font-size:0.82rem;margin-top:2px;">+500 🪙 Gold</div></div>
+                                <div><div style="font-weight:800;color:#fff;font-size:0.95rem;">${task.title}</div><div style="color:var(--gold);font-size:0.82rem;margin-top:2px;">+${taskReward.toLocaleString()} 🪙 Gold</div></div>
                             </div>
-                            <button class="btn task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-category="${category}" data-state="start">🚀 Complete Task</button>`;
+                            <button class="btn task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-category="${category}" data-state="start" data-reward="${taskReward}">🚀 Complete Task</button>`;
                     }
                     container.appendChild(card); count++;
                 });
