@@ -9,7 +9,7 @@
 const { getDb, admin } = require('./utils/firebase');
 const { handleCors }   = require('./utils/cors');
 
-const MAX_LOOTBOX_GOLD   = 500;
+const MAX_LOOTBOX_GOLD   = 3000;
 const REFERRAL_BONUS_GOLD = 2000; // referrer bonus on first lootbox claim
 
 module.exports = async function handler(req, res) {
@@ -34,8 +34,8 @@ module.exports = async function handler(req, res) {
     }
 
     // Security: cap gold amount
-    if (goldAmount < 100 || goldAmount > MAX_LOOTBOX_GOLD) {
-        return res.status(400).json({ ok: false, error: `Gold must be 100–${MAX_LOOTBOX_GOLD}` });
+    if (goldAmount < 600 || goldAmount > MAX_LOOTBOX_GOLD) {
+        return res.status(400).json({ ok: false, error: `Gold must be 600–${MAX_LOOTBOX_GOLD}` });
     }
 
     const db      = getDb();
