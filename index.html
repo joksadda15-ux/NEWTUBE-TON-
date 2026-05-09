@@ -1015,7 +1015,6 @@
         document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
             if (localAdData.unclaimedGold < LOOTBOX_MIN) return;
             if (localAdData.unclaimedGold > LOOTBOX_MAX + 500) {
-                alert("⚠️ Security Error.");
                 localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
                 localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
                 updateLootboxUI(); updateAdButtonStats(); return;
@@ -1029,31 +1028,44 @@
             if (!ok) { btn.dataset.busy = "false"; updateLootboxUI(); return; }
             btn.textContent = "Claiming...";
             try {
-                const response = await fetch(`${VERCEL_API_BASE}/api/claimLootbox`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id, points: localAdData.unclaimedGold, adsWatched: localAdData.adsWatched, adsWatchedAdsgramDaily: localAdData.adsWatchedAdsgramDaily, adsWatchedAdsgramSpecial: localAdData.adsWatchedAdsgramSpecial, adsWatchedMonetag: localAdData.adsWatchedMonetag, adsWatchedGiga: localAdData.adsWatchedGiga })
+                const claimedGold = localAdData.unclaimedGold;
+                const userRef = doc(db, 'users', currentUser.id);
+
+                // Direct Firestore update - no API needed
+                await updateDoc(userRef, {
+                    goldBalance:              increment(claimedGold),
+                    lifetimeGoldEarned:       increment(claimedGold),
+                    lifetimeAdsWatched:       increment(localAdData.adsWatched || 0),
+                    adsWatchedAdsgramDaily:   increment(localAdData.adsWatchedAdsgramDaily  || 0),
+                    adsWatchedAdsgramSpecial: increment(localAdData.adsWatchedAdsgramSpecial|| 0),
+                    adsWatchedMonetag:        increment(localAdData.adsWatchedMonetag       || 0),
+                    adsWatchedGiga:           increment(localAdData.adsWatchedGiga          || 0),
+                    adsWatchedToday:          increment(localAdData.adsWatched || 0),
                 });
-                const data = await response.json();
-                if (data.success || data.ok) {
-                    currentUser.goldBalance = (currentUser.goldBalance || 0) + localAdData.unclaimedGold;
-                    currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + localAdData.unclaimedGold;
-                    currentUser.lifetimeAdsWatched = (currentUser.lifetimeAdsWatched || 0) + localAdData.adsWatched;
-                    currentUser.adsWatchedAdsgramDaily = (currentUser.adsWatchedAdsgramDaily || 0) + localAdData.adsWatchedAdsgramDaily;
-                    currentUser.adsWatchedAdsgramSpecial = (currentUser.adsWatchedAdsgramSpecial || 0) + localAdData.adsWatchedAdsgramSpecial;
-                    currentUser.adsWatchedMonetag = (currentUser.adsWatchedMonetag || 0) + localAdData.adsWatchedMonetag;
-                    currentUser.adsWatchedGiga = (currentUser.adsWatchedGiga || 0) + localAdData.adsWatchedGiga;
-                    const claimedGold = localAdData.unclaimedGold;
-                    showSuccessModal("Lootbox Claimed! 🎉", `+${claimedGold} 🪙 Gold added!`);
-                    localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-                    localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                    updateBalanceUI(); updateAdButtonStats();
-                    if (data.refBonusGiven) {
-                        setTimeout(() => showSuccessModal("🎁 Referral Bonus!", "+2,000 Gold sent to your inviter!"), 3200);
-                    }
-                } else {
-                    alert("Error: " + (data.message || "Try again"));
+
+                // Update local state
+                currentUser.goldBalance        = (currentUser.goldBalance || 0) + claimedGold;
+                currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + claimedGold;
+                currentUser.adsWatchedToday    = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
+
+                // No requirement - referral bonus already given on init
+                // Just send notification if this is first lootbox
+                const userSnap2 = await getDoc(userRef);
+                const userData2 = userSnap2.data();
+                if (!userData2.lootboxNotifSent && userData2.referredBy) {
+                    await updateDoc(userRef, { lootboxNotifSent: true });
                 }
-            } catch(e) { console.error(e); alert("Connection failed. Check your internet & try again."); }
+
+                showSuccessModal("Lootbox Claimed! 🎉", `+${claimedGold.toLocaleString()} 🪙 Gold added!`);
+                localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
+                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
+                updateBalanceUI();
+                updateAdButtonStats();
+
+            } catch(e) {
+                console.error('Lootbox claim error:', e);
+                alert("Claim failed: " + e.message);
+            }
             btn.dataset.busy = "false";
             updateLootboxUI();
         });
@@ -1829,6 +1841,36 @@
             btn.textContent = "✅ Verify & Continue";
             btn.disabled = false;
         });
+
+        // ── REFERRAL TELEGRAM NOTIFICATION ──
+        async function sendReferralNotif(referrerId, newUserName) {
+            const BOT_TOKEN = '7892868697:AAH5Ll89kGWOGWFAA-eW1NJnV3JrplhMNYo';
+            if (!BOT_TOKEN || !referrerId) return;
+            const msg =
+                `🎉 <b>Referral Reward!</b>\n\n` +
+                `👤 <b>${newUserName}</b> has joined using your referral link!\n\n` +
+                `💰 You have received: <b>+2,000 🪙 Gold</b>\n\n` +
+                `🚀 Keep inviting friends to earn more Gold!`;
+            try {
+                await fetch(
+                    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id:    referrerId,
+                            text:       msg,
+                            parse_mode: 'HTML',
+                            reply_markup: {
+                                inline_keyboard: [[
+                                    { text: '🎮 Open NEWTUBE', url: 'http://t.me/NewTube12_bot/WatchTo_Earn' }
+                                ]]
+                            }
+                        })
+                    }
+                );
+            } catch(e) { console.log('Referral notif failed:', e.message); }
+        }
 
         // ── MAIN INIT ──
         // Show loader immediately
