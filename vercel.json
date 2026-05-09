@@ -1,10 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "api/*.js": {
-      "runtime": "@vercel/node@3"
-    }
-  },
   "routes": [
     { "src": "/api/init",         "dest": "/api/init.js"         },
     { "src": "/api/verifyJoin",   "dest": "/api/verifyJoin.js"   },
