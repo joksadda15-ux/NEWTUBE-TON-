@@ -1,13 +1,11 @@
 // api/init.js
 // POST /api/init
 // Creates or fetches a user. Awards referral gold to referrer.
-// Awards welcome bonus gold on first activation.
 
 const { getDb, admin } = require('./utils/firebase');
 const { handleCors } = require('./utils/cors');
 
 const REFERRAL_REWARD_GOLD = 2000;   // Gold given to referrer per valid new user
-const WELCOME_BONUS_GOLD   = 2000;   // Gold given to new user on first join-verify
 const GOLD_PER_DIAMOND     = 1000;   // Exchange rate
 
 module.exports = async function handler(req, res) {
@@ -51,7 +49,6 @@ module.exports = async function handler(req, res) {
                 adsWatchedGiga:          0,
                 dailyVideoMined:         0,
                 lastResetDate:           today,
-                welcomeBonusClaimed:     false,
                 tasksCompletedToday:     0,
                 adsWatchedToday:         0,
                 lastWithdrawDate:        '',
@@ -65,13 +62,14 @@ module.exports = async function handler(req, res) {
                     const refRef = db.collection('users').doc(String(referrerCode));
                     const refSnap = await refRef.get();
                     if (refSnap.exists) {
+                        // No requirement - give gold immediately on join
                         await refRef.update({
                             totalInvites:       admin.firestore.FieldValue.increment(1),
                             goldBalance:        admin.firestore.FieldValue.increment(REFERRAL_REWARD_GOLD),
                             lifetimeGoldEarned: admin.firestore.FieldValue.increment(REFERRAL_REWARD_GOLD),
                             referralCount:      admin.firestore.FieldValue.increment(1),
                         });
-                        // Send Telegram notification to referrer
+                        // Send Telegram notification immediately
                         sendReferralNotification(referrerCode, tgUser.first_name || 'A user', REFERRAL_REWARD_GOLD);
                     }
                 } catch (refErr) {
@@ -128,4 +126,4 @@ function getTodayString() {
         month: '2-digit',
         day:   '2-digit',
     });
-}
+                                  }
