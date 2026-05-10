@@ -1,19 +1,23 @@
-// api/utils/cors.js
-// Simple CORS handler for Vercel serverless functions
+// utils/cors.js
+// CORS handler — সব API তে এটা use হয়
 
-function setCors(res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
+const ALLOWED_ORIGINS = [
+  'https://newtube-ton.vercel.app',
+  'https://t.me',
+];
 
-function handleCors(req, res) {
-    setCors(res);
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return true; // handled
-    }
-    return false;
-}
+module.exports.handleCors = function handleCors(req, res) {
+  const origin = req.headers.origin || '';
+  const allowed = ALLOWED_ORIGINS.some(o => origin.startsWith(o)) || process.env.NODE_ENV === 'development';
 
-module.exports = { setCors, handleCors };
+  res.setHeader('Access-Control-Allow-Origin', allowed ? origin : ALLOWED_ORIGINS[0]);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return true; // caller should return after this
+  }
+  return false;
+};
