@@ -1022,15 +1022,41 @@
             const pct = Math.min(100, (g / LOOTBOX_MAX) * 100);
             if (bar) bar.style.width = pct + '%';
             if (btn.dataset.busy === "true") return;
-            if (g >= LOOTBOX_MIN) {
+
+            const claimCount = currentUser ? getLootboxClaimCount() : 0;
+            const limitReached = claimCount >= LOOTBOX_DAILY_CLAIM_MAX;
+
+            if (limitReached) {
+                btn.disabled = true;
+                btn.classList.add('outline');
+                btn.innerHTML = `<i class="fas fa-lock"></i> Daily limit (${claimCount}/${LOOTBOX_DAILY_CLAIM_MAX})`;
+            } else if (g >= LOOTBOX_MIN) {
                 btn.disabled = false;
                 btn.classList.remove('outline');
-                btn.innerHTML = `<i class="fas fa-download"></i> Claim ${g.toLocaleString()} 🪙`;
+                btn.innerHTML = `<i class="fas fa-download"></i> Claim ${g.toLocaleString()} 🪙 (${claimCount}/${LOOTBOX_DAILY_CLAIM_MAX})`;
             } else {
                 btn.disabled = true;
                 btn.classList.add('outline');
                 btn.innerHTML = `<i class="fas fa-lock"></i> Min 600 Gold (${g}/${LOOTBOX_MIN})`;
             }
+        }
+
+        // Lootbox daily claim count (max 3 per day)
+        const LOOTBOX_DAILY_CLAIM_MAX = 3;
+        function getLootboxClaimCount() {
+            const key = 'newtube_lootbox_claims_' + currentUser.id;
+            const today = new Date().toLocaleDateString('en-US', {timeZone:'Asia/Dhaka'});
+            try {
+                const saved = JSON.parse(localStorage.getItem(key) || '{}');
+                if (saved.date !== today) return 0;
+                return saved.count || 0;
+            } catch(e) { return 0; }
+        }
+        function incrementLootboxClaimCount() {
+            const key = 'newtube_lootbox_claims_' + currentUser.id;
+            const today = new Date().toLocaleDateString('en-US', {timeZone:'Asia/Dhaka'});
+            const count = getLootboxClaimCount() + 1;
+            localStorage.setItem(key, JSON.stringify({ date: today, count }));
         }
 
         document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
@@ -1040,19 +1066,25 @@
                 localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
                 updateLootboxUI(); updateAdButtonStats(); return;
             }
+
+            // Check daily claim limit (max 3)
+            const claimCount = getLootboxClaimCount();
+            if (claimCount >= LOOTBOX_DAILY_CLAIM_MAX) {
+                alert(`⚠️ Daily limit reached! You can claim the lootbox ${LOOTBOX_DAILY_CLAIM_MAX} times per day.
+Come back tomorrow!`);
+                return;
+            }
+
             const btn = document.getElementById('claimLootboxBtn');
             btn.disabled = true;
             btn.dataset.busy = "true";
-            const adFunctions = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd, showGigaPubAd];
-            const randomAdFunc = adFunctions[Math.floor(Math.random() * adFunctions.length)];
-            const ok = await runAdAndVerifyTime('claimLootboxBtn', randomAdFunc);
-            if (!ok) { btn.dataset.busy = "false"; updateLootboxUI(); return; }
             btn.textContent = "Claiming...";
+
+            // NO AD REQUIRED for lootbox claim
             try {
                 const claimedGold = localAdData.unclaimedGold;
                 const userRef = doc(db, 'users', currentUser.id);
 
-                // Direct Firestore update - no API needed
                 await updateDoc(userRef, {
                     goldBalance:              increment(claimedGold),
                     lifetimeGoldEarned:       increment(claimedGold),
@@ -1064,20 +1096,14 @@
                     adsWatchedToday:          increment(localAdData.adsWatched || 0),
                 });
 
-                // Update local state
                 currentUser.goldBalance        = (currentUser.goldBalance || 0) + claimedGold;
                 currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + claimedGold;
                 currentUser.adsWatchedToday    = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
 
-                // No requirement - referral bonus already given on init
-                // Just send notification if this is first lootbox
-                const userSnap2 = await getDoc(userRef);
-                const userData2 = userSnap2.data();
-                if (!userData2.lootboxNotifSent && userData2.referredBy) {
-                    await updateDoc(userRef, { lootboxNotifSent: true });
-                }
+                incrementLootboxClaimCount();
+                const remaining = LOOTBOX_DAILY_CLAIM_MAX - getLootboxClaimCount();
 
-                showSuccessModal("Lootbox Claimed! 🎉", `+${claimedGold.toLocaleString()} 🪙 Gold added!`);
+                showSuccessModal("Lootbox Claimed! 🎉", `+${claimedGold.toLocaleString()} 🪙 Gold added!<br><small style="color:rgba(255,255,255,0.6);">Claims left today: ${remaining}/${LOOTBOX_DAILY_CLAIM_MAX}</small>`);
                 localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
                 localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
                 updateBalanceUI();
@@ -1411,15 +1437,25 @@
         });
 
         // Fetch Videos
+        // ── VIDEO CACHE (Optimization 1: fetch once, use everywhere) ──
+        let _videoCache = null; // in-memory cache
+
+        async function getVideosFromCache() {
+            if (_videoCache) return _videoCache; // already fetched
+            const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
+            _videoCache = [];
+            snap.forEach(d => _videoCache.push(d.data()));
+            return _videoCache;
+        }
+
         async function fetchVideosFromFirebase() {
             const container = document.getElementById('video-list-container');
             container.innerHTML = '<div class="loader"></div>';
             try {
-                const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
+                const videos = await getVideosFromCache();
                 container.innerHTML = '';
-                if(snap.empty) { container.innerHTML = '<p style="text-align:center; padding:16px; color:var(--text2); font-size:0.83rem;">No videos available.</p>'; return; }
-                snap.forEach(docSnap => {
-                    const v = docSnap.data();
+                if (!videos.length) { container.innerHTML = '<p style="text-align:center; padding:16px; color:var(--text2); font-size:0.83rem;">No videos available.</p>'; return; }
+                videos.forEach(v => {
                     container.innerHTML += `
                         <div class="video-table-row" onclick="window.playYtVideo('${v.videoId}')">
                             <div class="video-row-info">
@@ -1435,15 +1471,14 @@
             } catch(e) { container.innerHTML = '<p style="text-align:center; padding:16px; color:var(--red); font-size:0.83rem;">Failed to load.</p>'; }
         }
 
-        // Load recent videos for home section
+        // Uses same cache - no extra Firestore reads
         async function loadHomeRecentVideos() {
             const strip = document.getElementById('home-recent-videos');
             strip.innerHTML = '';
             try {
-                const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(8)));
-                if(snap.empty) { strip.innerHTML = '<p style="font-size:0.78rem; color:var(--text2);">No videos yet.</p>'; return; }
-                snap.forEach(docSnap => {
-                    const v = docSnap.data();
+                const videos = await getVideosFromCache();
+                if (!videos.length) { strip.innerHTML = '<p style="font-size:0.78rem; color:var(--text2);">No videos yet.</p>'; return; }
+                videos.slice(0, 8).forEach(v => {
                     strip.innerHTML += `
                         <div class="recent-vid-item" onclick="window.playYtVideo('${v.videoId}')">
                             <div class="recent-vid-thumb">
@@ -1586,35 +1621,50 @@
         });
 
         // ── HISTORY ──
+        // ── HISTORY (Optimization 3: lazy load + cache) ──
+        let _historyCache = null;
+
         document.getElementById('history-btn').addEventListener('click', async () => {
             document.getElementById('historyModalOverlay').classList.add('show');
             const container = document.getElementById('combined-history-list');
+
+            // Use cache if available (saves ~20 reads per open)
+            if (_historyCache) {
+                renderHistoryList(_historyCache, container);
+                return;
+            }
+
             container.innerHTML = '<div class="loader"></div>';
             try {
-                const [wSnap, tSnap] = await Promise.all([
-                    getDocs(query(collection(db, "withdrawals"), where("userId", "==", currentUser.id))),
-                    getDocs(query(collection(db, "transactions"), where("userId", "==", currentUser.id)))
-                ]);
+                // Only fetch withdrawals - transactions collection may not exist
+                const wSnap = await getDocs(
+                    query(collection(db, "withdrawals"), where("userId", "==", currentUser.id), limit(20))
+                );
                 let list = [];
                 wSnap.forEach(d => list.push({ ...d.data(), isW: true, time: d.data().createdAt }));
-                tSnap.forEach(d => list.push({ ...d.data(), isW: false, time: d.data().createdAt }));
                 list.sort((a, b) => (b.time?.toMillis() || 0) - (a.time?.toMillis() || 0));
-                list = list.slice(0, 20);
-                if (!list.length) { container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text2);">No history yet.</p>'; return; }
-                container.innerHTML = list.map(d => {
-                    const date = d.time ? d.time.toDate().toLocaleDateString() : '';
-                    let title, amt, color, icon;
-                    if (d.isW || d.type === 'Withdrawal') {
-                        title = `Withdraw (${d.status || 'pending'})`; amt = `-${d.diamondAmount || d.pointAmount || 0} 💎`; color = 'var(--red)'; icon = '💸';
-                    } else {
-                        title = d.type || 'Reward'; amt = `+${d.goldAmount || d.pointAmount || 0} 🪙`; color = 'var(--gold)'; icon = '✨';
-                    }
-                    return `<div style="display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(245,166,35,0.1);">
-                        <span style="font-size:1.3rem;">${icon}</span><div style="flex:1;"><strong style="display:block;color:var(--text);font-size:0.88rem;">${title}</strong><small style="color:var(--text2);font-size:0.72rem;">${date}</small></div>
-                        <strong style="color:${color};font-size:0.92rem;">${amt}</strong></div>`;
-                }).join('');
+                _historyCache = list; // cache for next open
+                renderHistoryList(list, container);
             } catch (e) { container.innerHTML = '<p style="text-align:center;color:var(--red);">Failed to load.</p>'; }
         });
+
+        function renderHistoryList(list, container) {
+            if (!list.length) { container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text2);">No history yet.</p>'; return; }
+            container.innerHTML = list.map(d => {
+                const date = d.time ? d.time.toDate().toLocaleDateString() : '';
+                let title, amt, color, icon;
+                if (d.isW || d.type === 'Withdrawal') {
+                    title = `Withdraw (${d.status || 'pending'})`; amt = `-${d.diamondAmount || 0} 💎`; color = 'var(--red)'; icon = '💸';
+                } else {
+                    title = d.type || 'Reward'; amt = `+${d.goldAmount || d.pointAmount || 0} 🪙`; color = 'var(--gold)'; icon = '✨';
+                }
+                return `<div style="display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(245,166,35,0.1);">
+                    <span style="font-size:1.3rem;">${icon}</span>
+                    <div style="flex:1;"><strong style="display:block;color:var(--text);font-size:0.88rem;">${title}</strong>
+                    <small style="color:var(--text2);font-size:0.72rem;">${date}</small></div>
+                    <strong style="color:${color};font-size:0.92rem;">${amt}</strong></div>`;
+            }).join('');
+        }
 
         // ── PROMO CODE ──
         document.getElementById('claimPromoBtn').addEventListener('click', async () => {
@@ -1696,7 +1746,11 @@
                 document.querySelectorAll('.nav-item, .content-section').forEach(el => el.classList.remove('active'));
                 link.classList.add('active');
                 document.querySelector(link.dataset.tabTarget).classList.add('active');
-                if (link.dataset.tabTarget === '#task-content') { tasksCacheChannel = null; tasksCachePartner = null; fetchAndRenderTasks(activeTaskTab); }
+                if (link.dataset.tabTarget === '#task-content') {
+                    // Don't clear cache - tasks rarely change in a session
+                    if (!tasksRenderedChannel && activeTaskTab === 'channel') fetchAndRenderTasks('channel');
+                    else if (!tasksRenderedPartner && activeTaskTab === 'partner') fetchAndRenderTasks('partner');
+                }
                 if (link.dataset.tabTarget === '#ads-content') updateAdButtonStats();
                 document.body.classList.toggle('video-active', isGoingToVideo);
             });
@@ -1711,7 +1765,11 @@
 
         // ── TASK SYSTEM ──
         const TASK_API_BASE = 'https://newtube-ton.vercel.app/api';
-        let activeTaskTab = 'channel'; let tasksCacheChannel = null; let tasksCachePartner = null;
+        let activeTaskTab = 'channel';
+        let tasksCacheChannel = null; // in-memory Firestore snapshot cache
+        let tasksCachePartner = null;
+        let tasksRenderedChannel = false; // track if already rendered
+        let tasksRenderedPartner = false;
 
         document.getElementById('task-content').addEventListener('click', async (e) => {
             const tabBtn = e.target.closest('[data-task-tab]');
@@ -1773,11 +1831,15 @@
 
         async function fetchAndRenderTasks(category = 'channel') {
             const container = document.getElementById(`task-list-${category}`);
+            // Use cache if available
+            const cachedSnap = category === 'channel' ? tasksCacheChannel : tasksCachePartner;
+            if (cachedSnap && (category === 'channel' ? tasksRenderedChannel : tasksRenderedPartner)) return;
             container.innerHTML = '<div class="loader"></div>';
             try {
                 const q = query(collection(db,'tasks'), where('isApproved','==',true), where('category','==',category), orderBy('createdAt','desc'), limit(30));
                 const snap = await getDocs(q);
-                if (category === 'channel') tasksCacheChannel = snap; else tasksCachePartner = snap;
+                if (category === 'channel') { tasksCacheChannel = snap; tasksRenderedChannel = true; }
+                else { tasksCachePartner = snap; tasksRenderedPartner = true; }
                 container.innerHTML = ''; let count = 0;
                 snap.forEach(docSnap => {
                     const task = docSnap.data();
