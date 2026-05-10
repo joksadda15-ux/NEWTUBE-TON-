@@ -1,141 +1,123 @@
 // api/withdraw.js
 // POST /api/withdraw
-// Body: { userId, method, details, diamondAmount }
+// Body: { withdrawalId, action ('approve'|'reject'), adminSecret }
 //
-// Withdraw Methods:
-//   binance   → min 100 Diamond
-//   tonkeeper → min  50 Diamond
-//   bkash     → min 100 Diamond
-//
-// Requirements per 24h window:
-//   - Complete 5 tasks
-//   - Watch 20 ads
-//   - 1 withdrawal per day
+// Admin approve/reject করলে:
+//   approve → Firestore status update + user Bot notification
+//   reject  → diamond refund (transaction) + user Bot notification
 
 const { getDb, admin } = require('./utils/firebase');
 const { handleCors }   = require('./utils/cors');
 
-const METHODS = {
-    binance:   { label: 'Binance UID',       minDiamond: 100, rate: '1000 Diamond = 1 USDT'   },
-    tonkeeper: { label: 'Tonkeeper Address', minDiamond: 50,  rate: '1000 Diamond = 0.45 TON' },
-    bkash:     { label: 'bKash Number',      minDiamond: 80,  rate: '1000 Diamond = 120 BDT'  },
-};
-
-const REQUIRED_TASKS_MIN = 5;   // total tasks completed
-const REQUIRED_ADS_TODAY = 20;  // ads watched today
+const MINI_APP_URL = process.env.MINI_APP_URL || 'https://t.me/NewTube12_bot/WatchTo_Earn';
+const BOT_TOKEN    = process.env.BOT_TOKEN;
 
 module.exports = async function handler(req, res) {
-    if (handleCors(req, res)) return;
+  if (handleCors(req, res)) return;
+  if (req.method !== 'POST')
+    return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ ok: false, error: 'POST only' });
-    }
+  const { withdrawalId, action, adminSecret } = req.body || {};
 
-    const { userId, method, details, diamondAmount } = req.body || {};
+  // ── Admin auth ──
+  if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET)
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
 
-    // ── Basic validation ──
-    if (!userId || !method || !details || typeof diamondAmount !== 'number') {
-        return res.status(400).json({ ok: false, error: 'userId, method, details and diamondAmount required' });
-    }
+  if (!withdrawalId || !['approve','reject'].includes(action))
+    return res.status(400).json({ ok: false, error: 'withdrawalId and action required' });
 
-    if (!METHODS[method]) {
-        return res.status(400).json({ ok: false, error: 'Invalid method. Use: binance, tonkeeper, bkash' });
-    }
+  const db = getDb();
 
-    const methodConfig = METHODS[method];
-    if (diamondAmount < methodConfig.minDiamond) {
-        return res.status(400).json({
-            ok: false,
-            error: `Minimum ${methodConfig.minDiamond} Diamond for ${methodConfig.label}`,
-        });
-    }
+  try {
+    const wRef  = db.collection('withdrawals').doc(withdrawalId);
+    const wSnap = await wRef.get();
 
-    const db      = getDb();
-    const userRef = db.collection('users').doc(String(userId));
-    const today   = getTodayString();
+    if (!wSnap.exists)
+      return res.status(404).json({ ok: false, error: 'Withdrawal not found' });
 
+    const wd = wSnap.data();
+    if (wd.status !== 'pending')
+      return res.status(400).json({ ok: false, error: `Already ${wd.status}` });
+
+    const userId     = String(wd.userId);
+    const diamondAmt = wd.diamondAmount || wd.amount || 0;
+    const method     = wd.method || 'TON';
+    const wallet     = wd.walletAddress || wd.address || '—';
+
+    // user telegramId নেওয়া
+    let telegramId = userId;
     try {
-        // ── Check if wallet already used by another account ──
-        const walletSnap = await db.collection('withdrawals')
-            .where('details', '==', details)
-            .limit(5)
-            .get();
+      const uSnap = await db.collection('users').doc(userId).get();
+      if (uSnap.exists) telegramId = String(uSnap.data().telegramId || uSnap.data().userId || userId);
+    } catch(_) {}
 
-        let walletConflict = false;
-        walletSnap.forEach(d => {
-            if (d.data().userId !== String(userId)) walletConflict = true;
-        });
-        if (walletConflict) {
-            return res.status(400).json({ ok: false, error: 'This address is already linked to another account' });
-        }
+    if (action === 'approve') {
+      await wRef.update({ status: 'approved', approvedAt: admin.firestore.FieldValue.serverTimestamp() });
+      await sendApproveMsg(telegramId, diamondAmt, method, wallet);
+      return res.status(200).json({ ok: true, message: 'Approved & notification sent' });
 
-        // ── Run in transaction ──
-        await db.runTransaction(async (t) => {
-            const snap = await t.get(userRef);
-            if (!snap.exists) throw new Error('User not found');
-            const user = snap.data();
-
-            if (user.isBanned) throw new Error('Account banned');
-
-            // 1 withdrawal per day
-            if (user.lastWithdrawDate === today) {
-                throw new Error('You can only withdraw once per day');
-            }
-
-            // Diamond balance check
-            const currentDiamond = user.diamondBalance || 0;
-            if (currentDiamond < diamondAmount) {
-                throw new Error(`Insufficient Diamonds. You have ${currentDiamond}, need ${diamondAmount}`);
-            }
-
-            // Requirements: always 5 tasks total + 20 ads today
-            const adsToday = user.adsWatchedToday || 0;
-            if (adsToday < REQUIRED_ADS_TODAY) {
-                throw new Error(`Watch ${REQUIRED_ADS_TODAY} ads today first. Done: ${adsToday}/${REQUIRED_ADS_TODAY}`);
-            }
-            const tasksTotal = (user.completedTasks || []).length;
-            if (tasksTotal < REQUIRED_TASKS_MIN) {
-                throw new Error(`Complete ${REQUIRED_TASKS_MIN} tasks first. Done: ${tasksTotal}/${REQUIRED_TASKS_MIN}`);
-            }
-
-            // Create withdrawal request
-            const wRef = db.collection('withdrawals').doc();
-            t.set(wRef, {
-                userId:        String(userId),
-                method,
-                methodLabel:   methodConfig.label,
-                details,
-                diamondAmount,
-                status:        'pending',
-                createdAt:     admin.firestore.FieldValue.serverTimestamp(),
-                currency:      'diamond',
-            });
-
-            // Deduct diamonds and mark withdraw date
-            t.update(userRef, {
-                diamondBalance:  admin.firestore.FieldValue.increment(-diamondAmount),
-                withdrawalCount: admin.firestore.FieldValue.increment(1),
-                lastWithdrawDate: today,
-            });
-        });
-
-        return res.status(200).json({
-            ok:      true,
-            success: true,
-            message: `Withdrawal of ${diamondAmount} Diamond submitted. Processing in 12–48 hours.`,
-        });
-
-    } catch (err) {
-        console.error('withdraw error:', err);
-        return res.status(400).json({ ok: false, error: err.message });
+    } else {
+      // reject: diamond ফেরত দেওয়া — atomic
+      const batch = db.batch();
+      batch.update(wRef, { status: 'rejected', rejectedAt: admin.firestore.FieldValue.serverTimestamp() });
+      batch.update(db.collection('users').doc(userId), {
+        diamondBalance: admin.firestore.FieldValue.increment(diamondAmt)
+      });
+      await batch.commit();
+      await sendRejectMsg(telegramId, diamondAmt, method);
+      return res.status(200).json({ ok: true, message: `Rejected, ${diamondAmt} Diamond refunded & notification sent` });
     }
+
+  } catch(err) {
+    console.error('withdraw API error:', err);
+    return res.status(500).json({ ok: false, error: err.message });
+  }
 };
 
-function getTodayString() {
-    return new Date().toLocaleDateString('en-US', {
-        timeZone: 'Asia/Dhaka',
-        year:  'numeric',
-        month: '2-digit',
-        day:   '2-digit',
+async function sendApproveMsg(chatId, diamondAmt, method, wallet) {
+  const usdt = (diamondAmt / 1000).toFixed(4);
+  const ton  = (diamondAmt / 1000 * 0.45).toFixed(4);
+  const bdt  = (diamondAmt / 1000 * 120).toFixed(2);
+  const text =
+    `🎉 <b>Withdrawal Approved!</b>\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `💎 Amount: <b>${diamondAmt.toLocaleString()} Diamond</b>\n` +
+    `💵 ≈ <b>${usdt} USDT</b>\n` +
+    `💠 ≈ <b>${ton} TON</b>\n` +
+    `🇧🇩 ≈ <b>${bdt} BDT</b>\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `📤 Method: <b>${method}</b>\n` +
+    `👛 Wallet: <code>${wallet}</code>\n\n` +
+    `⏳ Payment will be sent within <b>12–48 hours</b>.\n` +
+    `Thank you for using <b>NEWTUBE</b>! 🎮✨`;
+  await tgSend(chatId, text);
+}
+
+async function sendRejectMsg(chatId, diamondAmt, method) {
+  const text =
+    `❌ <b>Withdrawal Rejected</b>\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `💎 Amount: <b>${diamondAmt.toLocaleString()} Diamond</b>\n` +
+    `📤 Method: <b>${method}</b>\n` +
+    `━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `✅ Your <b>${diamondAmt.toLocaleString()} Diamond</b> has been <b>refunded</b> to your account.\n\n` +
+    `❓ Questions? Contact support.\n\n` +
+    `Keep earning on <b>NEWTUBE</b>! 🎮`;
+  await tgSend(chatId, text);
+}
+
+async function tgSend(chatId, text) {
+  if (!BOT_TOKEN) return console.error('BOT_TOKEN not set');
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id:    chatId,
+        text,
+        parse_mode: 'HTML',
+        reply_markup: { inline_keyboard: [[{ text: '🎮 Open NEWTUBE', url: MINI_APP_URL }]] }
+      })
     });
+  } catch(e) { console.error('tgSend error:', e); }
 }
