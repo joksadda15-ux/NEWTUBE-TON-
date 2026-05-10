@@ -2,88 +2,79 @@
 // POST /api/exchange
 // Body: { userId, goldAmount }
 //
-// Converts Gold → Diamond
-// Rate: 1,000 Gold = 1 Diamond
-// Min: 5,000 Gold | Max: 100,000 Gold per transaction
+// Gold → Diamond convert করে।
+// Rate: 1000 Gold = 1 Diamond (Firestore config থেকে নেওয়া হয়)
+// Minimum: 1000 Gold
+// Atomic: gold কমানো + diamond বাড়ানো একসাথে
 
 const { getDb, admin } = require('./utils/firebase');
 const { handleCors }   = require('./utils/cors');
 
-const GOLD_PER_DIAMOND = 1000;
-const MIN_GOLD         = 5000;
-const MAX_GOLD         = 100000;
+const DEFAULT_RATE    = 1000; // 1000 gold = 1 diamond
+const MIN_GOLD        = 1000;
 
 module.exports = async function handler(req, res) {
-    if (handleCors(req, res)) return;
+  if (handleCors(req, res)) return;
+  if (req.method !== 'POST')
+    return res.status(405).json({ ok: false, error: 'POST only' });
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ ok: false, error: 'POST only' });
-    }
+  const { userId, goldAmount } = req.body || {};
 
-    const { userId, goldAmount } = req.body || {};
+  if (!userId || typeof goldAmount !== 'number')
+    return res.status(400).json({ ok: false, error: 'userId and goldAmount required' });
 
-    if (!userId || typeof goldAmount !== 'number') {
-        return res.status(400).json({ ok: false, error: 'userId and goldAmount required' });
-    }
+  if (goldAmount < MIN_GOLD)
+    return res.status(400).json({ ok: false, error: `Minimum ${MIN_GOLD} Gold required` });
 
-    if (goldAmount < MIN_GOLD) {
-        return res.status(400).json({ ok: false, error: `Minimum ${MIN_GOLD} Gold required` });
-    }
+  if (goldAmount % MIN_GOLD !== 0)
+    return res.status(400).json({ ok: false, error: `Gold must be multiple of ${MIN_GOLD}` });
 
-    if (goldAmount > MAX_GOLD) {
-        return res.status(400).json({ ok: false, error: `Maximum ${MAX_GOLD} Gold per exchange` });
-    }
+  const db = getDb();
 
-    const diamondOut = Math.floor(goldAmount / GOLD_PER_DIAMOND);
-    if (diamondOut < 1) {
-        return res.status(400).json({ ok: false, error: 'Not enough Gold for 1 Diamond' });
-    }
+  try {
+    // ── Config থেকে rate নেওয়া (admin panel থেকে set করা যাবে) ──
+    let rate = DEFAULT_RATE;
+    try {
+      const cfgSnap = await db.collection('config').doc('exchange').get();
+      if (cfgSnap.exists && cfgSnap.data().goldPerDiamond) {
+        rate = cfgSnap.data().goldPerDiamond;
+      }
+    } catch (_) { /* config না পেলে default use */ }
 
-    const db      = getDb();
+    const diamondToAdd = Math.floor(goldAmount / rate);
+    if (diamondToAdd < 1)
+      return res.status(400).json({ ok: false, error: 'Not enough gold for 1 diamond' });
+
     const userRef = db.collection('users').doc(String(userId));
 
-    try {
-        // Run in Firestore transaction to prevent race conditions
-        const result = await db.runTransaction(async (t) => {
-            const snap = await t.get(userRef);
+    // ── Transaction: balance check + atomic update ──
+    await db.runTransaction(async (t) => {
+      const snap = await t.get(userRef);
+      if (!snap.exists) throw new Error('User not found');
 
-            if (!snap.exists) throw new Error('User not found');
-            const user = snap.data();
-            if (user.isBanned) throw new Error('Account banned');
+      const user = snap.data();
+      if (user.isBanned) throw new Error('Banned');
 
-            const currentGold = user.goldBalance || 0;
-            if (currentGold < goldAmount) {
-                throw new Error(`Insufficient Gold. You have ${currentGold}, need ${goldAmount}`);
-            }
+      const currentGold = user.goldBalance || 0;
+      if (currentGold < goldAmount)
+        throw new Error(`Insufficient gold. You have ${currentGold}, need ${goldAmount}`);
 
-            t.update(userRef, {
-                goldBalance:    admin.firestore.FieldValue.increment(-goldAmount),
-                diamondBalance: admin.firestore.FieldValue.increment(diamondOut),
-            });
+      t.update(userRef, {
+        goldBalance:            admin.firestore.FieldValue.increment(-goldAmount),
+        diamondBalance:         admin.firestore.FieldValue.increment(diamondToAdd),
+        lifetimeDiamondsEarned: admin.firestore.FieldValue.increment(diamondToAdd),
+      });
+    });
 
-            // Log the exchange
-            const logRef = db.collection('exchanges').doc();
-            t.set(logRef, {
-                userId:      String(userId),
-                goldSpent:   goldAmount,
-                diamondGained: diamondOut,
-                rate:        GOLD_PER_DIAMOND,
-                createdAt:   admin.firestore.FieldValue.serverTimestamp(),
-            });
+    return res.status(200).json({
+      ok:           true,
+      goldSpent:    goldAmount,
+      diamondAdded: diamondToAdd,
+      rate,
+    });
 
-            return { goldSpent: goldAmount, diamondGained: diamondOut };
-        });
-
-        return res.status(200).json({
-            ok:            true,
-            success:       true,
-            goldSpent:     result.goldSpent,
-            diamondGained: result.diamondGained,
-            message:       `Converted ${result.goldSpent} Gold → ${result.diamondGained} Diamond`,
-        });
-
-    } catch (err) {
-        console.error('exchange error:', err);
-        return res.status(400).json({ ok: false, error: err.message });
-    }
+  } catch (err) {
+    console.error('exchange error:', err);
+    return res.status(500).json({ ok: false, error: err.message });
+  }
 };
