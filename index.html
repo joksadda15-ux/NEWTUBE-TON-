@@ -19,15 +19,6 @@
         });
     </script>
 
-    <!-- Adexium Ads -->
-    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', () => {
-            const adexiumWidget = new AdexiumWidget({wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial'});
-            adexiumWidget.autoMode();
-        });
-    </script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
@@ -48,31 +39,31 @@
     </script>
 
     <style>
-        /* ── DARK OBSIDIAN GOLD THEME ── */
+        /* ── DARK NEON LIGHTNING THEME ── */
         :root {
-            --bg: #050508;
-            --bg2: #0a0a12;
-            --card: rgba(12, 12, 22, 0.92);
-            --card2: rgba(18, 16, 30, 0.88);
-            --header-bg: rgba(5, 5, 8, 0.97);
-            --gold: #F5A623;
-            --gold-bright: #FFD166;
-            --gold-dim: rgba(245, 166, 35, 0.12);
-            --gold-glow: rgba(245, 166, 35, 0.35);
-            --diamond: #A8EDFF;
-            --diamond-dim: rgba(168, 237, 255, 0.1);
-            --diamond-glow: rgba(168, 237, 255, 0.3);
-            --blue: #4FC3F7;
-            --green: #00E5A0;
-            --green-dim: rgba(0, 229, 160, 0.12);
-            --red: #FF6B8A;
-            --purple: #9B59B6;
-            --text: #F0F0F8;
-            --text2: #8888AA;
-            --border: rgba(245, 166, 35, 0.18);
-            --border2: rgba(255,255,255,0.06);
-            --disabled-bg: #111118;
-            --disabled-text: #444455;
+            --bg: #020408;
+            --bg2: #060d14;
+            --card: rgba(6, 14, 24, 0.95);
+            --card2: rgba(8, 18, 30, 0.90);
+            --header-bg: rgba(2, 4, 8, 0.98);
+            --gold: #00D4FF;
+            --gold-bright: #60EFFF;
+            --gold-dim: rgba(0, 212, 255, 0.10);
+            --gold-glow: rgba(0, 212, 255, 0.30);
+            --diamond: #BF94FF;
+            --diamond-dim: rgba(191, 148, 255, 0.10);
+            --diamond-glow: rgba(191, 148, 255, 0.30);
+            --blue: #00D4FF;
+            --green: #00FFC8;
+            --green-dim: rgba(0, 255, 200, 0.10);
+            --red: #FF4D6D;
+            --purple: #BF94FF;
+            --text: #E8F4FF;
+            --text2: #6A8FAF;
+            --border: rgba(0, 212, 255, 0.15);
+            --border2: rgba(255,255,255,0.05);
+            --disabled-bg: #0a1118;
+            --disabled-text: #2a3a4a;
             --r-card: 18px;
             --r-btn: 12px;
         }
@@ -93,16 +84,16 @@
         /* ── BACKGROUND ── */
         .bg-canvas {
             position: fixed; inset: 0; z-index: -3;
-            background: 
-                radial-gradient(ellipse at 20% 10%, rgba(245,166,35,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(168,237,255,0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, #0d0b18 0%, #050508 80%);
+            background:
+                radial-gradient(ellipse at 15% 10%, rgba(0,212,255,0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 85% 85%, rgba(191,148,255,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, #040c18 0%, #020408 80%);
         }
         .bg-grid {
             position: fixed; inset: 0; z-index: -2;
             background-image:
-                linear-gradient(rgba(245,166,35,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(245,166,35,0.04) 1px, transparent 1px);
+                linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
             background-size: 44px 44px;
             animation: gridMove 40s linear infinite;
             mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
@@ -220,20 +211,20 @@
 
         .btn {
             width: 100%; padding: 13px; border: none; border-radius: var(--r-btn); font-weight: 700; font-size: 0.85rem; cursor: pointer;
-            background: linear-gradient(135deg, var(--gold), #e09010); color: #000;
+            background: linear-gradient(135deg, #00D4FF, #0090cc); color: #000;
             transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 7px;
             text-transform: uppercase; letter-spacing: 0.4px;
-            box-shadow: 0 4px 14px rgba(245,166,35,0.3);
+            box-shadow: 0 4px 18px rgba(0,212,255,0.35), 0 0 1px rgba(0,212,255,0.5) inset;
         }
-        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,166,35,0.5); }
-        .btn.outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); box-shadow: none; }
-        .btn.outline:hover:not(:disabled) { background: var(--gold-dim); box-shadow: 0 0 14px var(--gold-dim); }
-        .btn.diamond-btn { background: linear-gradient(135deg, var(--diamond), #70c8f0); color: #000; box-shadow: 0 4px 14px var(--diamond-glow); }
-        .btn.diamond-btn:hover:not(:disabled) { box-shadow: 0 6px 22px var(--diamond-glow); }
-        .btn.ghost { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text2); box-shadow: none; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,212,255,0.55), 0 0 20px rgba(0,212,255,0.2); }
+        .btn.outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); box-shadow: 0 0 8px rgba(0,212,255,0.1); }
+        .btn.outline:hover:not(:disabled) { background: var(--gold-dim); box-shadow: 0 0 18px rgba(0,212,255,0.25); }
+        .btn.diamond-btn { background: linear-gradient(135deg, #BF94FF, #9060e0); color: #fff; box-shadow: 0 4px 18px rgba(191,148,255,0.35); }
+        .btn.diamond-btn:hover:not(:disabled) { box-shadow: 0 6px 28px rgba(191,148,255,0.5); }
+        .btn.ghost { background: rgba(0,212,255,0.04); border: 1px solid rgba(0,212,255,0.12); color: var(--text2); box-shadow: none; }
         .btn.ghost:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
-        .btn.green-btn { background: linear-gradient(135deg, var(--green), #00bb80); color: #000; box-shadow: 0 4px 14px var(--green-dim); }
-        .btn:disabled { background: var(--disabled-bg) !important; color: var(--disabled-text) !important; cursor: not-allowed; border: 1px solid #1a1a2a !important; box-shadow: none !important; transform: none !important; }
+        .btn.green-btn { background: linear-gradient(135deg, #00FFC8, #00bba0); color: #000; box-shadow: 0 4px 18px rgba(0,255,200,0.3); }
+        .btn:disabled { background: var(--disabled-bg) !important; color: var(--disabled-text) !important; cursor: not-allowed; border: 1px solid #0a1a2a !important; box-shadow: none !important; transform: none !important; }
 
         /* ── SECTION TITLES ── */
         .section-title { font-size: 1.15rem; font-weight: 800; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
@@ -1080,21 +1071,31 @@ Come back tomorrow!`);
             btn.dataset.busy = "true";
             btn.textContent = "Claiming...";
 
-            // NO AD REQUIRED for lootbox claim
+            // ── API দিয়ে lootbox claim করা (secure)
             try {
                 const claimedGold = localAdData.unclaimedGold;
-                const userRef = doc(db, 'users', currentUser.id);
 
-                await updateDoc(userRef, {
-                    goldBalance:              increment(claimedGold),
-                    lifetimeGoldEarned:       increment(claimedGold),
-                    lifetimeAdsWatched:       increment(localAdData.adsWatched || 0),
-                    adsWatchedAdsgramDaily:   increment(localAdData.adsWatchedAdsgramDaily  || 0),
-                    adsWatchedAdsgramSpecial: increment(localAdData.adsWatchedAdsgramSpecial|| 0),
-                    adsWatchedMonetag:        increment(localAdData.adsWatchedMonetag       || 0),
-                    adsWatchedGiga:           increment(localAdData.adsWatchedGiga          || 0),
-                    adsWatchedToday:          increment(localAdData.adsWatched || 0),
+                const res = await fetch(`${VERCEL_API_BASE}/api/claimLootbox`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId:                   String(currentUser.id),
+                        points:                   claimedGold,
+                        adsWatched:               localAdData.adsWatched || 0,
+                        adsWatchedAdsgramDaily:   localAdData.adsWatchedAdsgramDaily  || 0,
+                        adsWatchedAdsgramSpecial: localAdData.adsWatchedAdsgramSpecial || 0,
+                        adsWatchedMonetag:        localAdData.adsWatchedMonetag       || 0,
+                        adsWatchedGiga:           localAdData.adsWatchedGiga          || 0,
+                    })
                 });
+                const data = await res.json();
+
+                if (!data.ok) {
+                    alert('Claim failed: ' + (data.error || 'Unknown error'));
+                    btn.dataset.busy = 'false';
+                    updateLootboxUI();
+                    return;
+                }
 
                 currentUser.goldBalance        = (currentUser.goldBalance || 0) + claimedGold;
                 currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + claimedGold;
@@ -1823,20 +1824,37 @@ Come back tomorrow!`);
                     }
                     // Get reward from button dataset (set dynamically from Firestore)
                     const reward = parseInt(button.dataset.reward || '250');
-                    const batch = writeBatch(db);
-                    batch.update(doc(db, 'users', currentUser.id), {
-                        completedTasks: arrayUnion(taskId),
-                        goldBalance:         increment(reward),
-                        lifetimeGoldEarned:  increment(reward),
-                        tasksCompletedToday: increment(1),
+
+                    // ── API দিয়ে task complete করা (channel verify + reward একসাথে)
+                    const res = await fetch(`${VERCEL_API_BASE}/api/tasks`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: String(currentUser.id),
+                            taskId: taskId
+                        })
                     });
-                    batch.update(doc(db, 'tasks', taskId), { completionCount: increment(1) });
-                    await batch.commit();
+                    const data = await res.json();
+
+                    if (!data.ok) {
+                        if (data.error === 'not_member') {
+                            alert('⚠️ Join the channel/group first!');
+                        } else if (data.alreadyDone) {
+                            alert('✅ Already completed!');
+                        } else {
+                            alert('Error: ' + (data.error || 'Unknown error'));
+                        }
+                        button.disabled = false;
+                        button.textContent = 'Verify';
+                        return;
+                    }
+
+                    const actualReward = data.rewardGold || reward;
                     currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
-                    currentUser.goldBalance = (currentUser.goldBalance || 0) + reward;
+                    currentUser.goldBalance = (currentUser.goldBalance || 0) + actualReward;
                     currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
                     updateBalanceUI();
-                    showSuccessModal('Task Done! ✅', `+${reward.toLocaleString()} 🪙 Gold earned!`);
+                    showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
                     button.closest('[data-task-card]').remove();
                 } catch (err) { button.disabled = false; button.textContent = 'Verify'; }
             }
@@ -1933,34 +1951,22 @@ Come back tomorrow!`);
 
         // ── REFERRAL TELEGRAM NOTIFICATION ──
         async function sendReferralNotif(referrerId, newUserName) {
-            const BOT_TOKEN = '7892868697:AAH5Ll89kGWOGWFAA-eW1NJnV3JrplhMNYo';
-            if (!BOT_TOKEN || !referrerId) return;
-            const msg =
-                `🎉 <b>Referral Reward!</b>\n\n` +
-                `👤 <b>${newUserName}</b> has joined using your referral link!\n\n` +
-                `💰 You have received: <b>+2,000 🪙 Gold</b>\n\n` +
-                `🚀 Keep inviting friends to earn more Gold!`;
+            if (!referrerId) return;
+            // Server API দিয়ে notification পাঠানো — Bot Token client-side এ নেই
             try {
-                await fetch(
-                    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id:    referrerId,
-                            text:       msg,
-                            parse_mode: 'HTML',
-                            reply_markup: {
-                                inline_keyboard: [[
-                                    { text: '🎮 Open NEWTUBE', url: 'http://t.me/NewTube12_bot/WatchTo_Earn' }
-                                ]]
-                            }
-                        })
-                    }
-                );
-            } catch(e) { console.log('Referral notif failed:', e.message); }
+                await fetch(`${VERCEL_API_BASE}/api/notify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'referral',
+                        referrerId: String(referrerId),
+                        newUserName
+                    })
+                });
+            } catch(e) {
+                console.log('Referral notif skipped:', e.message);
+            }
         }
-
         // ── MAIN INIT ──
         // Show loader immediately
         function showAppLoader() {
