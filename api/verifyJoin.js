@@ -1,8 +1,8 @@
 // api/verifyJoin.js
-// Handles BOTH routes in ONE file (saves serverless function count):
-//   /api/verifyJoin  → check official channel+group
-//   /api/checkMember → check any single channel (task system)
-//   /api/checkJoin   → alias for verifyJoin
+// Handles 3 routes:
+//   GET /api/checkMember?userId=&channel=   → task channel check
+//   GET /api/checkJoin?userId=              → official channel+group check
+//   GET/POST /api/verifyJoin?userId=        → official channel+group check
 
 const { getDb } = require('./utils/firebase');
 const { handleCors } = require('./utils/cors');
@@ -14,14 +14,17 @@ const OFFICIAL_GROUP   = process.env.GROUP_ID   || '@newTon_Gc';
 module.exports = async function handler(req, res) {
     if (handleCors(req, res)) return;
 
-    const urlPath = req.url || '';
+    const path = req.url || '';
+    const query = req.query || {};
 
-    // ── /api/checkMember?userId=&channel= ──
-    // Task system: check single channel membership
-    if (urlPath.includes('checkMember') || (req.query.channel && !req.query.checkJoin)) {
-        const { userId, channel } = req.query;
+    // ── Route: checkMember (for task channel verification) ──
+    if (path.includes('checkMember') || (query.channel && query.userId)) {
+        const { userId, channel } = query;
         if (!userId || !channel) {
             return res.status(400).json({ ok: false, error: 'userId and channel required' });
+        }
+        if (!BOT_TOKEN) {
+            return res.status(200).json({ ok: true, joined: true }); // don't block if no token
         }
         try {
             const joined = await checkMember(userId, channel);
@@ -31,18 +34,17 @@ module.exports = async function handler(req, res) {
         }
     }
 
-    // ── /api/verifyJoin or /api/checkJoin ──
+    // ── Route: verifyJoin / checkJoin (official channels) ──
     const userId = req.method === 'POST'
         ? req.body?.userId
-        : req.query?.userId;
+        : query.userId;
 
     if (!userId) {
         return res.status(400).json({ ok: false, error: 'userId required' });
     }
 
     if (!BOT_TOKEN) {
-        // Don't block user if token missing
-        return res.status(200).json({ ok: true, joined: true, error: 'BOT_TOKEN not configured' });
+        return res.status(200).json({ ok: true, joined: true });
     }
 
     try {
@@ -57,7 +59,7 @@ module.exports = async function handler(req, res) {
             try {
                 const db = getDb();
                 await db.collection('users').doc(String(userId)).update({ channelVerified: true });
-            } catch(e) { /* ignore */ }
+            } catch(e) {}
         }
 
         return res.status(200).json({ ok: true, joined, chanOk, groupOk });
@@ -75,6 +77,8 @@ async function checkMember(userId, chatId) {
         if (!resp.ok) return false;
         const data = await resp.json();
         if (!data.ok) return false;
-        return ['member','administrator','creator'].includes(data.result?.status);
-    } catch(e) { return false; }
+        return ['member', 'administrator', 'creator'].includes(data.result?.status);
+    } catch(e) {
+        return false;
+    }
 }
