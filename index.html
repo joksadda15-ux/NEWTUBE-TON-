@@ -1801,21 +1801,34 @@ Come back tomorrow!`);
             } else if (state === 'claim') {
                 button.disabled = true; button.textContent = 'Checking...';
                 try {
-                    if (category === 'channel' && channelId) {
+                    // Channel tasks: verify membership via API
+                    // Partner/YouTube/FB/WhatsApp tasks: no API needed, just complete
+                    if (category === 'channel' && channelId && channelId.trim() !== '') {
                         try {
                             const res = await fetch(`${TASK_API_BASE}/checkMember?userId=${currentUser.id}&channel=${encodeURIComponent(channelId)}`);
-                            const j = await res.json();
-                            if (!j.joined) { alert('⚠️ Join the channel/group first!'); button.disabled = false; button.textContent = 'Verify'; return; }
-                        } catch(e) { button.disabled = false; button.textContent = 'Verify'; return; }
+                            if (res.ok) {
+                                const j = await res.json();
+                                if (!j.joined) {
+                                    alert('⚠️ Join the channel/group first!');
+                                    button.disabled = false;
+                                    button.textContent = 'Verify';
+                                    return;
+                                }
+                            }
+                            // If API fails, allow completion anyway
+                        } catch(e) {
+                            console.log('Channel check skipped:', e.message);
+                            // Don't block - let user complete
+                        }
                     }
                     // Get reward from button dataset (set dynamically from Firestore)
                     const reward = parseInt(button.dataset.reward || '250');
                     const batch = writeBatch(db);
                     batch.update(doc(db, 'users', currentUser.id), {
                         completedTasks: arrayUnion(taskId),
-                        goldBalance: increment(reward),
-                        lifetimeGoldEarned: increment(reward),
-                        tasksCompletedToday: increment(1)
+                        goldBalance:         increment(reward),
+                        lifetimeGoldEarned:  increment(reward),
+                        tasksCompletedToday: increment(1),
                     });
                     batch.update(doc(db, 'tasks', taskId), { completionCount: increment(1) });
                     await batch.commit();
