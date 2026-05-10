@@ -1,107 +1,127 @@
 // api/tasks.js
 // POST /api/tasks
-// Body: { userId, taskId, category }
+// Body: { userId, taskId }
 //
-// Completes a task, awards Gold reward.
-// Channel tasks require Telegram membership verification.
-// Tracks daily task count for withdraw requirement (need 5/day).
+// Channel task হলে → Telegram Bot API দিয়ে membership verify
+// Partner task হলে → directly complete (YouTube/Facebook/Telegram bot)
+// Duplicate prevention: userId_taskId document ID
+// Reward শুধু verified হলেই দেওয়া হবে
 
 const { getDb, admin } = require('./utils/firebase');
 const { handleCors }   = require('./utils/cors');
 
-const BOT_TOKEN      = process.env.BOT_TOKEN;
-const TASK_REWARD_GOLD = 250; // Gold per task
+const BOT_TOKEN = process.env.BOT_TOKEN;
 
 module.exports = async function handler(req, res) {
-    if (handleCors(req, res)) return;
+  if (handleCors(req, res)) return;
+  if (req.method !== 'POST')
+    return res.status(405).json({ ok: false, error: 'POST only' });
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ ok: false, error: 'POST only' });
-    }
+  const { userId, taskId } = req.body || {};
+  if (!userId || !taskId)
+    return res.status(400).json({ ok: false, error: 'userId and taskId required' });
 
-    const { userId, taskId, category } = req.body || {};
+  const db = getDb();
 
-    if (!userId || !taskId) {
-        return res.status(400).json({ ok: false, error: 'userId and taskId required' });
-    }
+  try {
+    // ── 1. Task load ──
+    const taskSnap = await db.collection('tasks').doc(taskId).get();
+    if (!taskSnap.exists)
+      return res.status(404).json({ ok: false, error: 'Task not found' });
+    const task = taskSnap.data();
 
-    const db      = getDb();
-    const userRef = db.collection('users').doc(String(userId));
-    const taskRef = db.collection('tasks').doc(String(taskId));
+    // ── 2. User load ──
+    const userSnap = await db.collection('users').doc(String(userId)).get();
+    if (!userSnap.exists)
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    const user = userSnap.data();
+    if (user.isBanned)
+      return res.status(403).json({ ok: false, error: 'Banned' });
 
-    try {
-        // Fetch user and task in parallel
-        const [userSnap, taskSnap] = await Promise.all([
-            userRef.get(),
-            taskRef.get(),
-        ]);
+    // ── 3. Duplicate check ──
+    const completionId  = `${userId}_${taskId}`;
+    const completionRef = db.collection('task_completions').doc(completionId);
+    const cSnap         = await completionRef.get();
+    if (cSnap.exists)
+      return res.status(200).json({ ok: false, error: 'Already completed', alreadyDone: true });
 
-        if (!userSnap.exists) return res.status(404).json({ ok: false, error: 'User not found' });
-        if (!taskSnap.exists) return res.status(404).json({ ok: false, error: 'Task not found' });
+    // ── 4. Task limit check ──
+    if (task.limit && task.limit > 0 && (task.completionCount || 0) >= task.limit)
+      return res.status(400).json({ ok: false, error: 'Task limit reached' });
 
-        const user = userSnap.data();
-        const task = taskSnap.data();
+    // ── 5. Channel task → Telegram membership verify ──
+    if (task.category === 'channel' && task.channelId) {
+      if (!BOT_TOKEN)
+        return res.status(500).json({ ok: false, error: 'Bot token not configured' });
 
-        if (user.isBanned) return res.status(403).json({ ok: false, error: 'Banned' });
-        if (!task.isApproved) return res.status(400).json({ ok: false, error: 'Task not approved' });
+      const tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChatMember`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          chat_id: task.channelId,   // e.g. "@channelname"
+          user_id: parseInt(userId),
+        }),
+      });
+      const tgData = await tgRes.json();
 
-        // Already completed?
-        if ((user.completedTasks || []).includes(taskId)) {
-            return res.status(400).json({ ok: false, error: 'Task already completed' });
-        }
-
-        // Task limit check
-        if (task.limit > 0 && (task.completionCount || 0) >= task.limit) {
-            return res.status(400).json({ ok: false, error: 'Task limit reached' });
-        }
-
-        // Channel membership check for channel tasks
-        if (category === 'channel' && task.channelId) {
-            const joined = await checkMember(userId, task.channelId);
-            if (!joined) {
-                return res.status(400).json({ ok: false, error: 'Join the channel first', notJoined: true });
-            }
-        }
-
-        // Award Gold in a batch
-        const batch = db.batch();
-
-        batch.update(userRef, {
-            goldBalance:         admin.firestore.FieldValue.increment(TASK_REWARD_GOLD),
-            lifetimeGoldEarned:  admin.firestore.FieldValue.increment(TASK_REWARD_GOLD),
-            completedTasks:      admin.firestore.FieldValue.arrayUnion(taskId),
-            tasksCompletedToday: admin.firestore.FieldValue.increment(1),
-        });
-
-        batch.update(taskRef, {
-            completionCount: admin.firestore.FieldValue.increment(1),
-        });
-
-        await batch.commit();
-
+      if (!tgData.ok) {
         return res.status(200).json({
-            ok:          true,
-            success:     true,
-            goldAwarded: TASK_REWARD_GOLD,
-            message:     `+${TASK_REWARD_GOLD} Gold earned!`,
+          ok:      false,
+          error:   'Telegram verify failed. Make sure bot is admin in channel.',
+          tgError: tgData.description,
         });
+      }
 
-    } catch (err) {
-        console.error('tasks error:', err);
-        return res.status(500).json({ ok: false, error: err.message });
+      const validStatuses = ['member', 'administrator', 'creator'];
+      if (!validStatuses.includes(tgData.result?.status)) {
+        return res.status(200).json({
+          ok:      false,
+          error:   'not_member',
+          message: 'User has not joined the channel/group yet',
+        });
+      }
     }
+
+    // ── 6. Partner task (YouTube / Facebook / Telegram Bot) ──
+    // API verify লাগে না, directly complete
+    // (taskType: youtube | facebook | telegram_bot | telegram_channel | other)
+
+    // ── 7. Complete — atomic batch ──
+    const rewardGold = task.rewardGold || task.rewardPoints || 250;
+    const batch      = db.batch();
+
+    // completion record
+    batch.set(completionRef, {
+      userId,
+      taskId,
+      rewardGold,
+      category:    task.category,
+      taskType:    task.taskType || 'other',
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // user gold বাড়ানো
+    batch.update(db.collection('users').doc(String(userId)), {
+      goldBalance:          admin.firestore.FieldValue.increment(rewardGold),
+      lifetimeGoldEarned:   admin.firestore.FieldValue.increment(rewardGold),
+      tasksCompletedTotal:  admin.firestore.FieldValue.increment(1),
+    });
+
+    // task completion count বাড়ানো
+    batch.update(db.collection('tasks').doc(taskId), {
+      completionCount: admin.firestore.FieldValue.increment(1),
+    });
+
+    await batch.commit();
+
+    return res.status(200).json({
+      ok:         true,
+      message:    'Task completed!',
+      rewardGold,
+    });
+
+  } catch (err) {
+    console.error('tasks API error:', err);
+    return res.status(500).json({ ok: false, error: err.message });
+  }
 };
-
-// ── Telegram membership check ──
-async function checkMember(userId, chatId) {
-    try {
-        const url = `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(chatId)}&user_id=${userId}`;
-        const resp = await fetch(url);
-        const data = await resp.json();
-        if (!data.ok) return false;
-        const status = data.result?.status;
-        return ['member', 'administrator', 'creator'].includes(status);
-    } catch (e) {
-        return false;
-    }
-}
