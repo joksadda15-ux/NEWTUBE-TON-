@@ -934,8 +934,8 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
@@ -1908,17 +1908,19 @@ Come back tomorrow!`);
 
         // ── CHANNEL VERIFICATION ──
         async function checkMembershipAndEnforce() {
-            // Check if already verified in Firestore
             if (currentUser.channelVerified) return;
             try {
-                const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin?userId=${currentUser.id}`);
-                if (!res.ok) return; // API error → skip, don't block user
+                const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: String(currentUser.id), taskId: 'membership_check' })
+                });
+                if (!res.ok) return;
                 const data = await res.json();
-                if (!data.joined) {
+                if (data.ok === false && data.error === 'not_member') {
                     document.getElementById('activationModalOverlay').classList.add('show');
                 }
             } catch (e) {
-                // Network error → don't block user, skip verification
                 console.log('Join check skipped:', e.message);
             }
         }
