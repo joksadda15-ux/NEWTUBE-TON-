@@ -1,10 +1,6 @@
 // api/withdraw.js
 // POST /api/withdraw
-// Body: { withdrawalId, action ('approve'|'reject'), adminSecret }
-//
-// Admin approve/reject করলে:
-//   approve → Firestore status update + user Bot notification
-//   reject  → diamond refund (transaction) + user Bot notification
+// action: 'approve' | 'reject' | 'referral_notify'
 
 const { getDb, admin } = require('./utils/firebase');
 const { handleCors }   = require('./utils/cors');
@@ -17,10 +13,25 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST')
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
-  const { withdrawalId, action, adminSecret } = req.body || {};
+  const { action, adminSecret, withdrawalId, referrerId, newUserName } = req.body || {};
 
-  // ── Admin auth ──
-  if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET)
+  // ── Referral notification (Mini App থেকে, internal secret)
+  if (action === 'referral_notify') {
+    if (adminSecret !== 'referral_internal')
+      return res.status(401).json({ ok: false, error: 'Unauthorized' });
+    if (!referrerId)
+      return res.status(400).json({ ok: false, error: 'referrerId required' });
+    const msg =
+      `🎉 <b>Referral Reward!</b>\n\n` +
+      `👤 <b>${newUserName || 'A friend'}</b> joined using your link!\n\n` +
+      `💰 You received: <b>+2,000 🪙 Gold</b>\n\n` +
+      `🚀 Keep inviting friends to earn more!`;
+    await tgSend(String(referrerId), msg);
+    return res.status(200).json({ ok: true });
+  }
+
+  // ── Approve / Reject (Admin Panel থেকে)
+  if (adminSecret !== process.env.ADMIN_SECRET)
     return res.status(401).json({ ok: false, error: 'Unauthorized' });
 
   if (!withdrawalId || !['approve','reject'].includes(action))
@@ -44,7 +55,6 @@ module.exports = async function handler(req, res) {
     const method     = wd.method || 'TON';
     const wallet     = wd.walletAddress || wd.address || '—';
 
-    // user telegramId নেওয়া
     let telegramId = userId;
     try {
       const uSnap = await db.collection('users').doc(userId).get();
@@ -55,9 +65,7 @@ module.exports = async function handler(req, res) {
       await wRef.update({ status: 'approved', approvedAt: admin.firestore.FieldValue.serverTimestamp() });
       await sendApproveMsg(telegramId, diamondAmt, method, wallet);
       return res.status(200).json({ ok: true, message: 'Approved & notification sent' });
-
     } else {
-      // reject: diamond ফেরত দেওয়া — atomic
       const batch = db.batch();
       batch.update(wRef, { status: 'rejected', rejectedAt: admin.firestore.FieldValue.serverTimestamp() });
       batch.update(db.collection('users').doc(userId), {
@@ -65,11 +73,10 @@ module.exports = async function handler(req, res) {
       });
       await batch.commit();
       await sendRejectMsg(telegramId, diamondAmt, method);
-      return res.status(200).json({ ok: true, message: `Rejected, ${diamondAmt} Diamond refunded & notification sent` });
+      return res.status(200).json({ ok: true, message: `Rejected, refunded & notification sent` });
     }
-
   } catch(err) {
-    console.error('withdraw API error:', err);
+    console.error('withdraw error:', err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 };
@@ -78,44 +85,35 @@ async function sendApproveMsg(chatId, diamondAmt, method, wallet) {
   const usdt = (diamondAmt / 1000).toFixed(4);
   const ton  = (diamondAmt / 1000 * 0.45).toFixed(4);
   const bdt  = (diamondAmt / 1000 * 120).toFixed(2);
-  const text =
+  await tgSend(chatId,
     `🎉 <b>Withdrawal Approved!</b>\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━━\n` +
-    `💎 Amount: <b>${diamondAmt.toLocaleString()} Diamond</b>\n` +
-    `💵 ≈ <b>${usdt} USDT</b>\n` +
-    `💠 ≈ <b>${ton} TON</b>\n` +
-    `🇧🇩 ≈ <b>${bdt} BDT</b>\n` +
-    `━━━━━━━━━━━━━━━━━━━━━\n` +
+    `━━━━━━━━━━━━━━━━━\n` +
+    `💎 <b>${diamondAmt.toLocaleString()} Diamond</b>\n` +
+    `💵 ≈ ${usdt} USDT | 💠 ≈ ${ton} TON | 🇧🇩 ≈ ${bdt} BDT\n` +
+    `━━━━━━━━━━━━━━━━━\n` +
     `📤 Method: <b>${method}</b>\n` +
-    `👛 Wallet: <code>${wallet}</code>\n\n` +
-    `⏳ Payment will be sent within <b>12–48 hours</b>.\n` +
-    `Thank you for using <b>NEWTUBE</b>! 🎮✨`;
-  await tgSend(chatId, text);
+    `👛 <code>${wallet}</code>\n\n` +
+    `⏳ Payment within <b>12–48 hours</b>.\nThank you for using <b>NEWTUBE</b>! 🎮`
+  );
 }
 
 async function sendRejectMsg(chatId, diamondAmt, method) {
-  const text =
+  await tgSend(chatId,
     `❌ <b>Withdrawal Rejected</b>\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━━\n` +
-    `💎 Amount: <b>${diamondAmt.toLocaleString()} Diamond</b>\n` +
-    `📤 Method: <b>${method}</b>\n` +
-    `━━━━━━━━━━━━━━━━━━━━━\n\n` +
-    `✅ Your <b>${diamondAmt.toLocaleString()} Diamond</b> has been <b>refunded</b> to your account.\n\n` +
-    `❓ Questions? Contact support.\n\n` +
-    `Keep earning on <b>NEWTUBE</b>! 🎮`;
-  await tgSend(chatId, text);
+    `💎 <b>${diamondAmt.toLocaleString()} Diamond</b> refunded to your account.\n` +
+    `📤 Method: <b>${method}</b>\n\n` +
+    `Keep earning on <b>NEWTUBE</b>! 🎮`
+  );
 }
 
 async function tgSend(chatId, text) {
-  if (!BOT_TOKEN) return console.error('BOT_TOKEN not set');
+  if (!BOT_TOKEN) return;
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chat_id:    chatId,
-        text,
-        parse_mode: 'HTML',
+        chat_id: chatId, text, parse_mode: 'HTML',
         reply_markup: { inline_keyboard: [[{ text: '🎮 Open NEWTUBE', url: MINI_APP_URL }]] }
       })
     });
