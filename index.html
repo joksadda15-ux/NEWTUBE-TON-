@@ -19,14 +19,7 @@
         });
     </script>
 
-    <!-- Adexium Ads -->
-    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', () => {
-            const adexiumWidget = new AdexiumWidget({wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial'});
-            adexiumWidget.autoMode();
-        });
-    </script>
+
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,9 +27,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <!-- AD INTEGRATIONS -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
-    <script src="https://ad.gigapub.tech/script?id=846"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js" async></script>
+    <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539' async></script>
+    <script src="https://ad.gigapub.tech/script?id=846" async></script>
 
     <script>
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -1190,12 +1183,12 @@ Come back tomorrow!`);
             const userRef = doc(db, 'users', userId);
             const today = getTodayDateString();
 
-            // ── Firestore read — timeout 8 সেকেন্ড
+            // ── Firestore read — timeout 5 সেকেন্ড
             let userSnap;
             try {
                 userSnap = await Promise.race([
                     getDoc(userRef),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 8000))
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 5000))
                 ]);
             } catch(e) {
                 console.error('Firestore getDoc failed:', e.message);
@@ -1994,31 +1987,32 @@ Come back tomorrow!`);
             try { tg.expand(); } catch(e) {}
             try { tg.setHeaderColor('#050508'); } catch(e) {}
 
-            await new Promise(r => setTimeout(r, 600));
+            // Telegram ready হওয়ার জন্য wait
+            await new Promise(r => setTimeout(r, 400));
 
             if (!tg.initDataUnsafe?.user) {
                 hideAppLoader();
-                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:var(--bg);"><i class="fas fa-telegram-plane" style="font-size:3rem;color:var(--gold);"></i><h3 style="color:var(--text2);font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
+                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:#050508;"><div style="font-size:3rem;">📱</div><h3 style="color:#888;font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
                 return;
             }
 
-            // ── Timeout fallback: ১০ সেকেন্ডের মধ্যে load না হলে loader hide করো
+            // ── Hard timeout: 8 সেকেন্ডে যা হোক loader hide
             const loaderTimeout = setTimeout(() => {
-                console.warn('Init timeout — forcing loader hide');
+                console.warn('Loader timeout — forcing hide');
                 hideAppLoader();
-            }, 10000);
+            }, 8000);
 
             try {
                 await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
             } catch(e) {
-                console.error('Init error:', e);
+                console.error('Init error:', e.message);
             } finally {
                 clearTimeout(loaderTimeout);
                 hideAppLoader();
             }
 
             if (currentUser && !currentUser.isBanned) {
-                setTimeout(() => checkMembershipAndEnforce(), 1500);
+                setTimeout(() => { try { checkMembershipAndEnforce(); } catch(e) {} }, 2000);
             }
         }
         main();
