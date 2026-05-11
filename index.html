@@ -1188,8 +1188,38 @@ Come back tomorrow!`);
         async function initializeUser(tgUser, referrerCode) {
             const userId = String(tgUser.id);
             const userRef = doc(db, 'users', userId);
-            const userSnap = await getDoc(userRef);
             const today = getTodayDateString();
+
+            // ── Firestore read — timeout 8 সেকেন্ড
+            let userSnap;
+            try {
+                userSnap = await Promise.race([
+                    getDoc(userRef),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 8000))
+                ]);
+            } catch(e) {
+                console.error('Firestore getDoc failed:', e.message);
+                // Firestore fail হলেও dummy user দিয়ে app চালু করো
+                currentUser = {
+                    id: userId,
+                    goldBalance: 0, diamondBalance: 0,
+                    telegramUsername: tgUser.username || 'N/A',
+                    firstName: tgUser.first_name || 'User',
+                    completedTasks: [], isBanned: false,
+                    lifetimeGoldEarned: 0, adsWatchedAdsgramDaily: 0,
+                    adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
+                    adsWatchedGiga: 0, dailyVideoMined: 0,
+                    lastResetDate: today, referralCount: 0,
+                    _offlineMode: true
+                };
+                updateBalanceUI();
+                updateLootboxUI();
+                updateVideoUI();
+                document.getElementById('uid-text').textContent = userId;
+                document.getElementById('profile-name-display').textContent = tgUser.first_name || 'User';
+                try { document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`; } catch(_) {}
+                return;
+            }
 
             if (!userSnap.exists()) {
                 const data = {
@@ -1803,7 +1833,7 @@ Come back tomorrow!`);
             } else if (state === 'claim') {
                 button.disabled = true; button.textContent = 'Checking...';
                 try {
-                    // ── /api/tasks দিয়ে complete (channel verify + reward একসাথে)
+                    // ── /api/tasks দিয়ে complete
                     const reward = parseInt(button.dataset.reward || '250');
                     try {
                         const res = await fetch('https://newtube-ton.vercel.app/api/tasks', {
@@ -1928,7 +1958,6 @@ Come back tomorrow!`);
         // ── REFERRAL TELEGRAM NOTIFICATION ──
         async function sendReferralNotif(referrerId, newUserName) {
             if (!referrerId) return;
-            // withdraw.js API তে referral notification merge করা আছে
             try {
                 await fetch('https://newtube-ton.vercel.app/api/withdraw', {
                     method: 'POST',
@@ -1961,25 +1990,30 @@ Come back tomorrow!`);
             showAppLoader();
             try { tg.ready(); } catch(e) {}
             try { tg.expand(); } catch(e) {}
-            try { tg.setHeaderColor('#020408'); } catch(e) {}
+            try { tg.setHeaderColor('#050508'); } catch(e) {}
 
-            // Telegram ready হওয়ার জন্য wait
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 600));
 
             if (!tg.initDataUnsafe?.user) {
                 hideAppLoader();
-                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:#020408;"><i class="fas fa-telegram-plane" style="font-size:3rem;color:#00D4FF;"></i><h3 style="color:#6A8FAF;font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
+                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:var(--bg);"><i class="fas fa-telegram-plane" style="font-size:3rem;color:var(--gold);"></i><h3 style="color:var(--text2);font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
                 return;
             }
+
+            // ── Timeout fallback: ১০ সেকেন্ডের মধ্যে load না হলে loader hide করো
+            const loaderTimeout = setTimeout(() => {
+                console.warn('Init timeout — forcing loader hide');
+                hideAppLoader();
+            }, 10000);
 
             try {
                 await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
             } catch(e) {
                 console.error('Init error:', e);
-                // Error হলেও loader hide করে দাও
+            } finally {
+                clearTimeout(loaderTimeout);
+                hideAppLoader();
             }
-
-            hideAppLoader();
 
             if (currentUser && !currentUser.isBanned) {
                 setTimeout(() => checkMembershipAndEnforce(), 1500);
