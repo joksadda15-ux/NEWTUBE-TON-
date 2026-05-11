@@ -1080,10 +1080,9 @@ Come back tomorrow!`);
             btn.dataset.busy = "true";
             btn.textContent = "Claiming...";
 
-            // ── API দিয়ে claim (secure, Firestore rules bypass হবে না)
+            // ── API দিয়ে claim
             try {
                 const claimedGold = localAdData.unclaimedGold;
-
                 const res = await fetch('https://newtube-ton.vercel.app/api/claimLootbox', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1098,29 +1097,20 @@ Come back tomorrow!`);
                     })
                 });
                 const data = await res.json();
-
                 if (!data.ok) {
                     alert('Claim failed: ' + (data.error || 'Unknown error'));
-                    btn.dataset.busy = 'false';
-                    btn.disabled = false;
-                    btn.textContent = 'Claim Lootbox';
-                    updateLootboxUI();
-                    return;
+                    btn.dataset.busy = 'false'; btn.disabled = false; btn.textContent = 'Claim Lootbox';
+                    updateLootboxUI(); return;
                 }
-
                 currentUser.goldBalance        = (currentUser.goldBalance || 0) + claimedGold;
                 currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + claimedGold;
                 currentUser.adsWatchedToday    = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-
                 incrementLootboxClaimCount();
                 const remaining = LOOTBOX_DAILY_CLAIM_MAX - getLootboxClaimCount();
-
                 showSuccessModal("Lootbox Claimed! 🎉", `+${claimedGold.toLocaleString()} 🪙 Gold added!<br><small style="color:rgba(255,255,255,0.6);">Claims left today: ${remaining}/${LOOTBOX_DAILY_CLAIM_MAX}</small>`);
                 localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
                 localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                updateBalanceUI();
-                updateAdButtonStats();
-
+                updateBalanceUI(); updateAdButtonStats();
             } catch(e) {
                 console.error('Lootbox claim error:', e);
                 alert('Claim failed: ' + e.message);
@@ -1813,34 +1803,25 @@ Come back tomorrow!`);
             } else if (state === 'claim') {
                 button.disabled = true; button.textContent = 'Checking...';
                 try {
-                    // Channel verify + reward — /api/tasks এ একসাথে হবে
-                    // ── API দিয়ে task complete (channel verify + reward একসাথে)
+                    // ── /api/tasks দিয়ে complete (channel verify + reward একসাথে)
                     const reward = parseInt(button.dataset.reward || '250');
                     try {
                         const res = await fetch('https://newtube-ton.vercel.app/api/tasks', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                userId: String(currentUser.id),
-                                taskId: taskId
-                            })
+                            body: JSON.stringify({ userId: String(currentUser.id), taskId })
                         });
                         const data = await res.json();
-
                         if (!data.ok) {
                             if (data.error === 'not_member') {
-                                alert('⚠️ Join the channel/group first, then verify!');
+                                alert('⚠️ Join the channel/group first, then tap Verify!');
                             } else if (data.alreadyDone) {
-                                alert('✅ Already completed!');
-                                button.closest('[data-task-card]')?.remove();
+                                button.closest('[data-task-card]')?.remove(); return;
                             } else {
-                                alert('Error: ' + (data.error || 'Unknown error'));
+                                alert('Error: ' + (data.error || 'Unknown'));
                             }
-                            button.disabled = false;
-                            button.textContent = 'Verify';
-                            return;
+                            button.disabled = false; button.textContent = 'Verify'; return;
                         }
-
                         const actualReward = data.rewardGold || reward;
                         currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
                         currentUser.goldBalance = (currentUser.goldBalance || 0) + actualReward;
@@ -1848,12 +1829,9 @@ Come back tomorrow!`);
                         updateBalanceUI();
                         showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
                         button.closest('[data-task-card]')?.remove();
-
-                    } catch (err) {
-                        console.error('Task complete error:', err);
+                    } catch(err) {
                         alert('Network error: ' + err.message);
-                        button.disabled = false;
-                        button.textContent = 'Verify';
+                        button.disabled = false; button.textContent = 'Verify';
                     }
             }
         });
@@ -1950,13 +1928,19 @@ Come back tomorrow!`);
         // ── REFERRAL TELEGRAM NOTIFICATION ──
         async function sendReferralNotif(referrerId, newUserName) {
             if (!referrerId) return;
+            // withdraw.js API তে referral notification merge করা আছে
             try {
-                await fetch('https://newtube-ton.vercel.app/api/notify', {
+                await fetch('https://newtube-ton.vercel.app/api/withdraw', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'referral', referrerId: String(referrerId), newUserName })
+                    body: JSON.stringify({
+                        action: 'referral_notify',
+                        referrerId: String(referrerId),
+                        newUserName,
+                        adminSecret: 'referral_internal'
+                    })
                 });
-            } catch(e) { console.log('Referral notif skipped:', e.message); }
+            } catch(e) { console.log('Referral notif skipped'); }
         }
 
         // ── MAIN INIT ──
@@ -1975,16 +1959,16 @@ Come back tomorrow!`);
 
         async function main() {
             showAppLoader();
-            tg.ready();
-            tg.expand();
-            tg.setHeaderColor('#050508');
+            try { tg.ready(); } catch(e) {}
+            try { tg.expand(); } catch(e) {}
+            try { tg.setHeaderColor('#020408'); } catch(e) {}
 
-            // Wait for Telegram to be fully ready
-            await new Promise(r => setTimeout(r, 600));
+            // Telegram ready হওয়ার জন্য wait
+            await new Promise(r => setTimeout(r, 800));
 
             if (!tg.initDataUnsafe?.user) {
                 hideAppLoader();
-                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:var(--bg);"><i class="fas fa-telegram-plane" style="font-size:3rem;color:var(--gold);"></i><h3 style="color:var(--text2);font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
+                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:#020408;"><i class="fas fa-telegram-plane" style="font-size:3rem;color:#00D4FF;"></i><h3 style="color:#6A8FAF;font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
                 return;
             }
 
@@ -1992,12 +1976,11 @@ Come back tomorrow!`);
                 await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
             } catch(e) {
                 console.error('Init error:', e);
+                // Error হলেও loader hide করে দাও
             }
 
-            // Hide loader - show app
             hideAppLoader();
 
-            // Non-blocking: check channel membership after UI is visible
             if (currentUser && !currentUser.isBanned) {
                 setTimeout(() => checkMembershipAndEnforce(), 1500);
             }
