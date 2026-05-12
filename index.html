@@ -1889,19 +1889,25 @@ Come back tomorrow!`);
 
         // ── CHANNEL VERIFICATION ──
         async function checkMembershipAndEnforce() {
-            if (currentUser.channelVerified) return;
+            // channelVerified থাকলে বা offline mode এ block করবো না
+            if (currentUser.channelVerified || currentUser._offlineMode) return;
             try {
+                const controller = new AbortController();
+                setTimeout(() => controller.abort(), 5000);
                 const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: String(currentUser.id), taskId: 'membership_check' })
+                    body: JSON.stringify({ userId: String(currentUser.id), taskId: 'membership_check' }),
+                    signal: controller.signal
                 });
-                if (!res.ok) return;
+                if (!res.ok) return; // API error হলে block করবো না
                 const data = await res.json();
+                // শুধু নিশ্চিতভাবে not_member হলে modal দেখাও
                 if (data.ok === false && data.error === 'not_member') {
                     document.getElementById('activationModalOverlay').classList.add('show');
                 }
             } catch (e) {
+                // timeout বা network error — block করবো না, চলতে দাও
                 console.log('Join check skipped:', e.message);
             }
         }
