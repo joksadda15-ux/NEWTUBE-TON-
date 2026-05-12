@@ -875,8 +875,8 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
@@ -1089,12 +1089,11 @@
             const userRef = doc(db, 'users', userId);
             const today = getTodayDateString();
 
-            // Firestore read — timeout 10s, fail হলে dummy user
             let userSnap;
             try {
                 userSnap = await Promise.race([
                     getDoc(userRef),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
                 ]);
             } catch(e) {
                 console.error('Firestore failed:', e.message);
@@ -1111,7 +1110,7 @@
                 updateBalanceUI(); updateLootboxUI(); updateVideoUI();
                 document.getElementById('uid-text').textContent = userId;
                 document.getElementById('profile-name-display').textContent = tgUser.first_name || 'User';
-                try { document.getElementById('modalReferralLinkInput').value = \`http://t.me/NewTube12_bot/WatchTo_Earn?startapp=\${userId}\`; } catch(_) {}
+                try { document.getElementById('modalReferralLinkInput').value = 'http://t.me/NewTube12_bot/WatchTo_Earn?startapp=' + userId; } catch(_) {}
                 return;
             }
 
@@ -1797,25 +1796,10 @@
 
         // ── MAIN INIT ──
         async function main() {
+            if (!tg.initDataUnsafe?.user) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--text2);">Open in Telegram.</h3>`; return; }
             tg.ready(); tg.expand(); tg.setHeaderColor('#050508');
-            // Telegram user পাওয়ার জন্য সর্বোচ্চ 2s wait
-            let waited = 0;
-            while (!tg.initDataUnsafe?.user && waited < 2000) {
-                await new Promise(r => setTimeout(r, 200));
-                waited += 200;
-            }
-            if (!tg.initDataUnsafe?.user) {
-                document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--text2);">Open in Telegram.</h3>`;
-                return;
-            }
-            try {
-                await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
-            } catch(e) {
-                console.error('Fatal init error:', e);
-            }
-            if(currentUser && !currentUser.isBanned) {
-                setTimeout(() => { try { checkMembershipAndEnforce(); } catch(e){} }, 1500);
-            }
+            await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
+            if(currentUser && !currentUser.isBanned) { await checkMembershipAndEnforce(); }
         }
         main();
 
