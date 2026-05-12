@@ -3,33 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NEWTUBE - Gold & Diamond Platform</title>
+    <title>NEWTUBE TON - Premium Platform</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
-
-    <!-- Adexium Ads (auto interstitial) -->
-    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', () => {
-            const adexiumWidget = new AdexiumWidget({
-                wid: '165512cc-372e-4fb0-98d2-552219c72799',
-                adFormat: 'interstitial'
-            });
-            adexiumWidget.autoMode();
-        });
-    </script>
-
-
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <!-- AD INTEGRATIONS -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js" async></script>
-    <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539' async></script>
-    <script src="https://ad.gigapub.tech/script?id=846" async></script>
 
     <script>
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -40,403 +20,361 @@
         }
     </script>
 
+    <!-- AD INTEGRATIONS -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
+    <script src="https://ad.gigapub.tech/script?id=846"></script>
+
     <style>
-        /* ── DARK OBSIDIAN GOLD THEME ── */
+        /* ── NEW UNIQUE OBSIDIAN & CYAN THEME ── */
         :root {
-            --bg: #050508;
-            --bg2: #0a0a12;
-            --card: rgba(12, 12, 22, 0.92);
-            --card2: rgba(18, 16, 30, 0.88);
-            --header-bg: rgba(5, 5, 8, 0.97);
-            --gold: #F5A623;
-            --gold-bright: #FFD166;
-            --gold-dim: rgba(245, 166, 35, 0.12);
-            --gold-glow: rgba(245, 166, 35, 0.35);
-            --diamond: #A8EDFF;
-            --diamond-dim: rgba(168, 237, 255, 0.1);
-            --diamond-glow: rgba(168, 237, 255, 0.3);
-            --blue: #4FC3F7;
-            --green: #00E5A0;
-            --green-dim: rgba(0, 229, 160, 0.12);
-            --red: #FF6B8A;
-            --purple: #9B59B6;
-            --text: #F0F0F8;
-            --text2: #8888AA;
-            --border: rgba(245, 166, 35, 0.18);
-            --border2: rgba(255,255,255,0.06);
-            --disabled-bg: #111118;
-            --disabled-text: #444455;
-            --r-card: 18px;
+            --bg: #030509;
+            --card: rgba(15, 20, 30, 0.85);
+            --header-bg: rgba(3, 5, 9, 0.95);
+            --primary: #00E5FF;
+            --primary-dim: rgba(0, 229, 255, 0.15);
+            --primary-hover: #00b8cc;
+            --secondary: #3b82f6;
+            --violet: #8B5CF6;
+            --violet-dim: rgba(139, 92, 246, 0.15);
+            --gold: #FBBF24;
+            --gold-dim: rgba(251, 191, 36, 0.15);
+            --green: #10B981;
+            --green-dim: rgba(16, 185, 129, 0.15);
+            --red: #F43F5E;
+            --text: #F8FAFC;
+            --text2: #94A3B8;
+            --border: rgba(0, 229, 255, 0.15);
+            --input-bg: rgba(3, 5, 9, 0.85);
+            --disabled-bg: #0B0F19;
+            --disabled-text: #475569;
+            --r-card: 16px;
             --r-btn: 12px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; }
 
         body {
-            background: var(--bg);
-            color: var(--text2);
-            font-family: 'Inter', sans-serif;
-            padding: 64px 0 86px;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-            position: relative;
+            background: var(--bg); color: var(--text2); font-family: 'Inter', sans-serif;
+            margin: 0; padding: 68px 0 88px; min-height: 100vh;
+            -webkit-font-smoothing: antialiased; overflow-x: hidden; position: relative;
         }
 
-        /* ── BACKGROUND ── */
+        /* ── ANIMATED PREMIUM BG ── */
         .bg-canvas {
-            position: fixed; inset: 0; z-index: -3;
-            background: 
-                radial-gradient(ellipse at 20% 10%, rgba(245,166,35,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(168,237,255,0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, #0d0b18 0%, #050508 80%);
+            position: fixed; inset: 0; z-index: -2; overflow: hidden;
+            background: radial-gradient(circle at 50% 0%, #0c1524 0%, var(--bg) 60%);
         }
+        /* Geometric Tech Grid */
         .bg-grid {
-            position: fixed; inset: 0; z-index: -2;
+            position: fixed; inset: 0; z-index: -1;
             background-image:
-                linear-gradient(rgba(245,166,35,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(245,166,35,0.04) 1px, transparent 1px);
-            background-size: 44px 44px;
-            animation: gridMove 40s linear infinite;
-            mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridMove 30s linear infinite;
+            mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
         }
-        @keyframes gridMove { 0%{background-position:0 0;} 100%{background-position:44px 44px;} }
+        @keyframes gridMove { 0%{background-position:0 0;} 100%{background-position:40px 40px;} }
 
+        /* Floating particles */
         .particles { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-        .particle { position: absolute; border-radius: 50%; animation: floatUp linear infinite; }
-        @keyframes floatUp {
+        .particle {
+            position: absolute; border-radius: 50%; animation: float linear infinite;
+        }
+        @keyframes float {
             0%   { transform: translateY(100vh) scale(0); opacity: 0; }
-            15%  { opacity: 1; }
-            85%  { opacity: 0.6; }
-            100% { transform: translateY(-5vh) scale(1.2); opacity: 0; }
+            20%  { opacity: 1; }
+            80%  { opacity: 0.8; }
+            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
         }
 
         /* ── HEADER ── */
         .main-header {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 60px;
-            background: var(--header-bg);
-            border-bottom: 1px solid rgba(245,166,35,0.15);
-            backdrop-filter: blur(24px);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.7), 0 1px 0 rgba(245,166,35,0.08);
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 64px;
+            background: var(--header-bg); border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
         .site-branding { display: flex; align-items: center; gap: 10px; }
         .logo-ring {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: linear-gradient(135deg, rgba(245,166,35,0.15), rgba(168,237,255,0.08));
-            border: 1px solid var(--gold);
+            width: 38px; height: 38px; border-radius: 10px;
+            background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(59,130,246,0.1));
+            border: 1px solid var(--primary);
             display: flex; align-items: center; justify-content: center;
-            color: var(--gold); font-size: 1rem;
-            box-shadow: 0 0 12px var(--gold-glow);
+            color: var(--primary); font-size: 1rem;
+            box-shadow: 0 0 15px rgba(0,229,255,0.3);
         }
-        .site-title { font-size: 1.1rem; color: var(--text); font-weight: 800; letter-spacing: 0.5px; }
-        .site-title span { color: var(--gold); }
+        .site-title { font-size: 1.15rem; color: var(--text); font-weight: 800; margin: 0; letter-spacing: 0.5px; }
+        .site-title span { color: var(--primary); }
         .header-right { display: flex; gap: 8px; }
         .hbtn {
-            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text);
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text);
             width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center;
-            justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 0.95rem;
+            justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 1rem;
         }
-        .hbtn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+        .hbtn:hover { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 10px var(--primary-dim); background: var(--primary-dim); }
 
-        .container { max-width: 780px; margin: 0 auto; padding: 16px 13px 0; position: relative; z-index: 1; }
+        /* ── CONTAINER ── */
+        .container { max-width: 780px; margin: 0 auto; padding: 0 14px; position: relative; z-index: 1; }
 
         /* ── PROFILE CARD ── */
         .profile-card {
-            position: relative; overflow: hidden; margin-bottom: 16px;
-            background: var(--card); backdrop-filter: blur(14px);
-            border: 1px solid rgba(245,166,35,0.2); border-radius: 22px; padding: 22px 18px 18px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(245,166,35,0.1);
+            position: relative; overflow: hidden; margin-bottom: 18px;
+            background: var(--card); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 20px; padding: 26px 20px 22px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
         }
         .profile-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, var(--gold), var(--diamond), var(--gold));
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary), var(--green));
         }
-        .profile-top { display: flex; align-items: center; gap: 13px; margin-bottom: 16px; }
+
+        .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
         .avatar-wrap { position: relative; flex-shrink: 0; width: 60px; height: 60px; }
         .avatar-ring {
-            width: 100%; height: 100%; border-radius: 16px;
-            background: linear-gradient(135deg, rgba(245,166,35,0.15), rgba(168,237,255,0.08));
-            border: 2px solid var(--gold);
-            display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--gold);
-            box-shadow: 0 0 18px var(--gold-glow);
+            width: 60px; height: 60px; border-radius: 16px;
+            background: var(--primary-dim); border: 2px solid var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; color: var(--primary);
+            box-shadow: 0 0 20px rgba(0,229,255,0.2);
         }
-        .avatar-status { position: absolute; bottom: -2px; right: -2px; width: 14px; height: 14px; background: var(--green); border: 2px solid var(--bg); border-radius: 50%; }
+        .avatar-status {
+            position: absolute; bottom: -2px; right: -2px;
+            width: 14px; height: 14px; background: var(--green);
+            border: 2px solid var(--bg); border-radius: 50%;
+        }
         .profile-info { flex: 1; min-width: 0; }
-        .profile-name { font-size: 1.1rem; font-weight: 800; color: var(--text); margin-bottom: 5px; }
+        .profile-name { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 4px; }
         .profile-id {
             display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(0,0,0,0.5); border: 1px solid rgba(245,166,35,0.2);
-            padding: 4px 10px; border-radius: 7px; cursor: pointer;
-            font-size: 0.72rem; font-family: 'Roboto Mono', monospace; color: var(--gold);
+            background: rgba(0,0,0,0.5); border: 1px solid var(--border);
+            padding: 4px 10px; border-radius: 8px; cursor: pointer;
+            font-size: 0.75rem; font-family: 'Roboto Mono', monospace; color: var(--primary);
+            transition: all 0.2s;
         }
 
-        /* ── CURRENCY DISPLAY ── */
-        .currency-display {
-            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px; padding: 18px; margin-bottom: 14px; text-align: center;
+        .balance-display {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px; padding: 18px; text-align: center; margin-bottom: 16px;
         }
-        .currency-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .currency-box {
-            background: rgba(0,0,0,0.4); border-radius: 12px; padding: 14px 10px; text-align: center;
+        .bal-ton {
+            font-size: 2.4rem; font-weight: 800; color: var(--text); line-height: 1;
+            text-shadow: 0 0 15px rgba(0,229,255,0.4);
+            font-family: 'Roboto Mono', monospace;
         }
-        .currency-box.gold-box { border: 1px solid rgba(245,166,35,0.3); }
-        .currency-box.diamond-box { border: 1px solid rgba(168,237,255,0.3); }
-        .currency-icon { font-size: 1.6rem; margin-bottom: 6px; }
-        .currency-amount { font-size: 1.5rem; font-weight: 800; font-family: 'Roboto Mono', monospace; line-height: 1; }
-        .gold-box .currency-amount { color: var(--gold); text-shadow: 0 0 14px var(--gold-glow); }
-        .diamond-box .currency-amount { color: var(--diamond); text-shadow: 0 0 14px var(--diamond-glow); }
-        .currency-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-top: 5px; }
-        .gold-box .currency-label { color: rgba(245,166,35,0.7); }
-        .diamond-box .currency-label { color: rgba(168,237,255,0.6); }
-        .currency-rate { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+        .bal-ton-label { font-size: 0.75rem; color: var(--text2); font-weight: 600; letter-spacing: 1px; margin-top: 4px; }
+        .bal-pts { font-size: 1rem; color: var(--green); font-weight: 700; margin-top: 6px; }
 
-        /* rate strip */
-        .rate-strip {
-            background: rgba(245,166,35,0.06); border: 1px solid rgba(245,166,35,0.15);
-            border-radius: 10px; padding: 9px 12px;
-            display: flex; justify-content: space-around; gap: 6px;
-            font-size: 0.68rem; color: var(--text2); text-align: center;
+        /* ── STATS GRID ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+        .stat-box {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; padding: 12px 8px; text-align: center;
         }
-        .rate-strip-item strong { display: block; font-size: 0.75rem; color: var(--gold); font-weight: 700; }
-
-        /* ── STATS ── */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
-        .stat-box { background: rgba(0,0,0,0.35); border: 1px solid var(--border2); border-radius: 12px; padding: 12px 7px; text-align: center; }
-        .stat-label { font-size: 0.62rem; text-transform: uppercase; font-weight: 600; color: var(--text2); margin-bottom: 5px; letter-spacing: 0.5px; }
-        .stat-val { font-size: 1.1rem; font-weight: 800; color: var(--gold); }
+        .stat-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+        .stat-val { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
 
         /* ── ACTION BUTTONS ── */
-        .action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 12px; }
+        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
         .action-link-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
+        /* ── BUTTONS ── */
         .btn {
-            width: 100%; padding: 13px; border: none; border-radius: var(--r-btn); font-weight: 700; font-size: 0.85rem; cursor: pointer;
-            background: linear-gradient(135deg, var(--gold), #e09010); color: #000;
-            transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 7px;
-            text-transform: uppercase; letter-spacing: 0.4px;
-            box-shadow: 0 4px 14px rgba(245,166,35,0.3);
+            width: 100%; padding: 13px; border: none; border-radius: var(--r-btn);
+            font-weight: 700; font-size: 0.9rem; cursor: pointer;
+            background: var(--primary); color: #000; transition: all 0.25s;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0,229,255,0.3);
         }
-        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,166,35,0.5); }
-        .btn.outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); box-shadow: none; }
-        .btn.outline:hover:not(:disabled) { background: var(--gold-dim); box-shadow: 0 0 14px var(--gold-dim); }
-        .btn.diamond-btn { background: linear-gradient(135deg, var(--diamond), #70c8f0); color: #000; box-shadow: 0 4px 14px var(--diamond-glow); }
-        .btn.diamond-btn:hover:not(:disabled) { box-shadow: 0 6px 22px var(--diamond-glow); }
-        .btn.ghost { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text2); box-shadow: none; }
-        .btn.ghost:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
-        .btn.green-btn { background: linear-gradient(135deg, var(--green), #00bb80); color: #000; box-shadow: 0 4px 14px var(--green-dim); }
-        .btn:disabled { background: var(--disabled-bg) !important; color: var(--disabled-text) !important; cursor: not-allowed; border: 1px solid #1a1a2a !important; box-shadow: none !important; transform: none !important; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,229,255,0.5); }
+        .btn.outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); box-shadow: none; }
+        .btn.outline:hover:not(:disabled) { background: var(--primary-dim); box-shadow: 0 0 15px var(--primary-dim); }
+        .btn.violet { background: var(--violet); color: #fff; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
+        .btn.violet:hover:not(:disabled) { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+        .btn.ghost { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); box-shadow: none; }
+        .btn.ghost:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
+        .btn:disabled { background: var(--disabled-bg) !important; color: var(--disabled-text) !important; cursor: not-allowed; border: 1px solid #222 !important; box-shadow: none !important; transform: none !important; }
+        .task-btn { padding: 8px 14px; font-size: 0.8rem; border-radius: 8px; width: auto; flex-shrink: 0; }
 
         /* ── SECTION TITLES ── */
-        .section-title { font-size: 1.15rem; font-weight: 800; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-        .title-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
-        .ti-gold  { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(245,166,35,0.25); }
-        .ti-diamond { background: var(--diamond-dim); color: var(--diamond); border: 1px solid rgba(168,237,255,0.2); }
-        .ti-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,229,160,0.2); }
-        .ti-red { background: rgba(255,107,138,0.12); color: var(--red); border: 1px solid rgba(255,107,138,0.2); }
-
-        /* ── CARDS ── */
-        .card {
-            background: var(--card); border: 1px solid var(--border2);
-            border-radius: var(--r-card); padding: 20px; margin-bottom: 14px;
+        .section-title {
+            font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 10px;
         }
-        .info-bar {
-            background: rgba(245,166,35,0.05); border: 1px solid rgba(245,166,35,0.15);
-            border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
-            font-size: 0.8rem; color: var(--text2); display: flex; align-items: center; gap: 10px;
+        .section-title .title-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0;
         }
-        .info-bar i { color: var(--gold); font-size: 1.1rem; flex-shrink: 0; }
+        .ti-blue { background: var(--primary-dim); color: var(--primary); border: 1px solid var(--border); }
+        .ti-gold  { background: var(--gold-dim);    color: var(--gold);    border: 1px solid rgba(251,191,36,0.3); }
+        .ti-violet{ background: var(--violet-dim);  color: var(--violet);  border: 1px solid rgba(139,92,246,0.3); }
 
         /* ── AD CARDS ── */
         .ad-card {
-            background: var(--card); border: 1px solid var(--border2); border-radius: var(--r-card);
-            padding: 16px 18px; margin-bottom: 12px; transition: all 0.25s;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.3); border-left: 3px solid transparent;
+            background: var(--card); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--r-card); padding: 16px 18px; margin-bottom: 12px;
+            transition: all 0.25s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-left: 3px solid transparent;
         }
-        .ad-card:hover { transform: translateY(-1px); background: var(--card2); }
+        .ad-card:hover { border-color: var(--primary); transform: translateY(-2px); background: rgba(20,25,35,0.9); }
+        
         .ad-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-        .ad-name { font-size: 0.95rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
-        .ad-network { font-size: 0.72rem; color: var(--text2); margin-top: 3px; }
-        .ad-badge { font-size: 0.68rem; font-weight: 800; padding: 3px 9px; border-radius: 5px; letter-spacing: 0.5px; }
+        .ad-name { font-size: 0.98rem; font-weight: 700; color: var(--text); display:flex; align-items:center; gap:6px;}
+        .ad-network { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
+        .ad-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; }
         .ad-card-bottom { display: flex; justify-content: space-between; align-items: center; }
-        .ad-reward { font-size: 0.95rem; font-weight: 800; color: var(--green); display: flex; align-items: center; gap: 5px; }
-        .ad-limit-text { font-size: 0.75rem; color: var(--text2); font-family: monospace; font-weight: bold; margin-top: 3px; }
-        .task-btn { padding: 9px 14px; font-size: 0.8rem; border-radius: 9px; width: auto; flex-shrink: 0; }
-        .ad-adsgram-daily { border-left-color: var(--gold); }
-        .ad-adsgram-daily .ad-badge { background: var(--gold-dim); color: var(--gold); }
-        .ad-adsgram-special { border-left-color: #FFD166; }
-        .ad-adsgram-special .ad-badge { background: rgba(255,209,102,0.12); color: #FFD166; }
-        .ad-monetag { border-left-color: var(--blue); }
-        .ad-monetag .ad-badge { background: rgba(79,195,247,0.12); color: var(--blue); }
+        .ad-reward { font-size: 0.95rem; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: 5px; }
+        .ad-limit-text { font-size: 0.75rem; color: var(--text2); font-family: monospace; }
+
+        /* Custom Ad Styles */
+        .ad-adsgram-daily { border-left-color: var(--primary); }
+        .ad-adsgram-daily .ad-badge { background: var(--primary-dim); color: var(--primary); }
+        
+        .ad-adsgram-special { border-left-color: var(--gold); }
+        .ad-adsgram-special .ad-badge { background: var(--gold-dim); color: var(--gold); }
+        
+        .ad-monetag { border-left-color: var(--secondary); }
+        .ad-monetag .ad-badge { background: rgba(59,130,246,0.15); color: var(--secondary); }
+        
         .ad-giga { border-left-color: var(--red); }
-        .ad-giga .ad-badge { background: rgba(255,107,138,0.12); color: var(--red); }
+        .ad-giga .ad-badge { background: rgba(244,63,94,0.15); color: var(--red); }
 
-        /* ── LOOTBOX (VIDEO SECTION) ── */
-        .lootbox-card {
-            background: linear-gradient(145deg, rgba(12,10,22,0.95), rgba(245,166,35,0.06));
-            border: 1px solid rgba(245,166,35,0.25); border-radius: var(--r-card);
-            padding: 20px; text-align: center; margin-bottom: 16px;
-            box-shadow: 0 0 22px rgba(245,166,35,0.1);
+        /* info bar */
+        .info-bar {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
+            font-size: 0.8rem; color: var(--text2); display: flex; align-items: center; gap: 10px;
         }
-        .lootbox-progress-wrap { margin: 14px 0 10px; }
-        .lootbox-bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden; }
-        .lootbox-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); transition: width 0.5s; border-radius: 5px; }
-        .lootbox-range-text { font-size: 0.72rem; color: var(--text2); margin-top: 6px; display: flex; justify-content: space-between; }
+        .info-bar i { color: var(--primary); font-size:1.1rem; flex-shrink: 0; }
 
-        /* ── VIDEO SECTION ── */
-        .video-theme-bg {
-            position: fixed; inset: 0; z-index: -1; pointer-events: none;
-            background: 
-                radial-gradient(ellipse at 50% 0%, rgba(245,166,35,0.1) 0%, transparent 55%),
-                radial-gradient(ellipse at 100% 100%, rgba(168,237,255,0.07) 0%, transparent 45%);
-            opacity: 0; transition: opacity 0.6s ease;
+        /* ── GENERIC CARD ── */
+        .card {
+            background: var(--card); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--r-card); padding: 20px; margin-bottom: 16px;
         }
-        body.video-active .video-theme-bg { opacity: 1; }
-        .video-player-card {
-            padding: 0; overflow: hidden; border-radius: 14px; margin-bottom: 12px;
-            position: relative; background: #000;
-            border: 1px solid rgba(245,166,35,0.3);
-            box-shadow: 0 0 24px rgba(245,166,35,0.15);
-        }
-        .video-player-label {
-            position: absolute; top: 8px; left: 8px; z-index: 10;
-            background: rgba(0,0,0,0.7); border: 1px solid rgba(245,166,35,0.4);
-            color: var(--gold); font-size: 0.62rem; font-weight: 800;
-            padding: 3px 9px; border-radius: 5px; letter-spacing: 1px; backdrop-filter: blur(6px);
-        }
-        .mining-compact {
-            background: linear-gradient(135deg, rgba(10,8,18,0.96), rgba(245,166,35,0.06));
-            border: 1px solid rgba(245,166,35,0.22); border-radius: 13px;
-            padding: 13px 15px; margin-bottom: 13px;
-            display: flex; align-items: center; gap: 13px;
-        }
-        .mining-compact-left { flex: 1; min-width: 0; }
-        .mining-compact-title { font-size: 0.76rem; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
-        .mining-compact-bar { width: 100%; height: 7px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
-        .mining-compact-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); transition: width 0.5s; border-radius: 3px; }
-        .mining-compact-stats { font-size: 0.7rem; color: var(--text2); }
-        .mining-compact-pts { font-family: monospace; font-weight: 800; color: var(--gold); font-size: 1.25rem; }
-        .mining-compact-right { flex-shrink: 0; text-align: right; }
-        .video-table-wrap { background: rgba(0,0,0,0.3); border: 1px solid rgba(245,166,35,0.15); border-radius: 13px; overflow: hidden; margin-bottom: 16px; }
-        .video-table-header { display: grid; grid-template-columns: 1fr 70px; padding: 9px 13px; background: rgba(245,166,35,0.07); border-bottom: 1px solid rgba(245,166,35,0.12); font-size: 0.68rem; font-weight: 800; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
-        .video-table-row { display: grid; grid-template-columns: 1fr 70px; align-items: center; padding: 9px 13px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s; cursor: pointer; gap: 9px; }
-        .video-table-row:last-child { border-bottom: none; }
-        .video-table-row:hover { background: rgba(245,166,35,0.06); }
-        .video-row-info { display: flex; align-items: center; gap: 9px; min-width: 0; }
-        .video-row-thumb { width: 52px; height: 34px; border-radius: 5px; overflow: hidden; flex-shrink: 0; position: relative; border: 1px solid rgba(245,166,35,0.2); }
-        .video-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .video-row-thumb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
-        .video-row-thumb-overlay i { color: #fff; font-size: 0.72rem; }
-        .video-row-title { font-size: 0.78rem; color: var(--text); font-weight: 600; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .video-row-pts { font-size: 0.7rem; color: var(--gold); font-weight: 700; text-align: right; white-space: nowrap; }
 
         /* ── FORMS ── */
         .form-group { margin-bottom: 14px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 7px; font-size: 0.82rem; font-weight: 600; color: var(--text2); }
-        input[type="text"], input[type="number"], select {
-            width: 100%; padding: 13px 14px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(0,0,0,0.5); color: var(--text); font-size: 0.9rem; outline: none; transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
+        .form-group label { display: block; margin-bottom: 6px; font-size: 0.82rem; font-weight: 500; color: var(--text2); }
+        input[type="text"], input[type="number"] {
+            width: 100%; padding: 12px 14px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5);
+            color: var(--text); font-size: 0.92rem; outline: none; transition: all 0.2s;
         }
-        input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 12px var(--gold-dim); }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-dim); }
         input:read-only { background: var(--disabled-bg); color: var(--text2); }
-        select option { background: #0d0b18; color: var(--text); }
-        .input-row { display: flex; gap: 9px; margin-bottom: 14px; }
+        .input-row { display: flex; gap: 8px; margin-bottom: 14px; }
         .input-row input { flex: 1; text-align: center; font-family: 'Roboto Mono', monospace; }
         .input-row .btn { width: auto; padding: 0 18px; flex-shrink: 0; }
 
         /* ── BOTTOM NAV ── */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
-            background: rgba(5,5,8,0.97); border-top: 1px solid rgba(245,166,35,0.12);
-            backdrop-filter: blur(22px); display: flex; padding: 10px 0 22px;
+            background: rgba(3,5,9,0.95); border-top: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px); display: flex; padding: 10px 0 20px;
         }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: var(--disabled-text); font-size: 0.62rem; font-weight: 700; transition: all 0.25s; text-transform: uppercase; letter-spacing: 0.3px; }
-        .nav-item i { font-size: 1.25rem; transition: transform 0.2s; }
-        .nav-item.active { color: var(--gold); }
-        .nav-item.active i { transform: translateY(-3px); filter: drop-shadow(0 0 7px var(--gold)); }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+            text-decoration: none; color: var(--disabled-text); font-size: 0.68rem;
+            font-weight: 600; transition: all 0.25s; text-transform: uppercase;
+        }
+        .nav-item i { font-size: 1.2rem; transition: transform 0.2s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-3px); filter: drop-shadow(0 0 5px var(--primary)); }
 
         /* ── CONTENT SECTIONS ── */
         .content-section { display: none; animation: fadeUp 0.3s ease forwards; }
         .content-section.active { display: block; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
 
-        /* ── LOADER ── */
-        .loader { border: 3px solid rgba(245,166,35,0.1); border-top: 3px solid var(--gold); border-radius: 50%; width: 30px; height: 30px; animation: spin 0.7s linear infinite; margin: 28px auto; }
+        .loader { border: 3px solid rgba(0,229,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 28px; height: 28px; animation: spin 0.7s linear infinite; margin: 28px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ── MODALS ── */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(12px); padding: 16px; }
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(8px); padding: 16px;
+        }
         .modal-overlay.show { display: flex; }
-        .modal-box { background: var(--bg2); border: 1px solid rgba(245,166,35,0.2); color: var(--text); padding: 24px; border-radius: 22px; width: 100%; max-width: 360px; box-shadow: 0 12px 50px rgba(0,0,0,0.8), 0 0 40px rgba(245,166,35,0.08); animation: modalPop 0.3s cubic-bezier(0.175,0.885,0.32,1.275) forwards; max-height: 88vh; overflow-y: auto; }
-        @keyframes modalPop { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
-        .modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-        .modal-header-icon { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .modal-title { font-size: 1.15rem; font-weight: 800; }
-        .tier-info { background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 13px; margin-bottom: 14px; }
-        .tier-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.82rem; }
+        .modal-box {
+            background: #0B0F19; border: 1px solid var(--border);
+            color: var(--text); padding: 24px; border-radius: 20px;
+            width: 100%; max-width: 350px;
+            box-shadow: 0 10px 50px rgba(0,229,255,0.15);
+            animation: modalPop 0.3s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+            max-height: 85vh; overflow-y: auto;
+        }
+        @keyframes modalPop { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+        .modal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .modal-header-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .modal-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
+
+        /* ── WITHDRAW TIERS ── */
+        .tier-info {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; padding: 12px; margin-bottom: 14px;
+        }
+        .tier-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; }
         .tier-row:last-child { border-bottom: none; }
-        .tier-range { color: var(--text2); font-weight: 500; }
-        .tier-ref { font-weight: 800; color: var(--gold); }
-        .ton-preview { margin-top: 7px; font-size: 0.88rem; color: var(--green); font-weight: 800; display: none; text-align: center; }
+        .tier-range { color: var(--text2); }
+        .tier-ref { font-weight: 700; color: var(--gold); }
+        .tier-active { background: var(--primary-dim); border-radius: 6px; padding: 5px 8px; border:1px solid var(--border); }
+        .tier-active .tier-range { color: var(--primary); font-weight:bold; }
 
-        /* ── TABS ── */
-        .tab-bar { display: flex; gap: 9px; margin-bottom: 16px; }
-        .tab-btn { flex: 1; padding: 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.35); color: var(--text2); font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-        .tab-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
+        .required-refs-display {
+            text-align: center; padding: 12px; background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255,255,255,0.1); border-radius: 10px;
+            margin-bottom: 14px; font-size: 0.85rem;
+        }
+        .ton-preview { margin-top: 6px; font-size: 0.85rem; color: var(--green); font-weight: 700; display: none; text-align:center; }
 
-        /* ── SUCCESS MODAL ── */
-        .success-icon { font-size: 3.2rem; margin-bottom: 13px; animation: iconPop 0.4s ease; }
-        @keyframes iconPop { 0%{transform:scale(0)} 80%{transform:scale(1.2)} 100%{transform:scale(1)} }
-
-        /* ── WITHDRAW METHOD TABS ── */
-        .method-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
-        .method-tab { flex: 1; padding: 10px 6px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.3); color: var(--text2); font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .method-tab.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
-        .method-tab i { display: block; font-size: 1rem; margin-bottom: 4px; }
-
-        /* ── EXCHANGE CARD ── */
-        .exchange-card {
-            background: linear-gradient(135deg, rgba(12,10,22,0.95), rgba(168,237,255,0.05));
-            border: 1px solid rgba(168,237,255,0.2); border-radius: var(--r-card);
-            padding: 20px; margin-bottom: 14px;
-            box-shadow: 0 0 20px rgba(168,237,255,0.07);
+        /* ── LOTTERY ── */
+        .wheel-wrap { position: relative; width: 230px; height: 230px; margin: 0 auto 20px; }
+        #wheelCanvas {
+            width: 100%; height: 100%; border-radius: 50%;
+            box-shadow: 0 0 0 4px var(--border), 0 0 30px var(--primary-dim);
+            transition: transform 4s cubic-bezier(0.175,0.885,0.32,1.05);
+        }
+        .spin-pointer {
+            position: absolute; top: 50%; right: -15px; transform: translateY(-50%);
+            width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent;
+            border-right: 24px solid var(--primary); z-index: 10;
         }
 
-        /* ── RECENT VIDEOS STRIP ── */
-        .recent-strip { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 4px; scrollbar-width: none; }
-        .recent-strip::-webkit-scrollbar { display: none; }
-        .recent-vid-item { flex-shrink: 0; width: 120px; cursor: pointer; }
-        .recent-vid-thumb { width: 120px; height: 70px; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(245,166,35,0.2); margin-bottom: 6px; }
-        .recent-vid-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .recent-vid-title { font-size: 0.7rem; color: var(--text2); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        /* ── TASK TABS ── */
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tab-btn {
+            flex: 1; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3); color: var(--text2); font-weight: 600; font-size: 0.85rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .tab-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
-        /* ── REQUIRE BADGE ── */
-        .require-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2); border-radius: 7px; padding: 4px 10px; font-size: 0.72rem; color: var(--green); font-weight: 700; }
-
-        /* ── GLOW TEXT ── */
-        .gold-text { color: var(--gold); }
-        .diamond-text { color: var(--diamond); }
+        .success-icon { font-size: 3rem; margin-bottom: 12px; animation: iconPop 0.4s ease; }
+        @keyframes iconPop { 0%{transform:scale(0)} 80%{transform:scale(1.2)} 100%{transform:scale(1)} }
     </style>
 </head>
 <body>
 
-    <!-- ══ GLOBAL APP LOADER ══ -->
-
+    <!-- ANIMATED BACKGROUND -->
     <div class="bg-canvas"></div>
     <div class="bg-grid"></div>
     <div class="particles" id="particles"></div>
-    <div class="video-theme-bg"></div>
 
+    <!-- HEADER -->
     <header class="main-header">
         <div class="site-branding">
-            <div class="logo-ring"><i class="fas fa-gem"></i></div>
-            <h1 class="site-title">NEW<span>TUBE</span></h1>
+            <div class="logo-ring"><i class="fas fa-cube"></i></div>
+            <h1 class="site-title">NEW<span>TUBE</span> TON</h1>
         </div>
         <div class="header-right">
-            <button class="hbtn" id="withdraw-modal-btn" title="Withdraw"><i class="fas fa-wallet"></i></button>
-            <button class="hbtn" id="history-btn" title="History"><i class="fas fa-clock-rotate-left"></i></button>
+            <button class="hbtn" id="withdraw-modal-btn"><i class="fas fa-wallet"></i></button>
+            <button class="hbtn" id="history-btn"><i class="fas fa-clock-rotate-left"></i></button>
         </div>
     </header>
 
@@ -444,117 +382,77 @@
 
         <!-- ══ HOME ══ -->
         <section id="home-content" class="content-section active">
+
             <div class="profile-card">
                 <div class="profile-top">
                     <div class="avatar-wrap">
-                        <div class="avatar-ring">💎</div>
+                        <div class="avatar-ring"><i class="fas fa-user-ninja"></i></div>
                         <div class="avatar-status"></div>
                     </div>
                     <div class="profile-info">
-                        <div class="profile-name" id="profile-name-display">...</div>
+                        <div class="profile-name">Terminal Access</div>
                         <div class="profile-id" id="profile-id-display">
-                            UID: <span id="uid-text">...</span>&nbsp;<i class="fas fa-copy" style="font-size:0.7rem;"></i>
+                            UID: <span>...</span>&nbsp;<i class="fas fa-copy" style="font-size:0.7rem;"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Currency Display -->
-                <div class="currency-display">
-                    <div class="currency-row">
-                        <div class="currency-box gold-box">
-                            <div class="currency-icon">🪙</div>
-                            <div class="currency-amount" id="home-gold">0</div>
-                            <div class="currency-label">Gold</div>
-                            <div class="currency-rate">1K Gold = 1 💎</div>
-                        </div>
-                        <div class="currency-box diamond-box">
-                            <div class="currency-icon">💎</div>
-                            <div class="currency-amount" id="home-diamond">0</div>
-                            <div class="currency-label">Diamond</div>
-                            <div class="currency-rate">1K 💎 = $1 / 120৳</div>
-                        </div>
-                    </div>
-                    <div class="rate-strip">
-                        <div class="rate-strip-item"><strong>1K Gold</strong>= 1 Diamond</div>
-                        <div class="rate-strip-item"><strong>1K Diamond</strong>= $1</div>
-                        <div class="rate-strip-item"><strong>1K Diamond</strong>= 120 BDT</div>
-                        <div class="rate-strip-item"><strong>1K Diamond</strong>= 0.5 TON</div>
-                    </div>
+                <div class="balance-display">
+                    <div class="bal-ton"><span id="home-ton">0.0000</span> TON</div>
+                    <div class="bal-ton-label">ESTIMATED BALANCE</div>
+                    <div class="bal-pts"><i class="fas fa-database" style="font-size:0.85rem;"></i> <span id="home-pts">0</span> Data Points</div>
                 </div>
 
-                <!-- Stats -->
                 <div class="stats-grid">
                     <div class="stat-box">
                         <div class="stat-label">Lifetime</div>
                         <div class="stat-val" id="home-life">0</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">Invites</div>
+                        <div class="stat-label">Total Invites</div>
                         <div class="stat-val" style="color:var(--text);" id="home-normal-ref">0</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">Refs Done</div>
-                        <div class="stat-val" style="color:var(--green);" id="home-valid-ref">0</div>
+                        <div class="stat-label">Valid Refs</div>
+                        <div class="stat-val" style="color:var(--gold);" id="home-valid-ref">0</div>
                     </div>
                 </div>
 
-                <!-- Action Buttons: Refer | Promo | Exchange -->
                 <div class="action-row">
-                    <button class="btn outline" id="action-invite" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-users"></i> Refer</button>
-                    <button class="btn ghost" id="action-promo-code" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-gift"></i> Promo</button>
-                    <button class="btn diamond-btn" id="action-exchange" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-sync-alt"></i> Exchange</button>
+                    <button class="btn" id="action-invite"><i class="fas fa-users"></i> Referrals</button>
+                    <button class="btn outline" id="action-promo-code"><i class="fas fa-gift"></i> Gift Code</button>
                 </div>
 
                 <div class="action-link-row">
-                    <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn ghost" style="padding:11px; font-size:0.82rem;">
+                    <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn ghost" style="padding:10px;">
                         <i class="fab fa-telegram-plane"></i> Official
                     </a>
-                    <a href="https://t.me/Your_Admin11" target="_blank" class="btn ghost" style="padding:11px; font-size:0.82rem;">
+                    <a href="https://t.me/Your_Admin11" target="_blank" class="btn ghost" style="padding:10px;">
                         <i class="fas fa-headset"></i> Support
                     </a>
                 </div>
-
-                <!-- Recent Videos Strip -->
-                <div style="margin-top:16px;">
-                    <div style="font-size:0.8rem; font-weight:800; color:var(--text); margin-bottom:9px; display:flex; align-items:center; gap:7px;">
-                        <i class="fas fa-film" style="color:var(--gold);"></i> Recent Videos
-                    </div>
-                    <div class="recent-strip" id="home-recent-videos">
-                        <div class="loader" style="margin:10px auto;"></div>
-                    </div>
-                </div>
             </div>
+
         </section>
 
         <!-- ══ ADS ══ -->
         <section id="ads-content" class="content-section">
-            <div class="section-title">
-                <div class="title-icon ti-gold"><i class="fas fa-satellite-dish"></i></div>
-                Network Missions
-            </div>
 
-            <!-- AD LOOTBOX (ADS SECTION) -->
-            <div class="lootbox-card">
-                <h3 style="margin:0 0 10px; color:var(--text); font-size:1.1rem;"><i class="fas fa-box-open" style="color:var(--gold);"></i> Ad Lootbox</h3>
-                <p style="font-size:0.82rem; color:var(--text2); margin-bottom:14px;">Watch ads to fill lootbox. Claim when ready. Max 3,000 Gold.</p>
-                <div style="font-size:2.2rem; font-weight:800; color:var(--gold); font-family:monospace; margin-bottom:14px; text-shadow: 0 0 14px var(--gold-glow);" id="lootboxGoldDisplay">0 🪙</div>
-                <div class="lootbox-progress-wrap">
-                    <div class="lootbox-bar-bg"><div class="lootbox-bar-fill" id="lootboxProgressBar" style="width:0%"></div></div>
-                    <div class="lootbox-range-text"><span>Min: 600 Gold</span><span>Max: 3,000 Gold</span></div>
-                </div>
-                <button id="claimLootboxBtn" class="btn" disabled style="margin-top:10px;"><i class="fas fa-download"></i> Claim Lootbox</button>
+            <div class="section-title">
+                <div class="title-icon ti-blue"><i class="fas fa-satellite-dish"></i></div>
+                Network Missions
             </div>
 
             <div class="info-bar">
                 <i class="fas fa-info-circle"></i>
-                <div>Data resets daily at <strong>12:00 AM</strong>. Higher rewards on premium networks.</div>
+                <div>Data resets daily at <strong>12:00 AM</strong>. Higher rewards on special networks.</div>
             </div>
 
             <!-- Adsgram Daily -->
             <div class="ad-card ad-adsgram-daily">
                 <div class="ad-card-top">
                     <div>
-                        <div class="ad-name"><i class="fas fa-bolt" style="color:var(--gold);"></i> AdsGram Daily</div>
+                        <div class="ad-name"><i class="fas fa-bolt" style="color:var(--primary);"></i> AdsGram Daily</div>
                         <div class="ad-network">Standard Video Network</div>
                     </div>
                     <div style="text-align:right;">
@@ -563,7 +461,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward">🪙 120 Gold</div>
+                    <div class="ad-reward">+10 Points</div>
                     <button id="btn-watch-adsgram-daily" class="btn outline task-btn">Watch</button>
                 </div>
             </div>
@@ -572,7 +470,7 @@
             <div class="ad-card ad-adsgram-special">
                 <div class="ad-card-top">
                     <div>
-                        <div class="ad-name"><i class="fas fa-star" style="color:#FFD166;"></i> AdsGram Special</div>
+                        <div class="ad-name"><i class="fas fa-star" style="color:var(--gold);"></i> AdsGram Special</div>
                         <div class="ad-network">Premium Video Network</div>
                     </div>
                     <div style="text-align:right;">
@@ -581,8 +479,8 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:#FFD166;">🪙 250 Gold</div>
-                    <button id="btn-watch-adsgram-special" class="btn task-btn" style="background:linear-gradient(135deg,#FFD166,#e8b930);color:#000;">Watch</button>
+                    <div class="ad-reward" style="color:var(--gold);">+20 Points</div>
+                    <button id="btn-watch-adsgram-special" class="btn task-btn" style="background:var(--gold);color:#000;">Watch</button>
                 </div>
             </div>
 
@@ -590,17 +488,17 @@
             <div class="ad-card ad-monetag">
                 <div class="ad-card-top">
                     <div>
-                        <div class="ad-name"><i class="fas fa-external-link-alt" style="color:var(--blue);"></i> Monetag Web</div>
+                        <div class="ad-name"><i class="fas fa-external-link-alt" style="color:var(--secondary);"></i> Monetag Web</div>
                         <div class="ad-network">External Display Network</div>
                     </div>
                     <div style="text-align:right;">
                         <div class="ad-badge">MONETAG</div>
-                        <div class="ad-limit-text" id="limit-monetag">0/20</div>
+                        <div class="ad-limit-text" id="limit-monetag">0/10</div>
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--blue);">🪙 120 Gold</div>
-                    <button id="btn-watch-monetag" class="btn outline task-btn" style="border-color:var(--blue);color:var(--blue);">Watch</button>
+                    <div class="ad-reward">+15 Points</div>
+                    <button id="btn-watch-monetag" class="btn outline task-btn" style="border-color:var(--secondary);color:var(--secondary);">Watch</button>
                 </div>
             </div>
 
@@ -613,66 +511,45 @@
                     </div>
                     <div style="text-align:right;">
                         <div class="ad-badge">GIGAPUB</div>
-                        <div class="ad-limit-text" id="limit-giga">0/20</div>
+                        <div class="ad-limit-text" id="limit-giga">0/10</div>
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--text);">🪙 120 Gold</div>
+                    <div class="ad-reward" style="color:var(--text);">+15 Points</div>
                     <button id="btn-watch-giga" class="btn outline task-btn" style="border-color:var(--red);color:var(--red);">Watch</button>
                 </div>
             </div>
+
         </section>
 
-        <!-- ══ VIDEO SECTION ══ -->
-        <section id="video-content" class="content-section">
+        <!-- ══ LOTTERY ══ -->
+        <section id="lottery-content" class="content-section">
             <div class="section-title">
-                <div class="title-icon ti-red"><i class="fab fa-youtube"></i></div>
-                Watch Videos &amp; Earn Gold
+                <div class="title-icon ti-gold"><i class="fas fa-dharmachakra"></i></div>
+                Data Spinner
             </div>
 
-            <!-- Video Player -->
-            <div class="video-player-card">
-                <div class="video-player-label">&#9679; LIVE STREAM</div>
-                <div id="ytplayer" style="width:100%; height:210px; background:#000;"></div>
-            </div>
+            <div class="card" style="text-align:center;">
+                <div id="spinLimitText" style="font-size:0.85rem; color:var(--primary); background:var(--primary-dim); border:1px solid var(--border); padding:8px 16px; border-radius:10px; display:inline-block; margin-bottom:20px; font-weight:600;">
+                    🎰 Loading Spin Status...
+                </div>
 
-            <!-- Mining Box -->
-            <div class="mining-compact">
-                <div class="mining-compact-left">
-                    <div class="mining-compact-title">
-                        <i class="fas fa-microchip"></i> Gold Mining Box
-                        <span style="font-size:0.62rem;color:var(--text2);font-weight:500;">1hr = 200 Gold | Box: 100–200</span>
-                    </div>
-                    <div class="mining-compact-bar">
-                        <div class="mining-compact-fill" id="videoMiningProgress" style="width:0%;"></div>
-                    </div>
-                    <div class="mining-compact-stats">
-                        <span id="videoDailyLimitDisplay">Daily: 0 / 200 Gold</span>
-                    </div>
+                <div class="wheel-wrap">
+                    <div class="spin-pointer"></div>
+                    <canvas id="wheelCanvas" width="400" height="400"></canvas>
                 </div>
-                <div class="mining-compact-right" style="display:flex; flex-direction:column; align-items:flex-end; gap:7px;">
-                    <div class="mining-compact-pts" id="videoMinedDisplay">0 🪙</div>
-                    <button id="claimVideoPtsBtn" class="btn outline" disabled style="padding:8px 12px; font-size:0.75rem; width:auto; white-space:nowrap;"><i class="fas fa-lock"></i> Min 100</button>
-                </div>
-            </div>
 
-            <!-- Video Table -->
-            <h4 style="color:var(--text); margin-bottom:9px; font-weight:800; font-size:0.9rem; display:flex; align-items:center; gap:7px;"><i class="fas fa-film" style="color:var(--gold);"></i> Available Streams</h4>
-            <div class="video-table-wrap">
-                <div class="video-table-header">
-                    <span>Video</span>
-                    <span style="text-align:right;">Reward</span>
-                </div>
-                <div id="video-list-container">
-                    <div class="loader"></div>
-                </div>
+                <button id="spinBtn" class="btn" style="margin-top:20px; padding:14px; max-width:280px; margin-left:auto; margin-right:auto;">
+                    <i class="fas fa-sync-alt"></i> INITIALIZE SPIN (AD)
+                </button>
+                <div id="lotteryResult" style="margin-top:16px; font-size:0.95rem; font-weight:600; color:var(--text);">Awaiting spin...</div>
             </div>
         </section>
 
         <!-- ══ TASKS ══ -->
         <section id="task-content" class="content-section">
             <div class="section-title">
-                <div class="title-icon ti-gold"><i class="fas fa-microchip"></i></div>
+                <div class="title-icon ti-violet"><i class="fas fa-microchip"></i></div>
                 Smart Contracts
             </div>
 
@@ -695,7 +572,7 @@
     <nav class="bottom-nav">
         <a href="#" class="nav-item active" data-tab-target="#home-content"><i class="fas fa-layer-group"></i>Panel</a>
         <a href="#" class="nav-item" data-tab-target="#ads-content"><i class="fas fa-bolt"></i>Extract</a>
-        <a href="#" class="nav-item" data-tab-target="#video-content"><i class="fas fa-play-circle"></i>Watch</a>
+        <a href="#" class="nav-item" data-tab-target="#lottery-content"><i class="fas fa-dharmachakra"></i>Spin</a>
         <a href="#" class="nav-item" data-tab-target="#task-content"><i class="fas fa-check-double"></i>Tasks</a>
     </nav>
 
@@ -705,52 +582,35 @@
     <div id="withdrawModalOverlay" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
-                <div class="modal-header-icon" style="background:var(--gold-dim); color:var(--gold);"><i class="fas fa-wallet"></i></div>
-                <h3 class="modal-title">Withdraw Diamonds</h3>
+                <div class="modal-header-icon" style="background:var(--primary-dim); color:var(--primary);"><i class="fas fa-wallet"></i></div>
+                <h3 class="modal-title">Withdraw Funds</h3>
             </div>
 
-            <div style="background:rgba(0,229,160,0.06); border:1px solid rgba(0,229,160,0.2); border-radius:10px; padding:11px 13px; margin-bottom:14px; font-size:0.8rem; color:var(--text2); line-height:1.6;">
-                <i class="fas fa-clock" style="color:var(--green);"></i>&nbsp;
-                Withdraw request দেওয়ার পর <b style="color:var(--green);">১২–৪৮ ঘণ্টার মধ্যে</b> payment পেয়ে যাবেন।
+            <div style="text-align:center; margin-bottom:15px;">
+                <div style="font-size:1.8rem; font-weight:800; color:var(--text); font-family:monospace;" id="withdrawPointBalance">0.0000 TON</div>
+                <div style="font-size:0.75rem; color:var(--text2); margin-top:4px;">Rate: 50,000 Pts = 1.00 TON</div>
             </div>
 
-            <div style="text-align:center; margin-bottom:16px; background:rgba(0,0,0,0.3); border-radius:12px; padding:14px;">
-                <div style="font-size:0.72rem; color:var(--text2); margin-bottom:5px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Your Diamond Balance</div>
-                <div style="font-size:2rem; font-weight:800; color:var(--diamond); font-family:monospace;" id="withdrawDiamondBalance">0 💎</div>
+            <div class="tier-info">
+                <div style="font-size:0.75rem; color:var(--text2); margin-bottom:8px; font-weight:600;">REQUIREMENTS</div>
+                <div class="tier-row" id="tier-row-1"><span class="tier-range">1 – 1,500 Pts</span><span class="tier-ref">1 Valid Ref</span></div>
+                <div class="tier-row" id="tier-row-2"><span class="tier-range">1,501 – 3,000 Pts</span><span class="tier-ref">2 Valid Refs</span></div>
+                <div class="tier-row" id="tier-row-3"><span class="tier-range">3,001 – 4,500 Pts</span><span class="tier-ref">3 Valid Refs</span></div>
+                <div class="tier-row" id="tier-row-4"><span class="tier-range">4,501 – 6,000 Pts</span><span class="tier-ref">4 Valid Refs</span></div>
+                <div class="tier-row" id="tier-row-5"><span class="tier-range">6,001+ Pts</span><span class="tier-ref">5 Valid Refs</span></div>
             </div>
 
-            <!-- Withdraw Method Selector -->
-            <div class="method-tabs">
-                <button class="method-tab active" data-method="binance" onclick="selectMethod('binance',this)">
-                    <i class="fas fa-coins"></i>Binance
-                </button>
-                <button class="method-tab" data-method="tonkeeper" onclick="selectMethod('tonkeeper',this)">
-                    <i class="fas fa-gem"></i>Tonkeeper
-                </button>
-                <button class="method-tab" data-method="bkash" onclick="selectMethod('bkash',this)">
-                    <i class="fas fa-mobile-alt"></i>bKash
-                </button>
-            </div>
-
-            <div class="tier-info" id="withdraw-method-info">
-                <div class="tier-row"><span class="tier-range">Method</span><span class="tier-ref" id="method-label">Binance UID</span></div>
-                <div class="tier-row"><span class="tier-range">Rate</span><span class="tier-ref" id="method-rate" style="color:var(--diamond);">1,000 💎 = 1 USDT</span></div>
-                <div class="tier-row"><span class="tier-range">Min Withdraw</span><span class="tier-ref" id="method-min">1,000 💎</span></div>
-                <div class="tier-row"><span class="tier-range">1st Withdraw</span><span class="tier-ref" style="color:var(--green); font-size:0.75rem;">5 Tasks + 20 Ads</span></div>
-                <div class="tier-row"><span class="tier-range">Next Withdraw</span><span class="tier-ref" style="color:var(--blue); font-size:0.75rem;">20 Ads only</span></div>
-            </div>
+            <div class="required-refs-display" id="requiredRefsDisplay">Enter amount to verify</div>
 
             <div class="form-group">
-                <label id="account-label">Binance UID</label>
-                <input type="text" id="accountDetails" placeholder="Enter your Binance UID">
+                <label>Amount (Points)</label>
+                <input type="number" id="withdrawalAmount" placeholder="Min: 1500">
+                <div class="ton-preview" id="realtime-ton-display">You receive: <span id="calc-ton-val">0.0000</span> TON</div>
             </div>
 
-            <div class="form-group">
-                <label>Diamond Amount</label>
-                <input type="number" id="withdrawalAmount" placeholder="Min: see above">
-                <div id="realtime-diamond-display" style="margin-top:8px; padding:10px 12px; background:rgba(168,237,255,0.07); border:1px solid rgba(168,237,255,0.2); border-radius:9px; font-size:0.85rem; color:var(--diamond); font-weight:800; display:none;">
-                    ≈ <span id="calc-currency-val">0</span> <span id="calc-currency-unit">USDT</span>
-                </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label>Tonkeeper Address</label>
+                <input type="text" id="accountDetails" placeholder="UQ... Address">
             </div>
 
             <div style="display:flex; gap:10px;">
@@ -760,54 +620,14 @@
         </div>
     </div>
 
-    <!-- Exchange Modal -->
-    <div id="exchangeModalOverlay" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-header-icon" style="background:var(--diamond-dim); color:var(--diamond);"><i class="fas fa-sync-alt"></i></div>
-                <h3 class="modal-title">Gold → Diamond</h3>
-            </div>
-            <p style="font-size:0.85rem; color:var(--text2); margin-bottom:16px;">Convert your Gold to Diamonds. Rate: <strong style="color:var(--gold);">1,000 Gold = 1 Diamond</strong></p>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
-                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(245,166,35,0.2); border-radius:10px; padding:13px; text-align:center;">
-                    <div style="font-size:0.7rem; color:var(--text2); font-weight:700; margin-bottom:5px;">YOUR GOLD</div>
-                    <div style="font-size:1.4rem; font-weight:800; color:var(--gold); font-family:monospace;" id="modal-gold-bal">0</div>
-                </div>
-                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(168,237,255,0.2); border-radius:10px; padding:13px; text-align:center;">
-                    <div style="font-size:0.7rem; color:var(--text2); font-weight:700; margin-bottom:5px;">YOUR DIAMONDS</div>
-                    <div style="font-size:1.4rem; font-weight:800; color:var(--diamond); font-family:monospace;" id="modal-diamond-bal">0</div>
-                </div>
-            </div>
-
-            <div style="background:rgba(168,237,255,0.05); border:1px solid rgba(168,237,255,0.15); border-radius:10px; padding:11px; margin-bottom:14px; font-size:0.8rem; color:var(--text2);">
-                <i class="fas fa-info-circle" style="color:var(--diamond);"></i>&nbsp;
-                Minimum: <strong style="color:var(--diamond);">5,000 Gold</strong> &nbsp;|&nbsp; Maximum: <strong style="color:var(--diamond);">100,000 Gold</strong>
-            </div>
-
-            <div class="form-group">
-                <label>Gold Amount to Convert (5K – 100K)</label>
-                <input type="number" id="exchangeGoldInput" placeholder="Enter gold amount (e.g. 5000)" min="5000" max="100000">
-                <div id="exchange-preview" style="margin-top:8px; font-size:0.9rem; color:var(--diamond); font-weight:800; display:none;">
-                    You receive: <span id="exchange-diamond-out">0</span> 💎 Diamond
-                </div>
-            </div>
-
-            <div style="display:flex; gap:10px;">
-                <button class="btn outline close-modal-btn" style="flex:1;">Cancel</button>
-                <button id="confirmExchangeBtn" class="btn diamond-btn" style="flex:1;"><i class="fas fa-sync-alt"></i> Convert</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Promo Code Modal -->
     <div id="promoModalOverlay" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
-                <div class="modal-header-icon" style="background:rgba(255,255,255,0.08); color:#fff;"><i class="fas fa-gift"></i></div>
+                <div class="modal-header-icon" style="background:rgba(255,255,255,0.1); color:#fff;"><i class="fas fa-gift"></i></div>
                 <h3 class="modal-title">Promo Code</h3>
             </div>
-            <p style="font-size:0.88rem; color:var(--text2); margin-bottom:16px;">Redeem secret codes for extra Gold. Ad verification required.</p>
+            <p style="font-size:0.85rem; color:var(--text2); margin-bottom:15px;">Redeem secret codes for extra Data Points. Ad verification required.</p>
             <div class="form-group"><input type="text" id="promoCodeInput" placeholder="Enter code..."></div>
             <button id="claimPromoBtn" class="btn" style="margin-bottom:10px;">Claim Reward</button>
             <button class="btn ghost close-modal-btn">Close</button>
@@ -817,56 +637,26 @@
     <!-- Invite Modal -->
     <div id="inviteModalOverlay" class="modal-overlay">
         <div class="modal-box" style="text-align:center;">
-            <i class="fas fa-user-plus" style="font-size:3rem; color:var(--gold); margin-bottom:14px;"></i>
-            <h3 style="margin:0 0 5px; font-size:1.2rem;">Referral Network</h3>
-            <p style="font-size:0.82rem; color:var(--text2); margin-bottom:16px;">Earn <strong style="color:var(--gold);">+2,000 🪙 Gold</strong> per valid referral!</p>
-
-            <!-- Stats -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
-                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(245,166,35,0.2); border-radius:11px; padding:11px;">
-                    <div style="font-size:0.62rem; color:var(--text2); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Invited</div>
-                    <div style="font-size:1.4rem; font-weight:800; color:var(--gold);" id="modal-total-invites">0</div>
-                </div>
-                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(0,229,160,0.2); border-radius:11px; padding:11px;">
-                    <div style="font-size:0.62rem; color:var(--text2); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Gold Earned</div>
-                    <div style="font-size:1.2rem; font-weight:800; color:var(--green);" id="modal-ref-gold">0 🪙</div>
-                </div>
+            <i class="fas fa-user-plus" style="font-size:3rem; color:var(--primary); margin-bottom:15px;"></i>
+            <h3 style="margin:0 0 10px; font-size:1.2rem;">Referral Network</h3>
+            <p style="font-size:0.85rem; color:var(--text2); margin-bottom:15px; line-height:1.5;">
+                Get <b style="color:#fff;">+1 Invite</b> on registration.<br>
+                Get <b style="color:var(--green);">+1 Valid Ref & 400 Pts</b> when your friend completes 20 ads!
+            </p>
+            <div class="input-row">
+                <input type="text" id="modalReferralLinkInput" readonly value="...">
+                <button id="modalCopyReferralLinkBtn" class="btn" style="padding:0 15px;"><i class="fas fa-copy"></i></button>
             </div>
-
-            <!-- How it works -->
-            <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(245,166,35,0.12); border-radius:12px; padding:13px; margin-bottom:14px; text-align:left;">
-                <div style="font-size:0.68rem; font-weight:800; color:var(--gold); letter-spacing:1px; margin-bottom:8px; text-transform:uppercase;">📋 How It Works</div>
-                <div style="font-size:0.8rem; color:var(--text2); line-height:1.9;">
-                    <div>👥 <b style="color:#fff;">Step 1:</b> Share your link below</div>
-                    <div>🎮 <b style="color:#fff;">Step 2:</b> Friend joins &amp; completes setup</div>
-                    <div>✅ <b style="color:#fff;">Step 3:</b> You get <b style="color:var(--gold);">+2,000 Gold</b> instantly!</div>
-                </div>
-            </div>
-
-            <!-- Link display -->
-            <div style="background:rgba(0,0,0,0.5); border:1px solid rgba(245,166,35,0.25); border-radius:10px; padding:11px 13px; margin-bottom:14px; word-break:break-all; font-size:0.72rem; color:var(--gold); font-family:'Roboto Mono',monospace; text-align:left; line-height:1.5;" id="referralLinkDisplay">Loading...</div>
-
-            <!-- Share on Telegram button -->
-            <button id="telegramShareBtn" class="btn" style="margin-bottom:9px; background:linear-gradient(135deg,#229ED9,#1680b8); box-shadow:0 4px 14px rgba(34,158,217,0.35);">
-                <i class="fab fa-telegram-plane"></i>&nbsp; Share on Telegram
-            </button>
-            <!-- Copy Link button -->
-            <button id="modalCopyReferralLinkBtn" class="btn outline" style="margin-bottom:9px;">
-                <i class="fas fa-copy"></i>&nbsp; Copy Link
-            </button>
             <button class="btn ghost close-modal-btn">Close</button>
-
-            <!-- Hidden input for fallback copy -->
-            <input type="text" id="modalReferralLinkInput" readonly style="position:absolute;opacity:0;pointer-events:none;width:1px;">
         </div>
     </div>
 
     <!-- Success Modal -->
     <div id="successModalOverlay" class="modal-overlay" style="z-index: 3000;">
-        <div class="modal-box" style="max-width:280px; text-align:center; padding:32px 22px;">
+        <div class="modal-box" style="max-width:260px; text-align:center; padding:30px 20px;">
             <div class="success-icon" style="color:var(--green);"><i class="fas fa-check-circle"></i></div>
-            <h3 id="successModalTitle" style="margin:0 0 10px; font-size:1.25rem;">Success!</h3>
-            <p id="successModalMessage" style="color:var(--text2); margin:0; font-size:0.92rem;"></p>
+            <h3 id="successModalTitle" style="margin:0 0 10px;">Success!</h3>
+            <p id="successModalMessage" style="color:var(--text2); margin:0; font-size:0.9rem;"></p>
         </div>
     </div>
 
@@ -875,28 +665,28 @@
         <div class="modal-box">
             <div class="modal-header">
                 <div class="modal-header-icon" style="background:var(--gold-dim); color:var(--gold);"><i class="fas fa-history"></i></div>
-                <h3 class="modal-title">Transaction History</h3>
+                <h3 class="modal-title">Log History</h3>
             </div>
-            <div id="combined-history-list" style="max-height:52vh; overflow-y:auto; padding-right:5px;"></div>
-            <button class="btn ghost close-modal-btn" style="margin-top:18px;">Close</button>
+            <div id="combined-history-list" style="max-height:50vh; overflow-y:auto; padding-right:5px;"></div>
+            <button class="btn ghost close-modal-btn" style="margin-top:15px;">Close</button>
         </div>
     </div>
 
     <!-- Verification Modal -->
     <div id="activationModalOverlay" class="modal-overlay" style="z-index: 5000;">
         <div class="modal-box" style="text-align:center;">
-            <i class="fas fa-shield-alt" style="font-size:3.2rem; color:var(--gold); margin-bottom:16px;"></i>
-            <h3 style="margin:0 0 10px; font-size:1.25rem;">Join & Activate</h3>
-            <p style="color:var(--text2); font-size:0.88rem; margin-bottom:22px;">আমাদের Official Channel &amp; Group-এ join করে account activate করুন।</p>
+            <i class="fas fa-shield-alt" style="font-size:3rem; color:var(--red); margin-bottom:15px;"></i>
+            <h3 style="margin:0 0 10px; font-size:1.2rem;">Security Check</h3>
+            <p style="color:var(--text2); font-size:0.85rem; margin-bottom:20px;">Join our networks to authenticate your device and claim <b style="color:var(--primary);">+10 Pts</b>.</p>
             <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:10px;"><i class="fab fa-telegram-plane"></i> 1. Official Channel</a>
-            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:18px;"><i class="fas fa-users"></i> 2. Community Group</a>
-            <button id="activateAccountBtn" class="btn">✅ Verify &amp; Continue</button>
+            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:15px;"><i class="fas fa-users"></i> 2. Community Group</a>
+            <button id="activateAccountBtn" class="btn">Verify Access</button>
         </div>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
@@ -913,59 +703,71 @@
 
         let currentUser = null;
         let isSubmittingWithdrawal = false;
-        let isAdRunning = false;
-        let selectedWithdrawMethod = 'binance';
+        let isAdRunning = false; 
 
-        // ── CURRENCY CONSTANTS ──
-        // 1,000 Gold = 1 Diamond
-        // 1,000 Diamond = $1 = 120 BDT = 0.5 TON
-        const GOLD_PER_DIAMOND = 1000;
-        const REFERRAL_REWARD_GOLD = 2000;
-        const VIDEO_GOLD_PER_HOUR = 200; // 200 gold per 60 mins
-        const VIDEO_GOLD_PER_TICK = VIDEO_GOLD_PER_HOUR / (60 * 4); // per 15 seconds = ~0.833
-        const VIDEO_BOX_MIN = 100;
-        const VIDEO_BOX_MAX = 200;
-        const DAILY_VIDEO_MAX = 200;
+        const REFERRAL_REWARD_POINTS = 400;
+        const POINTS_TO_TON_RATE = 0.00002;
 
-        const WITHDRAW_METHODS = {
-            binance:    { label: 'Binance UID',       min: 100, placeholder: 'Enter your Binance UID',  rate: '1,000 💎 = 1 USDT',   currency: 'USDT'  },
-            tonkeeper:  { label: 'Tonkeeper Address', min: 50,  placeholder: 'UQ... Wallet Address',    rate: '1,000 💎 = 0.45 TON',  currency: 'TON'   },
-            bkash:      { label: 'bKash Number',      min: 80,  placeholder: '01XXXXXXXXX',             rate: '1,000 💎 = 120 BDT',   currency: 'BDT'   }
+        // ════════════════════════════════════════════
+        // DEVICE FINGERPRINTING & MULTI-ACCOUNT SYSTEM
+        // ════════════════════════════════════════════
+        async function generateDeviceFingerprint() {
+            return new Promise(resolve => {
+                let fp = "";
+                try {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.textBaseline = "top"; ctx.font = "14px 'Arial'"; ctx.textBaseline = "alphabetic";
+                    ctx.fillStyle = "#f60"; ctx.fillRect(125,1,62,20);
+                    ctx.fillStyle = "#069"; ctx.fillText("NewTubeTON", 2, 15);
+                    ctx.fillStyle = "rgba(102, 204, 0, 0.7)"; ctx.fillText("NewTubeTON", 4, 17);
+                    const dataUrl = canvas.toDataURL();
+                    
+                    let hash = 0;
+                    for (let i = 0; i < dataUrl.length; i++) {
+                        let char = dataUrl.charCodeAt(i);
+                        hash = ((hash << 5) - hash) + char; hash = hash & hash;
+                    }
+                    const rawString = `${hash}_${navigator.userAgent}_${screen.width}x${screen.height}x${screen.colorDepth}`;
+                    
+                    let finalHash = 0;
+                    for (let i = 0; i < rawString.length; i++) {
+                        let char = rawString.charCodeAt(i);
+                        finalHash = ((finalHash << 5) - finalHash) + char; finalHash = finalHash & finalHash;
+                    }
+                    fp = Math.abs(finalHash).toString(16);
+                } catch(e) { fp = "fallback_" + Math.random().toString(36).substr(2, 9); }
+                resolve(fp);
+            });
+        }
+
+        // ════════════════════════════════════════════
+        // UPDATED AD CONFIGURATION
+        // ════════════════════════════════════════════
+        const AD_CONFIG = { 
+            adsgramDaily:   { limit: 10, reward: 10 },
+            adsgramSpecial: { limit: 5,  reward: 20 },
+            monetag:        { limit: 10, reward: 15 },
+            giga:           { limit: 10, reward: 15 }
         };
 
-        const LOOTBOX_MIN  = 600;
-        const LOOTBOX_MAX  = 3000;
-        let localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-
-        // Video mining variables
-        let ytPlayer = null;
-        let isVideoPlaying = false;
-        let localVideoMined = 0;
-        let videoPlaySeconds = 0;
-        let vServerStartTime = 0;
-        let vServerSignature = "";
-        const VERCEL_API_BASE = "https://newtube-ton.vercel.app";
-
-        // Monetag timer
-        let videoWatchTotalSeconds = 0;
-        let lastMonetagAdShownAt = 0;
-        const MONETAG_AD_INTERVAL_SECONDS = 600;
-
-        // ── AD FUNCTIONS ──
         const showAdsgramDailyAd = () => new Promise((res, rej) => {
-            if (window.Adsgram) { window.Adsgram.init({blockId:"int-27565"}).show().then(res).catch(rej); }
+            if (window.Adsgram) { window.Adsgram.init({blockId:"int-21249"}).show().then(res).catch(rej); } 
             else { setTimeout(res, 2000); }
         });
+
         const showAdsgramSpecialAd = () => new Promise((res, rej) => {
-            if (window.Adsgram) { window.Adsgram.init({blockId:"27566"}).show().then(res).catch(rej); }
+            if (window.Adsgram) { window.Adsgram.init({blockId:"22908"}).show().then(res).catch(rej); } 
             else { setTimeout(res, 2000); }
         });
+
         const showMonetagAd = () => new Promise((res) => {
             if (typeof show_9442539 === 'function') {
                 const t = setTimeout(res, 15000);
                 show_9442539().then(() => { clearTimeout(t); res(); }).catch(() => { clearTimeout(t); res(); });
             } else { setTimeout(res, 2000); }
         });
+
         const showGigaPubAd = () => new Promise((res) => {
             if (typeof window.showGiga === 'function') {
                 const t = setTimeout(res, 15000);
@@ -973,131 +775,24 @@
             } else { setTimeout(res, 2000); }
         });
 
-        // ── LOOTBOX UI ──
-        function updateLootboxUI() {
-            const display = document.getElementById('lootboxGoldDisplay');
-            const btn = document.getElementById('claimLootboxBtn');
-            const bar = document.getElementById('lootboxProgressBar');
-            const g = localAdData.unclaimedGold;
-            display.textContent = `${g.toLocaleString()} 🪙`;
-            const pct = Math.min(100, (g / LOOTBOX_MAX) * 100);
-            if (bar) bar.style.width = pct + '%';
-            if (btn.dataset.busy === "true") return;
-
-            const claimCount = currentUser ? getLootboxClaimCount() : 0;
-            const limitReached = claimCount >= LOOTBOX_DAILY_CLAIM_MAX;
-
-            if (limitReached) {
-                btn.disabled = true;
-                btn.classList.add('outline');
-                btn.innerHTML = `<i class="fas fa-lock"></i> Daily limit (${claimCount}/${LOOTBOX_DAILY_CLAIM_MAX})`;
-            } else if (g >= LOOTBOX_MIN) {
-                btn.disabled = false;
-                btn.classList.remove('outline');
-                btn.innerHTML = `<i class="fas fa-download"></i> Claim ${g.toLocaleString()} 🪙 (${claimCount}/${LOOTBOX_DAILY_CLAIM_MAX})`;
-            } else {
-                btn.disabled = true;
-                btn.classList.add('outline');
-                btn.innerHTML = `<i class="fas fa-lock"></i> Min 600 Gold (${g}/${LOOTBOX_MIN})`;
-            }
-        }
-
-        // Lootbox daily claim count (max 3 per day)
-        const LOOTBOX_DAILY_CLAIM_MAX = 3;
-        function getLootboxClaimCount() {
-            const key = 'newtube_lootbox_claims_' + currentUser.id;
-            const today = new Date().toLocaleDateString('en-US', {timeZone:'Asia/Dhaka'});
-            try {
-                const saved = JSON.parse(localStorage.getItem(key) || '{}');
-                if (saved.date !== today) return 0;
-                return saved.count || 0;
-            } catch(e) { return 0; }
-        }
-        function incrementLootboxClaimCount() {
-            const key = 'newtube_lootbox_claims_' + currentUser.id;
-            const today = new Date().toLocaleDateString('en-US', {timeZone:'Asia/Dhaka'});
-            const count = getLootboxClaimCount() + 1;
-            localStorage.setItem(key, JSON.stringify({ date: today, count }));
-        }
-
-        document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
-            if (localAdData.unclaimedGold < LOOTBOX_MIN) return;
-            if (localAdData.unclaimedGold > LOOTBOX_MAX + 500) {
-                localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                updateLootboxUI(); updateAdButtonStats(); return;
-            }
-
-            // Check daily claim limit (max 3)
-            const claimCount = getLootboxClaimCount();
-            if (claimCount >= LOOTBOX_DAILY_CLAIM_MAX) {
-                alert(`⚠️ Daily limit reached! You can claim the lootbox ${LOOTBOX_DAILY_CLAIM_MAX} times per day.
-Come back tomorrow!`);
-                return;
-            }
-
-            const btn = document.getElementById('claimLootboxBtn');
-            btn.disabled = true;
-            btn.dataset.busy = "true";
-            btn.textContent = "Claiming...";
-
-            // ── Firebase SDK দিয়ে claim (API বাদ) ──
-            try {
-                const claimedGold = localAdData.unclaimedGold;
-                // Firestore transaction দিয়ে সরাসরি gold add
-                await runTransaction(db, async (t) => {
-                    const userRef = doc(db, 'users', currentUser.id);
-                    const uData = (await t.get(userRef)).data();
-                    t.update(userRef, {
-                        goldBalance: increment(claimedGold),
-                        lifetimeGoldEarned: increment(claimedGold),
-                        adsWatchedToday: increment(localAdData.adsWatched || 0),
-                        adsWatchedAdsgramDaily: increment(localAdData.adsWatchedAdsgramDaily || 0),
-                        adsWatchedAdsgramSpecial: increment(localAdData.adsWatchedAdsgramSpecial || 0),
-                        adsWatchedMonetag: increment(localAdData.adsWatchedMonetag || 0),
-                        adsWatchedGiga: increment(localAdData.adsWatchedGiga || 0),
-                        lootboxClaimedAt: serverTimestamp()
-                    });
-                });
-                currentUser.goldBalance        = (currentUser.goldBalance || 0) + claimedGold;
-                currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + claimedGold;
-                currentUser.adsWatchedToday    = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-                incrementLootboxClaimCount();
-                const remaining = LOOTBOX_DAILY_CLAIM_MAX - getLootboxClaimCount();
-                showSuccessModal("Lootbox Claimed! 🎉", `+${claimedGold.toLocaleString()} 🪙 Gold added!<br><small style="color:rgba(255,255,255,0.6);">Claims left today: ${remaining}/${LOOTBOX_DAILY_CLAIM_MAX}</small>`);
-                localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                updateBalanceUI(); updateAdButtonStats();
-            } catch(e) {
-                console.error('Lootbox claim error:', e);
-                alert('Claim failed: ' + e.message);
-            }
-            btn.dataset.busy = "false";
-            updateLootboxUI();
-        });
-
-        // ── AD CONFIG ──
-        const AD_CONFIG = {
-            adsgramDaily:   { limit: 10, min: 120, max: 120 },
-            adsgramSpecial: { limit: 5,  min: 250, max: 250 },
-            monetag:        { limit: 20, min: 120, max: 120 },
-            giga:           { limit: 20, min: 120, max: 120 }
-        };
-
         async function runAdAndVerifyTime(btnId, adFunc) {
-            if (isAdRunning) { alert("⚠️ An ad is already playing."); return false; }
-            const btn = document.getElementById(btnId); if (!btn) return false;
+            if (isAdRunning) { alert("⚠️ Please wait, an ad is already playing."); return false; }
+            const btn = document.getElementById(btnId);
+            if (!btn) return false;
             isAdRunning = true; btn.dataset.busy = "true"; btn.disabled = true;
             const originalHTML = btn.innerHTML;
             const minDuration = 6000; const startTime = Date.now();
+
             const timer = setInterval(() => {
                 const left = Math.ceil((minDuration - (Date.now() - startTime)) / 1000);
                 btn.textContent = left > 0 ? `Wait ${left}s...` : "Checking...";
             }, 500);
+
             return new Promise(async (resolve) => {
                 let closedEarly = false;
                 const visHandler = () => { if (!document.hidden && (Date.now() - startTime) < minDuration) closedEarly = true; };
                 document.addEventListener('visibilitychange', visHandler);
+                
                 try {
                     const adStart = Date.now();
                     if (adFunc) await adFunc();
@@ -1105,14 +800,14 @@ Come back tomorrow!`);
                     const remaining = minDuration - (Date.now() - startTime);
                     if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
                 } catch (e) { closedEarly = true; }
+
                 clearInterval(timer); document.removeEventListener('visibilitychange', visHandler);
                 isAdRunning = false; btn.dataset.busy = "false";
+
                 if (closedEarly) {
-                    alert("⚠️ Ad skipped too early. No reward.");
+                    alert("⚠️ Ad skipped or closed too early. No points awarded.");
                     btn.innerHTML = originalHTML; btn.disabled = false; resolve(false);
-                } else {
-                    btn.innerHTML = originalHTML; resolve(true);
-                }
+                } else { resolve(true); }
             });
         }
 
@@ -1121,22 +816,16 @@ Come back tomorrow!`);
         async function checkDailyReset(user) {
             const today = getTodayDateString();
             if (user.lastResetDate !== today) {
-                const updates = { adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0, dailyVideoMined: 0, lastResetDate: today };
+                const updates = { 
+                    adsWatchedAdsgramDaily: 0, 
+                    adsWatchedAdsgramSpecial: 0, 
+                    adsWatchedMonetag: 0, 
+                    adsWatchedGiga: 0, 
+                    dailySpinsUsed: 0, 
+                    lastResetDate: today 
+                };
                 Object.assign(user, updates);
                 try { await updateDoc(doc(db, 'users', user.id), updates); } catch (e) {}
-                const savedLoot = localStorage.getItem('newtube_lootbox_' + user.id);
-                if (savedLoot) {
-                    try {
-                        let parsedLoot = JSON.parse(savedLoot);
-                        parsedLoot.adsWatchedAdsgramDaily = 0; parsedLoot.adsWatchedAdsgramSpecial = 0;
-                        parsedLoot.adsWatchedMonetag = 0; parsedLoot.adsWatchedGiga = 0;
-                        localStorage.setItem('newtube_lootbox_' + user.id, JSON.stringify(parsedLoot));
-                        if (localAdData) { localAdData.adsWatchedAdsgramDaily = 0; localAdData.adsWatchedAdsgramSpecial = 0; localAdData.adsWatchedMonetag = 0; localAdData.adsWatchedGiga = 0; }
-                    } catch(e) {}
-                }
-                localStorage.removeItem('newtube_video_mine_' + user.id);
-                localVideoMined = 0; vServerStartTime = 0; vServerSignature = "";
-                updateAdButtonStats(); updateVideoUI();
                 return true;
             }
             return false;
@@ -1144,550 +833,243 @@ Come back tomorrow!`);
 
         async function initializeUser(tgUser, referrerCode) {
             const userId = String(tgUser.id);
-            const userRef = doc(db, 'users', userId);
-            const today = getTodayDateString();
-
-            // ── Firestore থেকে user load করো (timeout 12s) ──
-            let userSnap = null;
-            try {
-                userSnap = await Promise.race([
-                    getDoc(userRef),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 12000))
-                ]);
-            } catch(e) {
-                console.error('Firestore read failed:', e.message);
+            
+            // ── ANTI BAN / 1 DEVICE 1 ACCOUNT SYSTEM ──
+            const fpHash = await generateDeviceFingerprint();
+            let localDevId = localStorage.getItem('newtube_device_id');
+            if(!localDevId) {
+                localDevId = 'dev_' + Date.now() + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('newtube_device_id', localDevId);
             }
 
-            if (!userSnap) {
-                // Firestore fail — dummy user দিয়ে চালু করো
-                currentUser = {
-                    id: userId, goldBalance: 0, diamondBalance: 0,
-                    telegramUsername: tgUser.username || 'N/A',
-                    firstName: tgUser.first_name || 'User',
-                    completedTasks: [], isBanned: false,
-                    lifetimeGoldEarned: 0, adsWatchedAdsgramDaily: 0,
-                    adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
-                    adsWatchedGiga: 0, dailyVideoMined: 0,
-                    lastResetDate: today, referralCount: 0, totalInvites: 0,
-                    _offlineMode: true
-                };
-            } else if (!userSnap.exists()) {
-                // ── নতুন user — create করো ──
+            let isMultiAccount = false;
+            try {
+                const checkHash = await getDocs(query(collection(db, 'users'), where('deviceHash', '==', fpHash), limit(2)));
+                checkHash.forEach(d => { if(d.id !== userId) isMultiAccount = true; });
+
+                const checkLoc = await getDocs(query(collection(db, 'users'), where('deviceId', '==', localDevId), limit(2)));
+                checkLoc.forEach(d => { if(d.id !== userId) isMultiAccount = true; });
+            } catch(e) {}
+
+            if(isMultiAccount) {
+                document.body.innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px;">
+                        <i class="fas fa-lock" style="font-size:4rem; color:var(--red); margin-bottom:20px; filter:drop-shadow(0 0 20px var(--red));"></i>
+                        <h2 style="color:#fff; margin-bottom:10px;">Device Blocked</h2>
+                        <p style="color:var(--text2); font-size:0.9rem; line-height:1.5;">Multiple accounts are not allowed on the same device. Your access has been restricted to prevent fraud.</p>
+                        <div style="margin-top:20px; padding:10px; background:rgba(244,63,94,0.1); border:1px solid rgba(244,63,94,0.3); border-radius:10px; font-size:0.8rem; color:var(--red);">Error: MULTI_ACCOUNT_VIOLATION</div>
+                    </div>`;
+                return null;
+            }
+
+            const userRef = doc(db, 'users', userId);
+            const userSnap = await getDoc(userRef);
+            const today = getTodayDateString();
+
+            if (!userSnap.exists()) {
                 const data = {
-                    goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0,
-                    referralCount: 0, totalInvites: 0,
-                    completedTasks: [], createdAt: serverTimestamp(),
-                    telegramUsername: tgUser.username || 'N/A',
-                    firstName: tgUser.first_name || 'User',
-                    isBanned: false, withdrawalCount: 0,
-                    lifetimeAdsWatched: 0, adsWatchedAdsgramDaily: 0,
-                    adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
-                    adsWatchedGiga: 0, dailyVideoMined: 0,
-                    lastResetDate: today, welcomeBonusClaimed: false,
-                    tasksCompletedToday: 0, adsWatchedToday: 0, lastWithdrawDate: ''
+                    tonBalance: 0, pointBalance: 0, lifetimePointsEarned: 0, referralCount: 0, totalInvites: 0, spentReferrals: 0, completedTasks: [],
+                    createdAt: serverTimestamp(), telegramUsername: tgUser.username || 'N/A', isBanned: false,
+                    lifetimeAdsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0, dailySpinsUsed: 0,
+                    lastResetDate: today, lastSpinTimestamp: 0, welcomeBonusClaimed: false,
+                    deviceId: localDevId, deviceHash: fpHash
                 };
                 if (referrerCode && referrerCode !== userId) {
                     data.referredBy = referrerCode;
-                    // referrer কে gold দাও Firebase SDK দিয়ে (API বাদ)
-                    (async () => {
-                        try {
-                            const refRef = doc(db, 'users', String(referrerCode));
-                            const refSnap = await getDoc(refRef);
-                            if (refSnap.exists()) {
-                                await updateDoc(refRef, {
-                                    goldBalance: increment(REFERRAL_REWARD_GOLD),
-                                    lifetimeGoldEarned: increment(REFERRAL_REWARD_GOLD),
-                                    referralCount: increment(1),
-                                    totalInvites: increment(1)
-                                });
-                                // Referral notify API (টেলিগ্রাম message পাঠানো) → এটা API-তেই থাকবে
-                                sendReferralNotif(referrerCode, tgUser.first_name || 'User');
-                            }
-                        } catch(e) { console.log('Referral reward skipped:', e.message); }
-                    })();
+                    try { await updateDoc(doc(db, 'users', referrerCode), { totalInvites: increment(1) }); } catch (e) {}
                 }
-                try { await setDoc(userRef, data); } catch(e) { console.error('setDoc failed:', e); }
+                await setDoc(userRef, data);
                 currentUser = { id: userId, ...data };
             } else {
-                // ── বিদ্যমান user ──
                 currentUser = { id: userSnap.id, ...userSnap.data() };
-                if (currentUser.isBanned) {
-                    document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>`;
-                    return null;
+                if (!currentUser.deviceId || !currentUser.deviceHash) {
+                    try { await updateDoc(userRef, { deviceId: localDevId, deviceHash: fpHash }); } catch(e){}
                 }
-                // daily reset background এ
-                checkDailyReset(currentUser).catch(()=>{});
             }
 
-            // ── LocalStorage restore ──
-            const savedLoot = localStorage.getItem('newtube_lootbox_' + currentUser.id);
-            if (savedLoot) {
-                try {
-                    localAdData = JSON.parse(savedLoot);
-                    if (!localAdData.unclaimedGold && localAdData.unclaimedPoints) {
-                        localAdData.unclaimedGold = localAdData.unclaimedPoints;
-                        delete localAdData.unclaimedPoints;
-                    }
-                } catch(e) {}
-            }
-            const savedVideo = localStorage.getItem('newtube_video_mine_' + currentUser.id);
-            if (savedVideo) {
-                try {
-                    let vData = JSON.parse(savedVideo);
-                    localVideoMined = vData.mined || 0;
-                    vServerStartTime = vData.startTime || 0;
-                    vServerSignature = vData.signature || "";
-                } catch(e) {}
-            }
-
-            // ── UI update ──
-            updateLootboxUI();
-            updateVideoUI();
+            if (currentUser.isBanned) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:#EF4444;">Account Banned.</h3>`; return null; }
+            
+            await checkDailyReset(currentUser);
             updateBalanceUI();
-            document.getElementById('uid-text').textContent = currentUser.id;
-            document.getElementById('profile-name-display').textContent = currentUser.firstName || currentUser.telegramUsername || 'User';
-            try { document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`; } catch(_) {}
-            updateAdButtonStats();
-            setTimeout(() => {
-                try { fetchVideosFromFirebase(); } catch(e) {}
-                try { loadHomeRecentVideos(); } catch(e) {}
-            }, 300);
+            document.getElementById('modalReferralLinkInput').value = `https://t.me/NewTube12_bot/TonFREE?startapp=${userId}`;
+            updateAdButtonStats(); updateLotteryUI();
         }
 
         function updateAdButtonStats() {
             if (!currentUser) return;
-            const upd = (btnId, limitId, dbCount, localCount, max) => {
+            const upd = (btnId, limitId, count, max) => {
                 const btn = document.getElementById(btnId);
                 const lim = document.getElementById(limitId);
                 if(!btn || !lim) return;
-                const totalCount = (dbCount || 0) + (localCount || 0);
-                lim.textContent = `${totalCount}/${max}`;
+                lim.textContent = `${count}/${max}`;
                 if (btn.dataset.busy === "true") return;
-                if (totalCount >= max) { btn.disabled = true; btn.textContent = "Done"; }
+                if (count >= max) { btn.disabled = true; btn.textContent = "Done"; } 
                 else { btn.disabled = false; btn.textContent = "Watch"; btn.style.background = ''; btn.style.color = ''; }
             };
-            upd('btn-watch-adsgram-daily',   'limit-adsgram-daily',   currentUser.adsWatchedAdsgramDaily,   localAdData.adsWatchedAdsgramDaily,   AD_CONFIG.adsgramDaily.limit);
-            upd('btn-watch-adsgram-special', 'limit-adsgram-special', currentUser.adsWatchedAdsgramSpecial, localAdData.adsWatchedAdsgramSpecial, AD_CONFIG.adsgramSpecial.limit);
-            upd('btn-watch-monetag',         'limit-monetag',         currentUser.adsWatchedMonetag,        localAdData.adsWatchedMonetag,        AD_CONFIG.monetag.limit);
-            upd('btn-watch-giga',            'limit-giga',            currentUser.adsWatchedGiga,           localAdData.adsWatchedGiga,           AD_CONFIG.giga.limit);
+            upd('btn-watch-adsgram-daily',   'limit-adsgram-daily',   currentUser.adsWatchedAdsgramDaily   || 0, AD_CONFIG.adsgramDaily.limit);
+            upd('btn-watch-adsgram-special', 'limit-adsgram-special', currentUser.adsWatchedAdsgramSpecial || 0, AD_CONFIG.adsgramSpecial.limit);
+            upd('btn-watch-monetag',         'limit-monetag',         currentUser.adsWatchedMonetag        || 0, AD_CONFIG.monetag.limit);
+            upd('btn-watch-giga',            'limit-giga',            currentUser.adsWatchedGiga           || 0, AD_CONFIG.giga.limit);
         }
 
         function updateBalanceUI() {
             if(!currentUser) return;
-            const gold = Math.floor(currentUser.goldBalance || 0);
-            const diamond = Math.floor(currentUser.diamondBalance || 0);
-            document.getElementById('home-gold').textContent = gold.toLocaleString();
-            document.getElementById('home-diamond').textContent = diamond.toLocaleString();
-            document.getElementById('home-life').textContent = Math.floor(currentUser.lifetimeGoldEarned || 0).toLocaleString();
+            const pts = currentUser.pointBalance || 0;
+            const ton = pts * POINTS_TO_TON_RATE;
+            document.getElementById('home-ton').textContent = ton.toFixed(4);
+            document.getElementById('home-pts').textContent = Math.floor(pts);
+            document.getElementById('home-life').textContent = `${Math.floor(currentUser.lifetimePointsEarned || 0)}`;
             document.getElementById('home-normal-ref').textContent = currentUser.totalInvites || 0;
             document.getElementById('home-valid-ref').textContent = currentUser.referralCount || 0;
-            // Withdraw modal
-            const wEl = document.getElementById('withdrawDiamondBalance');
-            if (wEl) wEl.textContent = `${diamond.toLocaleString()} 💎`;
-            // Exchange modal
-            const mg = document.getElementById('modal-gold-bal');
-            const md = document.getElementById('modal-diamond-bal');
-            if (mg) mg.textContent = gold.toLocaleString();
-            if (md) md.textContent = diamond.toLocaleString();
+            const wEl = document.getElementById('withdrawPointBalance');
+            if (wEl) wEl.textContent = `${ton.toFixed(4)} TON`;
         }
 
-        // ── AD HANDLERS ──
         const handleAdClick = async (type, btnId, maxLimit, adFunc) => {
-            await checkDailyReset(currentUser);
-            if (localAdData.unclaimedGold >= LOOTBOX_MAX) { alert(`⚠️ Lootbox full (Max ${LOOTBOX_MAX} Gold). Claim first!`); return; }
             const countName = `adsWatched${type.charAt(0).toUpperCase() + type.slice(1)}`;
-            const totalCount = (currentUser[countName] || 0) + (localAdData[countName] || 0);
-            if (totalCount >= maxLimit) return;
+            const count = currentUser[countName] || 0;
+            if (count >= maxLimit) return;
             const ok = await runAdAndVerifyTime(btnId, adFunc);
-            if (ok) {
-                const min = AD_CONFIG[type].min; const max = AD_CONFIG[type].max;
-                let reward = Math.floor(Math.random() * (max - min + 1)) + min;
-                if (localAdData.unclaimedGold + reward > LOOTBOX_MAX) reward = LOOTBOX_MAX - localAdData.unclaimedGold;
-                localAdData.unclaimedGold += reward;
-                localAdData.adsWatched += 1;
-                localAdData[countName] = (localAdData[countName] || 0) + 1;
-                // Track daily ads for withdraw requirement
-                currentUser.adsWatchedToday = (currentUser.adsWatchedToday || 0) + 1;
-                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                showSuccessModal("Ad Watched! 🎁", `+${reward} 🪙 Gold added to Lootbox`);
-                updateLootboxUI(); updateAdButtonStats();
-            }
+            if (ok) await processAdReward(type, AD_CONFIG[type].reward, countName);
         };
 
-        const attachAdListener = (id, type, maxLimit, adFunc) => {
-            const btn = document.getElementById(id);
-            if(btn) btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); handleAdClick(type, id, maxLimit, adFunc); });
-        };
-        attachAdListener('btn-watch-adsgram-daily', 'adsgramDaily', AD_CONFIG.adsgramDaily.limit, showAdsgramDailyAd);
-        attachAdListener('btn-watch-adsgram-special', 'adsgramSpecial', AD_CONFIG.adsgramSpecial.limit, showAdsgramSpecialAd);
-        attachAdListener('btn-watch-monetag', 'monetag', AD_CONFIG.monetag.limit, showMonetagAd);
-        attachAdListener('btn-watch-giga', 'giga', AD_CONFIG.giga.limit, showGigaPubAd);
+        document.getElementById('btn-watch-adsgram-daily').addEventListener('click',   () => handleAdClick('adsgramDaily',   'btn-watch-adsgram-daily',   AD_CONFIG.adsgramDaily.limit,   showAdsgramDailyAd));
+        document.getElementById('btn-watch-adsgram-special').addEventListener('click', () => handleAdClick('adsgramSpecial', 'btn-watch-adsgram-special', AD_CONFIG.adsgramSpecial.limit, showAdsgramSpecialAd));
+        document.getElementById('btn-watch-monetag').addEventListener('click',         () => handleAdClick('monetag',        'btn-watch-monetag',         AD_CONFIG.monetag.limit,        showMonetagAd));
+        document.getElementById('btn-watch-giga').addEventListener('click',            () => handleAdClick('giga',           'btn-watch-giga',            AD_CONFIG.giga.limit,           showGigaPubAd));
 
-        // ── YOUTUBE VIDEO MINING ──
-        window.ytApiReady = false;
-        const ytScriptTag = document.createElement('script');
-        ytScriptTag.src = "https://www.youtube.com/iframe_api";
-        document.head.appendChild(ytScriptTag);
+        async function processAdReward(type, points, dbField) {
+            const userRef = doc(db, 'users', currentUser.id);
+            const updates = { lifetimeAdsWatched: increment(1), pointBalance: increment(points), lifetimePointsEarned: increment(points) };
+            updates[dbField] = increment(1);
+            
+            try { await updateDoc(userRef, updates); } catch(e){}
 
-        window.onYouTubeIframeAPIReady = function() { window.ytApiReady = true; };
+            currentUser[dbField] = (currentUser[dbField] || 0) + 1;
+            currentUser.lifetimeAdsWatched = (currentUser.lifetimeAdsWatched || 0) + 1;
+            currentUser.pointBalance       = (currentUser.pointBalance       || 0) + points;
+            currentUser.lifetimePointsEarned = (currentUser.lifetimePointsEarned || 0) + points;
 
-        async function onPlayerStateChange(event) {
-            if (event.data == YT.PlayerState.PLAYING) {
-                isVideoPlaying = true;
-                if (vServerStartTime === 0) {
-                    // Firebase SDK দিয়ে server time নেওয়া হচ্ছে (API বাদ)
-                    try {
-                        const startMs = Date.now();
-                        vServerStartTime = startMs;
-                        vServerSignature = `vid_${currentUser.id}_${startMs}`;
-                        // Firestore-এ video session শুরু লগ করা
-                        try {
-                            await updateDoc(doc(db, 'users', currentUser.id), {
-                                videoSessionStart: startMs,
-                                videoSessionActive: true
-                            });
-                        } catch(e) {}
-                        localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature }));
-                    } catch (e) { isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Session error. Reload app."); }
-                }
-            } else { isVideoPlaying = false; }
-        }
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && isVideoPlaying && ytPlayer) ytPlayer.pauseVideo();
-        });
-
-        window.playYtVideo = function(vId) {
-            if (!window.ytApiReady) return alert("YouTube Player is loading...");
-            if (localVideoMined >= VIDEO_BOX_MAX) return alert(`Box is full! Claim your ${VIDEO_BOX_MAX} Gold first.`);
-            let dailyMined = currentUser.dailyVideoMined || 0;
-            if (dailyMined >= DAILY_VIDEO_MAX) return alert(`Daily limit reached (${DAILY_VIDEO_MAX} Gold/day). Come back tomorrow!`);
-
-            if (!ytPlayer) {
-                ytPlayer = new YT.Player('ytplayer', {
-                    height: '210', width: '100%', videoId: vId,
-                    playerVars: { autoplay: 1, controls: 0, rel: 0, modestbranding: 1 },
-                    events: { 'onStateChange': onPlayerStateChange }
-                });
-            } else {
-                ytPlayer.loadVideoById(vId);
-            }
-            document.querySelector('[data-tab-target="#video-content"]')?.click();
-        };
-
-        function updateVideoUI() {
-            const mined = localVideoMined;
-            const pct = Math.min(100, (mined / VIDEO_BOX_MAX) * 100);
-            const prog = document.getElementById('videoMiningProgress');
-            const disp = document.getElementById('videoMinedDisplay');
-            const btn = document.getElementById('claimVideoPtsBtn');
-            const daily = document.getElementById('videoDailyLimitDisplay');
-            if(prog) prog.style.width = pct + '%';
-            if(disp) disp.textContent = `${Math.floor(mined)} 🪙`;
-            if(daily) daily.textContent = `Daily: ${Math.floor(currentUser?.dailyVideoMined || 0)} / ${DAILY_VIDEO_MAX} Gold`;
-            if(btn) {
-                if(btn.dataset.busy === "true") return;
-                if(mined >= VIDEO_BOX_MIN) {
-                    btn.disabled = false;
-                    btn.innerHTML = `<i class="fas fa-box-open"></i> Claim ${Math.floor(mined)} 🪙`;
-                } else {
-                    btn.disabled = true;
-                    btn.innerHTML = `<i class="fas fa-lock"></i> Min ${VIDEO_BOX_MIN} Gold`;
-                }
-            }
-        }
-
-        // Video gold timer (every 15s = 200gold/hr ÷ 240 ticks = ~0.833 gold)
-        setInterval(() => {
-            if (!isVideoPlaying || !currentUser) return;
-            videoPlaySeconds++; videoWatchTotalSeconds++;
-
-            // Monetag every 10 mins
-            if (videoWatchTotalSeconds - lastMonetagAdShownAt >= MONETAG_AD_INTERVAL_SECONDS && !isAdRunning) {
-                lastMonetagAdShownAt = videoWatchTotalSeconds;
-                try { showMonetagAd(); } catch(e) {}
-            }
-
-            if (videoPlaySeconds >= 15) {
-                const goldPerTick = VIDEO_GOLD_PER_HOUR / (60 * 4); // 0.833 per 15s
-                localVideoMined = Math.min(VIDEO_BOX_MAX, localVideoMined + goldPerTick);
-                videoPlaySeconds = 0;
-                updateVideoUI();
-                localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature }));
-
-                if (localVideoMined >= VIDEO_BOX_MAX && ytPlayer) ytPlayer.pauseVideo();
-            }
-        }, 1000);
-
-        // Claim Video Gold
-        document.getElementById('claimVideoPtsBtn').addEventListener('click', async () => {
-            if (localVideoMined < VIDEO_BOX_MIN) return;
-            // vServerStartTime check সরানো হয়েছে — Firebase SDK ব্যবহার করা হচ্ছে
-            const btn = document.getElementById('claimVideoPtsBtn');
-            const amtToClaim = Math.floor(localVideoMined);
-            btn.dataset.busy = "true";
-            const adFunctions = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd, showGigaPubAd];
-            const randomAdFunc = adFunctions[Math.floor(Math.random() * adFunctions.length)];
-            const ok = await runAdAndVerifyTime('claimVideoPtsBtn', randomAdFunc);
-            if (ok) {
-                btn.disabled = true; btn.textContent = "Claiming...";
+            const VALID_REF_ADS = 20;
+            if (currentUser.lifetimeAdsWatched === VALID_REF_ADS && currentUser.referredBy) {
                 try {
-                    // ── Firebase SDK দিয়ে সরাসরি Firestore update (API বাদ) ──
-                    const elapsedMs = Date.now() - (vServerStartTime || Date.now());
-                    const maxAllowed = Math.min(VIDEO_BOX_MAX, Math.ceil((elapsedMs / 3600000) * VIDEO_GOLD_PER_HOUR) + 50);
-                    const finalClaim = Math.min(amtToClaim, maxAllowed);
-                    await updateDoc(doc(db, 'users', currentUser.id), {
-                        goldBalance: increment(finalClaim),
-                        lifetimeGoldEarned: increment(finalClaim),
-                        dailyVideoMined: increment(finalClaim),
-                        videoSessionActive: false,
-                        videoSessionStart: 0
+                    await runTransaction(db, async (t) => {
+                        const refRef = doc(db, 'users', currentUser.referredBy);
+                        const refDoc = await t.get(refRef);
+                        if (refDoc.exists()) {
+                            t.update(refRef, { pointBalance: increment(REFERRAL_REWARD_POINTS), lifetimePointsEarned: increment(REFERRAL_REWARD_POINTS), referralCount: increment(1) });
+                            t.set(doc(collection(db, 'transactions')), { userId: currentUser.referredBy, type: 'Referral Reward', details: `Valid Ref UID: ${currentUser.id}`, pointAmount: REFERRAL_REWARD_POINTS, createdAt: serverTimestamp() });
+                        }
                     });
-                    currentUser.goldBalance = (currentUser.goldBalance || 0) + finalClaim;
-                    currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + finalClaim;
-                    currentUser.dailyVideoMined = (currentUser.dailyVideoMined || 0) + finalClaim;
-                    showSuccessModal("Gold Mined! ⛏️", `+${finalClaim} 🪙 Gold added!`);
-                    localVideoMined = 0; vServerStartTime = 0; vServerSignature = ""; videoPlaySeconds = 0;
-                    localStorage.removeItem('newtube_video_mine_' + currentUser.id);
-                    updateBalanceUI(); updateVideoUI();
-                    if (ytPlayer) ytPlayer.playVideo();
-                } catch(e) { console.error(e); alert("Claim failed: " + e.message); }
+                } catch (e) {}
             }
-            btn.dataset.busy = "false";
-            updateVideoUI();
-        });
-
-        // Fetch Videos
-        // ── VIDEO CACHE (Optimization 1: fetch once, use everywhere) ──
-        let _videoCache = null; // in-memory cache
-
-        async function getVideosFromCache() {
-            if (_videoCache) return _videoCache; // already fetched
-            const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
-            _videoCache = [];
-            snap.forEach(d => _videoCache.push(d.data()));
-            return _videoCache;
+            showSuccessModal("Ad Complete! 🎉", `+${points} Points added`);
+            updateBalanceUI(); updateAdButtonStats();
         }
 
-        async function fetchVideosFromFirebase() {
-            const container = document.getElementById('video-list-container');
-            container.innerHTML = '<div class="loader"></div>';
-            try {
-                const videos = await getVideosFromCache();
-                container.innerHTML = '';
-                if (!videos.length) { container.innerHTML = '<p style="text-align:center; padding:16px; color:var(--text2); font-size:0.83rem;">No videos available.</p>'; return; }
-                videos.forEach(v => {
-                    container.innerHTML += `
-                        <div class="video-table-row" onclick="window.playYtVideo('${v.videoId}')">
-                            <div class="video-row-info">
-                                <div class="video-row-thumb">
-                                    <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" alt="${v.title}">
-                                    <div class="video-row-thumb-overlay"><i class="fas fa-play"></i></div>
-                                </div>
-                                <div class="video-row-title">${v.title}</div>
-                            </div>
-                            <div class="video-row-pts">🪙 200/hr</div>
-                        </div>`;
-                });
-            } catch(e) { container.innerHTML = '<p style="text-align:center; padding:16px; color:var(--red); font-size:0.83rem;">Failed to load.</p>'; }
+        // ════════════════════════════════════════════
+        // WITHDRAW LOGIC
+        // ════════════════════════════════════════════
+        function getRequiredRefs(amount) {
+            if (amount <= 1500) return 1; if (amount <= 3000) return 2; if (amount <= 4500) return 3; if (amount <= 6000) return 4; return 5;
         }
 
-        // Uses same cache - no extra Firestore reads
-        async function loadHomeRecentVideos() {
-            const strip = document.getElementById('home-recent-videos');
-            strip.innerHTML = '';
-            try {
-                const videos = await getVideosFromCache();
-                if (!videos.length) { strip.innerHTML = '<p style="font-size:0.78rem; color:var(--text2);">No videos yet.</p>'; return; }
-                videos.slice(0, 8).forEach(v => {
-                    strip.innerHTML += `
-                        <div class="recent-vid-item" onclick="window.playYtVideo('${v.videoId}')">
-                            <div class="recent-vid-thumb">
-                                <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" alt="${v.title}">
-                            </div>
-                            <div class="recent-vid-title">${v.title}</div>
-                        </div>`;
-                });
-            } catch(e) { strip.innerHTML = ''; }
+        function highlightTierRow(amount) {
+            const rows = ['tier-row-1','tier-row-2','tier-row-3','tier-row-4','tier-row-5'];
+            rows.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('tier-active'); });
+            if (!amount || amount < 1500) return;
+            let rowIdx = amount <= 1500 ? 1 : amount <= 3000 ? 2 : amount <= 4500 ? 3 : amount <= 6000 ? 4 : 5;
+            const activeRow = document.getElementById(`tier-row-${rowIdx}`);
+            if (activeRow) activeRow.classList.add('tier-active');
         }
 
-        // ── WITHDRAW METHOD SELECTOR ──
-        window.selectMethod = function(method, el) {
-            selectedWithdrawMethod = method;
-            document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            const m = WITHDRAW_METHODS[method];
-            document.getElementById('method-label').textContent = m.label;
-            document.getElementById('method-min').textContent = `${m.min} 💎`;
-            const rateEl = document.getElementById('method-rate');
-            if (rateEl) rateEl.textContent = m.rate;
-            document.getElementById('account-label').textContent = m.label;
-            document.getElementById('accountDetails').placeholder = m.placeholder;
-            document.getElementById('withdrawalAmount').placeholder = `Min: ${m.min.toLocaleString()} Diamonds`;
-            document.getElementById('realtime-diamond-display').style.display = 'none';
-            document.getElementById('withdrawalAmount').value = '';
-        };
-
-        document.getElementById('withdraw-modal-btn').addEventListener('click', () => {
-            updateBalanceUI();
-            document.getElementById('withdrawalAmount').value = '';
-            document.getElementById('accountDetails').value = '';
-            document.getElementById('realtime-diamond-display').style.display = 'none';
-            document.getElementById('withdrawModalOverlay').classList.add('show');
-        });
+        document.getElementById('withdraw-modal-btn').addEventListener('click', () => { document.getElementById('withdrawModalOverlay').classList.add('show'); updateBalanceUI(); });
 
         document.getElementById('withdrawalAmount').addEventListener('input', (e) => {
             const amt = parseFloat(e.target.value);
-            const preview = document.getElementById('realtime-diamond-display');
-            const m = WITHDRAW_METHODS[selectedWithdrawMethod];
-            if (amt >= m.min) {
-                let converted = '';
-                if (selectedWithdrawMethod === 'binance')   converted = (amt / 1000).toFixed(4) + ' USDT';
-                if (selectedWithdrawMethod === 'tonkeeper') converted = (amt / 1000 * 0.45).toFixed(4) + ' TON';
-                if (selectedWithdrawMethod === 'bkash')     converted = (amt / 1000 * 120).toFixed(2) + ' BDT';
-                document.getElementById('calc-currency-val').textContent = converted;
-                document.getElementById('calc-currency-unit').textContent = '';
+            const preview = document.getElementById('realtime-ton-display');
+            const refsDisplay = document.getElementById('requiredRefsDisplay');
+
+            if (amt >= 1500) {
+                document.getElementById('calc-ton-val').textContent = (amt * POINTS_TO_TON_RATE).toFixed(4);
                 preview.style.display = 'block';
+                const needed = getRequiredRefs(amt);
+                const avail = (currentUser.referralCount || 0) - (currentUser.spentReferrals || 0);
+                const color = avail >= needed ? 'var(--green)' : 'var(--red)';
+                refsDisplay.innerHTML = `Need <strong style="color:${color};font-size:1.1rem;">${needed}</strong> Valid Ref${needed>1?'s':''} &nbsp;|&nbsp; You have <strong style="color:${color};">${avail}</strong>`;
+                highlightTierRow(amt);
             } else {
-                preview.style.display = 'none';
+                preview.style.display = 'none'; refsDisplay.innerHTML = 'Enter amount to see required referrals'; highlightTierRow(0);
             }
         });
 
         document.getElementById('submitWithdrawalBtn').addEventListener('click', async (e) => {
             e.preventDefault(); if (isSubmittingWithdrawal) return;
-            const amount = parseFloat(document.getElementById('withdrawalAmount').value);
+
+            const amount  = parseFloat(document.getElementById('withdrawalAmount').value);
             const details = document.getElementById('accountDetails').value.trim();
-            const today = getTodayDateString();
-            const method = selectedWithdrawMethod;
-            const minReq = WITHDRAW_METHODS[method].min;
 
-            if (!details || isNaN(amount) || amount < minReq) return alert(`Min ${minReq} Diamond and address required.`);
-            if ((currentUser.diamondBalance || 0) < amount) return alert('Insufficient Diamonds.');
-            if (currentUser.lastWithdrawDate === today) return alert('1 withdrawal per day only.');
+            if (!details || isNaN(amount) || amount < 1500) return alert('Min 1,500 Pts and Tonkeeper address required.');
+            if ((currentUser.pointBalance || 0) < amount)   return alert('Insufficient Points.');
 
-            // Withdraw requirements: always 5 tasks + 20 ads
-            const adsToday = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-            const tasksTotal = currentUser.completedTasks?.length || 0;
-            if (tasksTotal < 5) return alert(`❌ Withdraw করতে minimum 5টি task complete করতে হবে।\nCompleted: ${tasksTotal}/5`);
-            if (adsToday < 20) return alert(`❌ Withdraw করতে আজকে 20টি ads দেখতে হবে।\nDone: ${adsToday}/20`);
+            const refsNeeded = getRequiredRefs(amount);
+            const refsAvail  = (currentUser.referralCount || 0) - (currentUser.spentReferrals || 0);
+            if (refsAvail < refsNeeded) return alert(`Need ${refsNeeded} Valid Ref${refsNeeded>1?'s':''} for this amount.`);
 
-            if (!confirm(`Withdraw ${amount} 💎 via ${WITHDRAW_METHODS[method].label}?`)) return;
+            if (!confirm(`Withdraw ${amount} Pts?\nCost: ${refsNeeded} Valid Referral${refsNeeded>1?'s':''}.`)) return;
 
             isSubmittingWithdrawal = true;
             try {
-                // Wallet check
-                const walletCheckSnap = await getDocs(query(collection(db, 'withdrawals'), where('details', '==', details), limit(5)));
-                let usedByOther = false;
-                walletCheckSnap.forEach(d => { if (d.data().userId !== currentUser.id) usedByOther = true; });
-                if (usedByOther) { isSubmittingWithdrawal = false; return alert('❌ This address is already used by another account.'); }
-
                 await runTransaction(db, async (t) => {
                     const userRef = doc(db, 'users', currentUser.id);
                     const uData = (await t.get(userRef)).data();
-                    if (uData.lastWithdrawDate === today) throw new Error("Already withdrawn today.");
-                    if ((uData.diamondBalance || 0) < amount) throw new Error("Insufficient Diamonds.");
-                    t.set(doc(collection(db, 'withdrawals')), {
-                        userId: currentUser.id, method, details, status: 'pending',
-                        createdAt: serverTimestamp(), diamondAmount: amount, currency: 'diamond'
-                    });
-                    t.update(userRef, { diamondBalance: increment(-amount), withdrawalCount: increment(1), lastWithdrawDate: today });
+                    const serverAvail = (uData.referralCount || 0) - (uData.spentReferrals || 0);
+                    if (uData.pointBalance < amount || serverAvail < refsNeeded) throw new Error("Requirements not met on server.");
+                    t.set(doc(collection(db, 'withdrawals')), { userId: currentUser.id, method: 'Tonkeeper', details, status: 'pending', createdAt: serverTimestamp(), pointAmount: amount, tonAmount: amount * POINTS_TO_TON_RATE, refsUsed: refsNeeded });
+                    t.update(userRef, { pointBalance: increment(-amount), spentReferrals: increment(refsNeeded) });
                 });
 
-                document.getElementById('withdrawalAmount').value = '';
-                document.getElementById('accountDetails').value = '';
-                document.getElementById('withdrawModalOverlay').classList.remove('show');
-                showSuccessModal("Request Sent! ✅", `Withdrawal of ${amount} 💎 pending.`);
-                currentUser.diamondBalance = (currentUser.diamondBalance || 0) - amount;
-                currentUser.lastWithdrawDate = today;
+                document.getElementById('withdrawalAmount').value = ''; document.getElementById('accountDetails').value = '';
+                document.getElementById('realtime-ton-display').style.display = 'none'; document.getElementById('requiredRefsDisplay').innerHTML = 'Enter amount...';
+                highlightTierRow(0); document.getElementById('withdrawModalOverlay').classList.remove('show');
+                showSuccessModal("Request Sent! ✅", `Withdrawal pending review.`);
+
+                currentUser.pointBalance = (currentUser.pointBalance || 0) - amount; currentUser.spentReferrals = (currentUser.spentReferrals || 0) + refsNeeded;
                 updateBalanceUI();
             } catch (err) { alert(err.message); } finally { isSubmittingWithdrawal = false; }
         });
 
-        // ── EXCHANGE: Gold → Diamond ──
-        document.getElementById('action-exchange').addEventListener('click', () => {
-            updateBalanceUI();
-            document.getElementById('exchangeGoldInput').value = '';
-            document.getElementById('exchange-preview').style.display = 'none';
-            document.getElementById('exchangeModalOverlay').classList.add('show');
-        });
-
-        document.getElementById('exchangeGoldInput').addEventListener('input', (e) => {
-            const g = parseFloat(e.target.value);
-            const preview = document.getElementById('exchange-preview');
-            if (g >= 5000 && g <= 100000) {
-                document.getElementById('exchange-diamond-out').textContent = Math.floor(g / GOLD_PER_DIAMOND);
-                preview.style.display = 'block';
-            } else { preview.style.display = 'none'; }
-        });
-
-        document.getElementById('confirmExchangeBtn').addEventListener('click', async () => {
-            const goldAmt = parseFloat(document.getElementById('exchangeGoldInput').value);
-            if (isNaN(goldAmt) || goldAmt < 5000) return alert('Minimum 5,000 Gold to convert.');
-            if (goldAmt > 100000) return alert('Maximum 100,000 Gold per exchange.');
-            if ((currentUser.goldBalance || 0) < goldAmt) return alert('Insufficient Gold balance.');
-            const diamondOut = Math.floor(goldAmt / GOLD_PER_DIAMOND);
-            if (diamondOut < 1) return alert('Not enough gold for even 1 Diamond. Min 1,000 Gold = 1 Diamond.');
-            if (!confirm(`Convert ${goldAmt.toLocaleString()} 🪙 Gold → ${diamondOut} 💎 Diamond?`)) return;
-            try {
-                await updateDoc(doc(db, 'users', currentUser.id), {
-                    goldBalance: increment(-goldAmt),
-                    diamondBalance: increment(diamondOut)
-                });
-                currentUser.goldBalance = (currentUser.goldBalance || 0) - goldAmt;
-                currentUser.diamondBalance = (currentUser.diamondBalance || 0) + diamondOut;
-                document.getElementById('exchangeModalOverlay').classList.remove('show');
-                updateBalanceUI();
-                showSuccessModal("Exchange Done! 💎", `+${diamondOut} Diamond received!`);
-            } catch(e) { alert("Exchange failed. Try again."); }
-        });
-
-        // ── HISTORY ──
-        // ── HISTORY (Optimization 3: lazy load + cache) ──
-        let _historyCache = null;
-
+        // --- HISTORY ---
         document.getElementById('history-btn').addEventListener('click', async () => {
             document.getElementById('historyModalOverlay').classList.add('show');
             const container = document.getElementById('combined-history-list');
-
-            // Use cache if available (saves ~20 reads per open)
-            if (_historyCache) {
-                renderHistoryList(_historyCache, container);
-                return;
-            }
-
             container.innerHTML = '<div class="loader"></div>';
             try {
-                // Only fetch withdrawals - transactions collection may not exist
-                const wSnap = await getDocs(
-                    query(collection(db, "withdrawals"), where("userId", "==", currentUser.id), limit(20))
-                );
+                const [wSnap, tSnap] = await Promise.all([ getDocs(query(collection(db, "withdrawals"), where("userId", "==", currentUser.id))), getDocs(query(collection(db, "transactions"), where("userId", "==", currentUser.id))) ]);
                 let list = [];
-                wSnap.forEach(d => list.push({ ...d.data(), isW: true, time: d.data().createdAt }));
+                wSnap.forEach(d => list.push({ ...d.data(), isW: true,  time: d.data().createdAt }));
+                tSnap.forEach(d => list.push({ ...d.data(), isW: false, time: d.data().createdAt }));
                 list.sort((a, b) => (b.time?.toMillis() || 0) - (a.time?.toMillis() || 0));
-                _historyCache = list; // cache for next open
-                renderHistoryList(list, container);
+                list = list.slice(0, 20);
+
+                if (!list.length) { container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text2);">No history yet.</p>'; return; }
+
+                container.innerHTML = list.map(d => {
+                    const date = d.time ? d.time.toDate().toLocaleDateString() : '';
+                    let title, amt, color, icon;
+                    if (d.isW || d.type === 'Withdrawal') {
+                        title = `Withdraw (${d.status || 'pending'})`; amt = `-${d.pointAmount} Pts`; color = 'var(--red)'; icon = '💸';
+                    } else {
+                        title = d.type || 'Reward'; amt = `+${d.pointAmount} Pts`; color = 'var(--green)'; icon = '✨';
+                    }
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);">
+                        <span style="font-size:1.3rem;">${icon}</span><div style="flex:1;"><strong style="display:block;color:var(--text);font-size:0.88rem;">${title}</strong><small style="color:var(--text2);font-size:0.72rem;">${date}</small></div>
+                        <strong style="color:${color};font-size:0.88rem;">${amt}</strong></div>`;
+                }).join('');
             } catch (e) { container.innerHTML = '<p style="text-align:center;color:var(--red);">Failed to load.</p>'; }
         });
 
-        function renderHistoryList(list, container) {
-            if (!list.length) { container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text2);">No history yet.</p>'; return; }
-            container.innerHTML = list.map(d => {
-                const date = d.time ? d.time.toDate().toLocaleDateString() : '';
-                let title, amt, color, icon;
-                if (d.isW || d.type === 'Withdrawal') {
-                    title = `Withdraw (${d.status || 'pending'})`; amt = `-${d.diamondAmount || 0} 💎`; color = 'var(--red)'; icon = '💸';
-                } else {
-                    title = d.type || 'Reward'; amt = `+${d.goldAmount || d.pointAmount || 0} 🪙`; color = 'var(--gold)'; icon = '✨';
-                }
-                return `<div style="display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(245,166,35,0.1);">
-                    <span style="font-size:1.3rem;">${icon}</span>
-                    <div style="flex:1;"><strong style="display:block;color:var(--text);font-size:0.88rem;">${title}</strong>
-                    <small style="color:var(--text2);font-size:0.72rem;">${date}</small></div>
-                    <strong style="color:${color};font-size:0.92rem;">${amt}</strong></div>`;
-            }).join('');
-        }
-
-        // ── PROMO CODE ──
+        // --- PROMO CODE ---
         document.getElementById('claimPromoBtn').addEventListener('click', async () => {
             const code = document.getElementById('promoCodeInput').value.trim(); if (!code) return;
             const ok = await runAdAndVerifyTime('claimPromoBtn', showAdsgramDailyAd); if (!ok) return;
@@ -1696,84 +1078,33 @@ Come back tomorrow!`);
                 await runTransaction(db, async (t) => {
                     const promoRef = doc(db, 'promo_codes', code); const p = (await t.get(promoRef)).data();
                     if (!p || !p.isActive || p.currentUses >= p.maxUses || p.usersClaimed?.includes(currentUser.id)) throw new Error("Invalid or already used code.");
-                    t.update(doc(db, 'users', currentUser.id), { goldBalance: increment(p.rewardAmount), lifetimeGoldEarned: increment(p.rewardAmount) });
+                    t.update(doc(db, 'users', currentUser.id), { pointBalance: increment(p.rewardAmount), lifetimePointsEarned: increment(p.rewardAmount) });
                     t.update(promoRef, { currentUses: increment(1), usersClaimed: arrayUnion(currentUser.id) });
                     return p.rewardAmount;
                 }).then(amt => {
                     document.getElementById('promoModalOverlay').classList.remove('show');
-                    showSuccessModal("Code Claimed! 🎁", `+${amt} 🪙 Gold added!`);
+                    showSuccessModal("Code Claimed!", `+${amt} Points added`);
                     document.getElementById('promoCodeInput').value = '';
-                    currentUser.goldBalance = (currentUser.goldBalance || 0) + amt;
-                    currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + amt;
+                    currentUser.pointBalance = (currentUser.pointBalance || 0) + amt; currentUser.lifetimePointsEarned = (currentUser.lifetimePointsEarned || 0) + amt;
                     updateBalanceUI();
                 });
             } catch (e) { alert(e.message); } finally { btn.disabled = false; btn.textContent = "Claim Reward"; }
         });
 
-        // ── UI EVENTS ──
+        // UI Modals & Nav
         document.getElementById('profile-id-display').addEventListener('click', () => { navigator.clipboard.writeText(currentUser.id); showSuccessModal("Copied!", "User ID copied."); });
-
-        // ── INVITE / REFERRAL ──
-        function getMyReferralLink() {
-            return `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`;
-        }
-        function openInviteModal() {
-            const link = getMyReferralLink();
-            // Update hidden input for copy fallback
-            document.getElementById('modalReferralLinkInput').value = link;
-            // Update visible link display
-            const disp = document.getElementById('referralLinkDisplay');
-            if (disp) disp.textContent = link;
-            // Update stats
-            const ti = document.getElementById('modal-total-invites');
-            const rg = document.getElementById('modal-ref-gold');
-            if (ti) ti.textContent = currentUser.totalInvites || 0;
-            if (rg) rg.textContent = ((currentUser.totalInvites || 0) * 2000).toLocaleString() + ' 🪙';
-            document.getElementById('inviteModalOverlay').classList.add('show');
-        }
-        document.getElementById('action-invite').addEventListener('click', openInviteModal);
-
-        document.getElementById('modalCopyReferralLinkBtn').addEventListener('click', () => {
-            const link = getMyReferralLink();
-            navigator.clipboard.writeText(link).then(() => {
-                showSuccessModal("Copied! 📋", "Referral link copied to clipboard.");
-            }).catch(() => {
-                // fallback
-                const inp = document.getElementById('modalReferralLinkInput');
-                inp.style.position = 'static'; inp.style.opacity = '1';
-                inp.select(); document.execCommand('copy');
-                inp.style.position = 'absolute'; inp.style.opacity = '0';
-                showSuccessModal("Copied! 📋", "Referral link copied.");
-            });
-        });
-
-        document.getElementById('telegramShareBtn').addEventListener('click', () => {
-            const link = getMyReferralLink();
-            const text = encodeURIComponent(`🎁 Join NEWTUBE and earn Gold & Diamonds!\n\nWatch videos, complete tasks, and withdraw real rewards.\n\n👉 Join here:`);
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
-            tg.openTelegramLink(shareUrl);
-        });
-
+        document.getElementById('modalCopyReferralLinkBtn').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('modalReferralLinkInput').value); showSuccessModal("Copied!", "Referral link copied."); });
+        document.getElementById('action-invite').addEventListener('click', () => document.getElementById('inviteModalOverlay').classList.add('show'));
         document.getElementById('action-promo-code').addEventListener('click', () => document.getElementById('promoModalOverlay').classList.add('show'));
         document.querySelectorAll('.close-modal-btn').forEach(b => b.addEventListener('click', e => e.target.closest('.modal-overlay').classList.remove('show')));
 
-        // Nav tabs
         document.querySelectorAll('.nav-item').forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
-                const isGoingToVideo = link.dataset.tabTarget === '#video-content';
-                const isLeavingVideo = !isGoingToVideo && document.body.classList.contains('video-active');
-                if (isLeavingVideo) { if (ytPlayer) ytPlayer.pauseVideo(); isVideoPlaying = false; }
                 document.querySelectorAll('.nav-item, .content-section').forEach(el => el.classList.remove('active'));
-                link.classList.add('active');
-                document.querySelector(link.dataset.tabTarget).classList.add('active');
-                if (link.dataset.tabTarget === '#task-content') {
-                    // Don't clear cache - tasks rarely change in a session
-                    if (!tasksRenderedChannel && activeTaskTab === 'channel') fetchAndRenderTasks('channel');
-                    else if (!tasksRenderedPartner && activeTaskTab === 'partner') fetchAndRenderTasks('partner');
-                }
+                link.classList.add('active'); document.querySelector(link.dataset.tabTarget).classList.add('active');
+                if (link.dataset.tabTarget === '#task-content') { tasksCacheChannel = null; tasksCachePartner = null; fetchAndRenderTasks(activeTaskTab); }
                 if (link.dataset.tabTarget === '#ads-content') updateAdButtonStats();
-                document.body.classList.toggle('video-active', isGoingToVideo);
             });
         });
 
@@ -1784,13 +1115,74 @@ Come back tomorrow!`);
             setTimeout(() => document.getElementById('successModalOverlay').classList.remove('show'), 3000);
         }
 
-        // ── TASK SYSTEM ──
-        const TASK_API_BASE = 'https://newtube-ton.vercel.app/api';
-        let activeTaskTab = 'channel';
-        let tasksCacheChannel = null; // in-memory Firestore snapshot cache
-        let tasksCachePartner = null;
-        let tasksRenderedChannel = false; // track if already rendered
-        let tasksRenderedPartner = false;
+        // --- LOTTERY ---
+        class LotteryWheel {
+            constructor(cId) {
+                this.c = document.getElementById(cId); this.ctx = this.c.getContext("2d"); this.rot = 0;
+                this.seg = [ { l: "5 Pts", v: 5, c: "#00E5FF", w: 40 }, { l: "8 Pts", v: 8, c: "#3b82f6", w: 30 }, { l: "10 Pts", v: 10, c: "#8B5CF6", w: 20 }, { l: "15 Pts", v: 15, c: "#F43F5E", w: 5 }, { l: "17 Pts", v: 17, c: "#10B981", w: 3 }, { l: "20 Pts", v: 20, c: "#FBBF24", w: 2 } ];
+                this.draw();
+            }
+            draw() {
+                const a = (2*Math.PI)/this.seg.length, cx = this.c.width/2, cy = this.c.height/2, r = cx;
+                this.seg.forEach((s, i) => {
+                    this.ctx.beginPath(); this.ctx.moveTo(cx,cy); this.ctx.arc(cx,cy,r,i*a,(i+1)*a);
+                    this.ctx.fillStyle = s.c; this.ctx.fill(); this.ctx.lineWidth = 3; this.ctx.strokeStyle = "#0B0F19"; this.ctx.stroke();
+                    this.ctx.save(); this.ctx.translate(cx,cy); this.ctx.rotate(i*a+a/2);
+                    this.ctx.textAlign = "right"; this.ctx.fillStyle = "#fff"; this.ctx.font = "bold 32px Arial";
+                    this.ctx.fillText(s.l, r-35, 12); this.ctx.restore();
+                });
+            }
+            spin(resEl, cb) {
+                const wId = (() => { let rnd=Math.random()*100, s=0; for(let i=0;i<this.seg.length;i++){s+=this.seg[i].w;if(rnd<=s)return i;} return 0;})();
+                const a = 360/this.seg.length, tg = (wId*a)+(a/2), fn = this.rot + (Math.floor(Math.random()*4)+6)*360 + (360-tg) - (this.rot%360);
+                this.c.style.transform = `rotate(${fn}deg)`; this.rot = fn;
+                resEl.innerText = "Spinning... 🌀";
+                setTimeout(() => { resEl.innerHTML = `🎉 Won ${this.seg[wId].l}!`; if(cb) cb(this.seg[wId]); }, 4000);
+            }
+        }
+        const wheel = new LotteryWheel("wheelCanvas");
+
+        async function updateLotteryUI() {
+            if (!currentUser) return; const now = Date.now(); const lastSpinTime = currentUser.lastSpinTimestamp || 0; const hourMs = 60 * 60 * 1000;
+            const canSpin = (now - lastSpinTime) >= hourMs;
+            const btn = document.getElementById("spinBtn"); const spinLimitEl = document.getElementById("spinLimitText");
+
+            if (!canSpin) {
+                btn.innerHTML = '<i class="fas fa-clock"></i> Wait for Next Spin'; btn.disabled = true;
+                if (!window._spinCountdown) {
+                    window._spinCountdown = setInterval(() => {
+                        const rem = hourMs - (Date.now() - (currentUser.lastSpinTimestamp || 0));
+                        if (rem <= 0) { clearInterval(window._spinCountdown); window._spinCountdown = null; updateLotteryUI(); } 
+                        else { spinLimitEl.innerText = `Next Spin in: ${Math.floor(rem/60000)}m ${Math.floor((rem%60000)/1000)}s`; }
+                    }, 1000);
+                }
+            } else {
+                if (window._spinCountdown) { clearInterval(window._spinCountdown); window._spinCountdown = null; }
+                spinLimitEl.innerText = `🎰 Spin Available! (1 per hour)`; btn.innerHTML = '<i class="fas fa-play-circle"></i> SPIN NOW (Watch Ad)'; btn.disabled = false;
+            }
+        }
+
+        document.getElementById('spinBtn').addEventListener('click', async () => {
+            if ((Date.now() - (currentUser.lastSpinTimestamp || 0)) < 3600000) return;
+            const btn = document.getElementById('spinBtn'); btn.dataset.busy = "true";
+            const ok = await runAdAndVerifyTime('spinBtn', showAdsgramDailyAd);
+            if (!ok) { btn.dataset.busy = "false"; updateLotteryUI(); return; }
+            btn.disabled = true; btn.innerHTML = 'Spinning...';
+            wheel.spin(document.getElementById("lotteryResult"), async (pz) => {
+                try {
+                    const spinTs = Date.now();
+                    await updateDoc(doc(db, 'users', currentUser.id), { lastSpinTimestamp: spinTs, pointBalance: increment(pz.v), lifetimePointsEarned: increment(pz.v) });
+                    showSuccessModal("You Won!", `+${pz.v} Points added!`);
+                    currentUser.lastSpinTimestamp = spinTs; currentUser.pointBalance = (currentUser.pointBalance || 0) + pz.v;
+                    currentUser.lifetimePointsEarned = (currentUser.lifetimePointsEarned || 0) + pz.v;
+                    updateBalanceUI(); updateLotteryUI();
+                } catch (e) {} finally { btn.dataset.busy = "false"; btn.disabled = false; }
+            });
+        });
+
+        // --- TASK SYSTEM ---
+        const TASK_API_BASE = 'https://new-ton-p2rd.vercel.app/api';
+        let activeTaskTab = 'channel'; let tasksCacheChannel = null; let tasksCachePartner = null;
 
         document.getElementById('task-content').addEventListener('click', async (e) => {
             const tabBtn = e.target.closest('[data-task-tab]');
@@ -1809,12 +1201,11 @@ Come back tomorrow!`);
 
             if (state === 'start') {
                 if (taskUrl) tg.openLink(taskUrl);
-                button.disabled = true; let c = 5; button.textContent = `Wait ${c}s`;
+                button.disabled = true; let c = 8; button.textContent = `Wait ${c}s`;
                 const iv = setInterval(() => {
                     c--; if (c > 0) { button.textContent = `Wait ${c}s`; }
                     else {
-                        clearInterval(iv); button.disabled = false;
-                        button.textContent = category === 'partner' ? '✅ Claim' : 'Verify';
+                        clearInterval(iv); button.disabled = false; button.textContent = category === 'partner' ? '✅ Claim' : 'Verify';
                         if (category === 'partner') { button.style.background = 'var(--green)'; button.style.color = '#000'; }
                         button.dataset.state = 'claim';
                     }
@@ -1822,229 +1213,106 @@ Come back tomorrow!`);
             } else if (state === 'claim') {
                 button.disabled = true; button.textContent = 'Checking...';
                 try {
-                    const reward = parseInt(button.dataset.reward || '250');
-
-                    if (category === 'channel') {
-                        // ── Channel task: API দিয়ে verify (membership check দরকার) ──
+                    if (category === 'channel' && channelId) {
                         try {
-                            const res = await fetch('https://newtube-ton.vercel.app/api/tasks', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ userId: String(currentUser.id), taskId })
-                            });
-                            const data = await res.json();
-                            if (!data.ok) {
-                                if (data.error === 'not_member') {
-                                    alert('⚠️ Join the channel/group first, then tap Verify!');
-                                } else if (data.alreadyDone) {
-                                    button.closest('[data-task-card]')?.remove(); return;
-                                } else {
-                                    alert('Error: ' + (data.error || 'Unknown'));
-                                }
-                                button.disabled = false; button.textContent = 'Verify'; return;
-                            }
-                            const actualReward = data.rewardGold || reward;
-                            currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
-                            currentUser.goldBalance = (currentUser.goldBalance || 0) + actualReward;
-                            currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
-                            updateBalanceUI();
-                            showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
-                            button.closest('[data-task-card]')?.remove();
-                        } catch(err) {
-                            alert('Network error: ' + err.message);
-                            button.disabled = false; button.textContent = 'Verify';
-                        }
-
-                    } else {
-                        // ── Partner task: Firebase SDK দিয়ে সরাসরি complete (API বাদ) ──
-                        try {
-                            if (currentUser.completedTasks?.includes(taskId)) {
-                                button.closest('[data-task-card]')?.remove(); return;
-                            }
-                            await runTransaction(db, async (t) => {
-                                const userRef = doc(db, 'users', currentUser.id);
-                                const taskRef = doc(db, 'tasks', taskId);
-                                const [uSnap, tSnap] = await Promise.all([t.get(userRef), t.get(taskRef)]);
-                                const uData = uSnap.data();
-                                const tData = tSnap.data();
-                                if (uData.completedTasks?.includes(taskId)) throw new Error('alreadyDone');
-                                if ((tData.limit||0) > 0 && (tData.completionCount||0) >= tData.limit) throw new Error('limit_reached');
-                                t.update(userRef, {
-                                    goldBalance: increment(reward),
-                                    lifetimeGoldEarned: increment(reward),
-                                    completedTasks: arrayUnion(taskId),
-                                    tasksCompletedToday: increment(1)
-                                });
-                                t.update(taskRef, { completionCount: increment(1) });
-                            });
-                            currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
-                            currentUser.goldBalance = (currentUser.goldBalance || 0) + reward;
-                            currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
-                            updateBalanceUI();
-                            showSuccessModal('Task Done! ✅', `+${reward.toLocaleString()} 🪙 Gold earned!`);
-                            button.closest('[data-task-card]')?.remove();
-                        } catch(err) {
-                            if (err.message === 'alreadyDone') { button.closest('[data-task-card]')?.remove(); return; }
-                            alert('Task error: ' + err.message);
-                            button.disabled = false; button.textContent = '✅ Claim';
-                        }
+                            const res = await fetch(`${TASK_API_BASE}/checkMember?userId=${currentUser.id}&channel=${encodeURIComponent(channelId)}`);
+                            const j = await res.json();
+                            if (!j.joined) { alert('⚠️ Join the channel/group first, then tap Verify!'); button.disabled = false; button.textContent = 'Verify'; return; }
+                        } catch(e) { button.disabled = false; button.textContent = 'Verify'; return; }
                     }
+                    const taskSnap = await getDoc(doc(db, 'tasks', taskId));
+                    if (!taskSnap.exists()) throw new Error('Task missing');
+                    const reward = taskSnap.data().rewardPoints || 0;
+                    const batch = writeBatch(db);
+                    batch.update(doc(db, 'users', currentUser.id), { completedTasks: arrayUnion(taskId), pointBalance: increment(reward), lifetimePointsEarned: increment(reward) });
+                    batch.update(doc(db, 'tasks', taskId), { completionCount: increment(1) });
+                    await batch.commit();
+                    currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
+                    currentUser.pointBalance = (currentUser.pointBalance || 0) + reward;
+                    updateBalanceUI(); showSuccessModal('Task Done!', `+${reward} Points`); button.closest('[data-task-card]').remove();
+                } catch (err) { button.disabled = false; button.textContent = 'Verify'; }
             }
         });
 
         async function fetchAndRenderTasks(category = 'channel') {
             const container = document.getElementById(`task-list-${category}`);
-            // Use cache if available
-            const cachedSnap = category === 'channel' ? tasksCacheChannel : tasksCachePartner;
-            if (cachedSnap && (category === 'channel' ? tasksRenderedChannel : tasksRenderedPartner)) return;
             container.innerHTML = '<div class="loader"></div>';
             try {
                 const q = query(collection(db,'tasks'), where('isApproved','==',true), where('category','==',category), orderBy('createdAt','desc'), limit(30));
                 const snap = await getDocs(q);
-                if (category === 'channel') { tasksCacheChannel = snap; tasksRenderedChannel = true; }
-                else { tasksCachePartner = snap; tasksRenderedPartner = true; }
+                if (category === 'channel') tasksCacheChannel = snap; else tasksCachePartner = snap;
                 container.innerHTML = ''; let count = 0;
                 snap.forEach(docSnap => {
                     const task = docSnap.data();
                     if (currentUser.completedTasks?.includes(docSnap.id) || ((task.limit||0)>0 && (task.completionCount||0)>=task.limit)) return;
-                    // Dynamic reward from Firestore (set by admin panel)
-                    const taskReward = task.rewardGold || task.rewardPoints || 250;
+                    
                     const card = document.createElement('div'); card.setAttribute('data-task-card', docSnap.id);
-                    card.setAttribute('data-task-reward', taskReward);
-                    card.className = 'card'; card.style.padding = '16px';
+                    card.className = 'card'; card.style.padding = '15px';
                     if (category === 'channel') {
                         card.innerHTML = `
-                            <div style="display:flex;justify-content:space-between;align-items:center;gap:9px;">
-                                <div style="flex:1;"><div style="font-weight:700;font-size:0.92rem;color:#fff;"><i class="fab fa-telegram-plane" style="color:var(--gold);"></i> ${task.title}</div><div style="color:var(--gold);font-size:0.82rem;margin-top:3px;">+${taskReward.toLocaleString()} 🪙 Gold</div></div>
-                                <button class="btn outline task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-channel-id="${task.channelId||''}" data-category="${category}" data-state="start" data-reward="${taskReward}" style="padding:9px 13px;width:auto;font-size:0.78rem;">Join</button>
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                                <div style="flex:1;"><div style="font-weight:600;font-size:0.9rem;color:#fff;"><i class="fab fa-telegram-plane" style="color:var(--primary);"></i> ${task.title}</div><div style="color:var(--green);font-size:0.8rem;margin-top:3px;">+${task.rewardPoints||5} Points</div></div>
+                                <button class="btn outline task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-channel-id="${task.channelId||''}" data-category="${category}" data-state="start" style="padding:8px 12px;width:auto;">Join</button>
                             </div>`;
                     } else {
                         card.innerHTML = `
-                            <div style="display:flex;align-items:center;gap:11px;margin-bottom:11px;">
-                                <div style="width:38px;height:38px;background:var(--gold-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-robot" style="color:var(--gold);font-size:1rem;"></i></div>
-                                <div><div style="font-weight:800;color:#fff;font-size:0.95rem;">${task.title}</div><div style="color:var(--gold);font-size:0.82rem;margin-top:2px;">+${taskReward.toLocaleString()} 🪙 Gold</div></div>
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                                <div style="width:35px;height:35px;background:var(--primary-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-robot" style="color:var(--primary);"></i></div>
+                                <div><div style="font-weight:700;color:#fff;font-size:0.95rem;">${task.title}</div><div style="color:var(--green);font-size:0.8rem;">+${task.rewardPoints||5} Points</div></div>
                             </div>
-                            <button class="btn task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-category="${category}" data-state="start" data-reward="${taskReward}">🚀 Complete Task</button>`;
+                            <button class="btn task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-category="${category}" data-state="start">🚀 Complete Task</button>`;
                     }
                     container.appendChild(card); count++;
                 });
-                if (!count) container.innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px;">No tasks available.</p>';
+                if (!count) container.innerHTML = '<p style="text-align:center;color:var(--text2);">No tasks available.</p>';
             } catch (err) { container.innerHTML = `<p style="text-align:center;color:var(--red);">Failed to load.</p>`; }
         }
 
-        // ── CHANNEL VERIFICATION ──
+        // --- VERIFICATION ---
         async function checkMembershipAndEnforce() {
-            if (currentUser.channelVerified) return;
             try {
-                const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: String(currentUser.id), taskId: 'membership_check' })
-                });
-                if (!res.ok) return;
+                const res  = await fetch(`https://new-ton-p2rd.vercel.app/api/checkJoin?userId=${currentUser.id}`);
                 const data = await res.json();
-                if (data.ok === false && data.error === 'not_member') {
-                    document.getElementById('activationModalOverlay').classList.add('show');
-                }
-            } catch (e) {
-                console.log('Join check skipped:', e.message);
-            }
+                if (!data.channel || !data.group) document.getElementById('activationModalOverlay').classList.add('show');
+            } catch (e) { document.getElementById('activationModalOverlay').classList.add('show'); }
         }
 
         document.getElementById('activateAccountBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('activateAccountBtn');
-            btn.textContent = "Verifying...";
-            btn.disabled = true;
+            document.getElementById('activateAccountBtn').textContent = "Verifying...";
             try {
-                const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin?userId=${currentUser.id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id })
-                });
-                if (!res.ok) throw new Error('Server error: ' + res.status);
+                const res  = await fetch(`https://new-ton-p2rd.vercel.app/api/checkJoin?userId=${currentUser.id}`);
                 const data = await res.json();
-                if (data.joined) {
-                    // Mark verified locally
-                    currentUser.channelVerified = true;
-                    try {
-                        await updateDoc(doc(db, 'users', currentUser.id), { channelVerified: true });
-                    } catch(e) {}
+                if (data.channel && data.group) {
                     document.getElementById('activationModalOverlay').classList.remove('show');
-                    showSuccessModal('✅ Activated!', 'Account verified! Start earning Gold.');
-                } else {
-                    alert("❌ Join করুন প্রথমে!\n\nChannel ও Group দুটোতেই join করতে হবে, তারপর Verify করুন।");
-                }
-            } catch (e) {
-                console.error('Verify error:', e);
-                // On error, let user in anyway (don't block)
-                document.getElementById('activationModalOverlay').classList.remove('show');
-            }
-            btn.textContent = "✅ Verify & Continue";
-            btn.disabled = false;
+                    if (!currentUser.welcomeBonusClaimed) {
+                        try {
+                            await updateDoc(doc(db, 'users', currentUser.id), { pointBalance: increment(10), lifetimePointsEarned: increment(10), welcomeBonusClaimed: true });
+                            currentUser.pointBalance = (currentUser.pointBalance || 0) + 10; currentUser.welcomeBonusClaimed = true; updateBalanceUI();
+                            showSuccessModal('🎁 Welcome Bonus!', `+10 Points added!`);
+                        } catch (e) {}
+                    }
+                } else alert("Join BOTH the channel and group to verify!");
+            } catch (e) {}
+            document.getElementById('activateAccountBtn').textContent = "Verify Access";
         });
 
-        // ── REFERRAL TELEGRAM NOTIFICATION ──
-        async function sendReferralNotif(referrerId, newUserName) {
-            if (!referrerId) return;
-            try {
-                await fetch('https://newtube-ton.vercel.app/api/withdraw', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'referral_notify',
-                        referrerId: String(referrerId),
-                        newUserName,
-                        adminSecret: 'referral_internal'
-                    })
-                });
-            } catch(e) { console.log('Referral notif skipped'); }
-        }
-
-        // ── MAIN INIT ──
+        // --- MAIN INIT ---
         async function main() {
-            // loader removed
-            
-            try { tg.ready(); } catch(e) {}
-            try { tg.expand(); } catch(e) {}
-            try { tg.setHeaderColor('#050508'); } catch(e) {}
-            // Telegram ready হওয়ার জন্য wait — বেশি দিন কারণ কখনো দেরি করে
-            await new Promise(r => setTimeout(r, 800));
-
-            // tg.initDataUnsafe.user না পেলে আরো 1.5s wait করো (retry)
-            if (!tg.initDataUnsafe?.user) {
-                await new Promise(r => setTimeout(r, 1500));
-            }
-
-            if (!tg.initDataUnsafe?.user) {
-                // loader removed
-                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:#050508;"><div style="font-size:3rem;">📱</div><h3 style="color:#888;font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
-                return;
-            }
-            try {
-                
-                await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
-                
-            } catch(e) {
-                console.error('Init error:', e.message);
-                
-            } finally {
-                // loader removed
-            }
-
-            if (currentUser && !currentUser.isBanned) {
-                setTimeout(() => { try { checkMembershipAndEnforce(); } catch(e) {} }, 2000);
-            }
+            if (!tg.initDataUnsafe?.user) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;">Open in Telegram.</h3>`; return; }
+            tg.ready(); tg.expand(); tg.setHeaderColor('#030509');
+            await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
+            if(currentUser && !currentUser.isBanned) await checkMembershipAndEnforce();
         }
         main();
 
-        // ── PARTICLES ──
+        // Particles Background
         (function spawnParticles() {
             const container = document.getElementById('particles');
-            const colors = ['rgba(245,166,35,0.5)', 'rgba(168,237,255,0.3)', 'rgba(245,166,35,0.2)'];
-            for (let i = 0; i < 18; i++) {
+            const colors = ['rgba(0,229,255,0.4)', 'rgba(59,130,246,0.3)', 'rgba(16,185,129,0.3)'];
+            for (let i = 0; i < 20; i++) {
                 const p = document.createElement('div'); p.className = 'particle';
-                const size = Math.random() * 2.5 + 1;
-                p.style.cssText = `width:${size}px; height:${size}px; left:${Math.random()*100}%; background:${colors[Math.floor(Math.random()*colors.length)]}; animation-duration:${Math.random()*18+12}s; animation-delay:${Math.random()*-25}s; box-shadow: 0 0 ${size*5}px ${colors[Math.floor(Math.random()*colors.length)]};`;
+                const size = Math.random() * 3 + 1;
+                p.style.cssText = `width:${size}px; height:${size}px; left:${Math.random()*100}%; background:${colors[Math.floor(Math.random()*colors.length)]}; animation-duration:${Math.random()*15+10}s; animation-delay:${Math.random()*-20}s; box-shadow: 0 0 ${size*4}px ${colors[Math.floor(Math.random()*colors.length)]};`;
                 container.appendChild(p);
             }
         })();
