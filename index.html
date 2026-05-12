@@ -907,8 +907,8 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
@@ -2000,37 +2000,37 @@ Come back tomorrow!`);
         }
 
         // ── MAIN INIT ──
-        async function main() {
+        function hideLoader() {
             const loader = document.getElementById('nt-loader');
-            const loaderText = document.getElementById('nt-loader-text');
+            if (loader) loader.style.display = 'none';
+        }
 
+        async function main() {
             try { tg.ready(); } catch(e) {}
             try { tg.expand(); } catch(e) {}
             try { tg.setHeaderColor('#050508'); } catch(e) {}
 
-            await new Promise(r => setTimeout(r, 400));
-
-            // Hard timeout — 8 সেকেন্ডে loader hide
-            const hardTimeout = setTimeout(() => {
-                if (loader) loader.style.display = 'none';
-            }, 8000);
+            // Telegram user পাওয়ার জন্য সর্বোচ্চ 2s wait
+            let waited = 0;
+            while (!tg.initDataUnsafe?.user && waited < 2000) {
+                await new Promise(r => setTimeout(r, 200));
+                waited += 200;
+            }
 
             if (!tg.initDataUnsafe?.user) {
-                clearTimeout(hardTimeout);
-                if (loader) loader.style.display = 'none';
-                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:#050508;"><div style="font-size:3rem;">📱</div><h3 style="color:#888;font-size:1rem;text-align:center;padding:0 20px;font-family:Inter,sans-serif;">Please open this app<br>inside Telegram.</h3></div>`;
+                hideLoader();
+                document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:#050508;"><div style="font-size:3rem;">📱</div><h3 style="color:#888;font-size:1rem;text-align:center;padding:0 20px;font-family:Inter,sans-serif;">Please open this app inside Telegram.</h3></div>';
                 return;
             }
 
             try {
-                if (loaderText) loaderText.textContent = 'Connecting...';
                 await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
             } catch(e) {
                 console.error('Init error:', e.message);
-            } finally {
-                clearTimeout(hardTimeout);
-                if (loader) loader.style.display = 'none';
             }
+
+            // initializeUser শেষ হলে loader hide
+            hideLoader();
 
             if (currentUser && !currentUser.isBanned) {
                 setTimeout(() => { try { checkMembershipAndEnforce(); } catch(e) {} }, 2000);
