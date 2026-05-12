@@ -423,38 +423,6 @@
 <body>
 
     <!-- ══ GLOBAL APP LOADER ══ -->
-    <div id="app-global-loader" style="
-        position:fixed; inset:0; z-index:9999;
-        background:#050508;
-        display:flex; flex-direction:column;
-        align-items:center; justify-content:center; gap:20px;
-        transition: opacity 0.4s ease;
-    ">
-        <div style="position:relative; width:64px; height:64px;">
-            <div style="
-                position:absolute; inset:0; border-radius:18px;
-                background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(168,237,255,0.08));
-                border:2px solid var(--gold);
-                display:flex; align-items:center; justify-content:center;
-                font-size:1.8rem;
-                box-shadow: 0 0 24px rgba(245,166,35,0.4);
-                animation: loaderPulse 1.5s ease-in-out infinite;
-            ">💎</div>
-        </div>
-        <div style="text-align:center;">
-            <div style="font-size:1.2rem; font-weight:800; color:#F5A623; letter-spacing:1px; margin-bottom:6px;">NEWTUBE</div>
-            <div style="font-size:0.75rem; color:#666688; font-weight:500;">Loading your account...</div>
-        </div>
-        <div style="display:flex; gap:7px; margin-top:4px;">
-            <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite 0s;"></div>
-            <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite 0.2s;"></div>
-            <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite 0.4s;"></div>
-        </div>
-    </div>
-    <style>
-        @keyframes loaderPulse { 0%,100%{box-shadow:0 0 18px rgba(245,166,35,0.3);} 50%{box-shadow:0 0 32px rgba(245,166,35,0.7);} }
-        @keyframes dotBounce { 0%,100%{transform:translateY(0);opacity:0.4;} 50%{transform:translateY(-8px);opacity:1;} }
-    </style>
 
     <div class="bg-canvas"></div>
     <div class="bg-grid"></div>
@@ -483,7 +451,7 @@
                         <div class="avatar-status"></div>
                     </div>
                     <div class="profile-info">
-                        <div class="profile-name" id="profile-name-display">Loading...</div>
+                        <div class="profile-name" id="profile-name-display">...</div>
                         <div class="profile-id" id="profile-id-display">
                             UID: <span id="uid-text">...</span>&nbsp;<i class="fas fa-copy" style="font-size:0.7rem;"></i>
                         </div>
@@ -927,8 +895,8 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getFirestore, enableNetwork, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
@@ -941,7 +909,9 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const tg = window.Telegram.WebApp;
+        // Firestore network explicitly enable করো
+        enableNetwork(db).catch(e => console.warn('enableNetwork:', e.message));
+        const tg = window.Telegram?.WebApp || { initDataUnsafe: {}, ready: ()=>{}, expand: ()=>{}, setHeaderColor: ()=>{}, showAlert: (m)=>alert(m), openTelegramLink: ()=>{}, openLink: ()=>{} };
 
         let currentUser = null;
         let isSubmittingWithdrawal = false;
@@ -1183,38 +1153,32 @@ Come back tomorrow!`);
             const userRef = doc(db, 'users', userId);
             const today = getTodayDateString();
 
-            // ── Firestore read — timeout 5 সেকেন্ড
-            let userSnap;
+            // ── Firestore থেকে user load করো (timeout 12s) ──
+            let userSnap = null;
             try {
                 userSnap = await Promise.race([
                     getDoc(userRef),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 5000))
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 7000))
                 ]);
             } catch(e) {
-                console.error('Firestore getDoc failed:', e.message);
-                // Firestore fail হলেও dummy user দিয়ে app চালু করো
+                console.error('Firestore read failed:', e.message);
+            }
+
+            if (!userSnap) {
+                // Firestore fail — dummy user দিয়ে চালু করো
                 currentUser = {
-                    id: userId,
-                    goldBalance: 0, diamondBalance: 0,
+                    id: userId, goldBalance: 0, diamondBalance: 0,
                     telegramUsername: tgUser.username || 'N/A',
                     firstName: tgUser.first_name || 'User',
                     completedTasks: [], isBanned: false,
                     lifetimeGoldEarned: 0, adsWatchedAdsgramDaily: 0,
                     adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
                     adsWatchedGiga: 0, dailyVideoMined: 0,
-                    lastResetDate: today, referralCount: 0,
+                    lastResetDate: today, referralCount: 0, totalInvites: 0,
                     _offlineMode: true
                 };
-                updateBalanceUI();
-                updateLootboxUI();
-                updateVideoUI();
-                document.getElementById('uid-text').textContent = userId;
-                document.getElementById('profile-name-display').textContent = tgUser.first_name || 'User';
-                try { document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`; } catch(_) {}
-                return;
-            }
-
-            if (!userSnap.exists()) {
+            } else if (!userSnap.exists()) {
+                // ── নতুন user — create করো ──
                 const data = {
                     goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0,
                     referralCount: 0, totalInvites: 0,
@@ -1222,44 +1186,70 @@ Come back tomorrow!`);
                     telegramUsername: tgUser.username || 'N/A',
                     firstName: tgUser.first_name || 'User',
                     isBanned: false, withdrawalCount: 0,
-                    lifetimeAdsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0,
-                    dailyVideoMined: 0, lastResetDate: today,
-                    welcomeBonusClaimed: false,
-                    tasksCompletedToday: 0, adsWatchedToday: 0,
-                    lastWithdrawDate: ''
+                    lifetimeAdsWatched: 0, adsWatchedAdsgramDaily: 0,
+                    adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
+                    adsWatchedGiga: 0, dailyVideoMined: 0,
+                    lastResetDate: today, welcomeBonusClaimed: false,
+                    tasksCompletedToday: 0, adsWatchedToday: 0, lastWithdrawDate: ''
                 };
                 if (referrerCode && referrerCode !== userId) {
                     data.referredBy = referrerCode;
-                    try {
-                        await updateDoc(doc(db, 'users', referrerCode), { totalInvites: increment(1), goldBalance: increment(REFERRAL_REWARD_GOLD), lifetimeGoldEarned: increment(REFERRAL_REWARD_GOLD) });
-                    } catch (e) {}
+                    // referrer কে gold দাও background এ — blocking নয়
+                    fetch('/api/init', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId, firstName: tgUser.first_name || 'User',
+                            username: tgUser.username || 'N/A', referrerCode
+                        })
+                    }).catch(()=>{});
                 }
-                await setDoc(userRef, data);
+                try { await setDoc(userRef, data); } catch(e) { console.error('setDoc failed:', e); }
                 currentUser = { id: userId, ...data };
             } else {
+                // ── বিদ্যমান user ──
                 currentUser = { id: userSnap.id, ...userSnap.data() };
+                if (currentUser.isBanned) {
+                    document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>`;
+                    return null;
+                }
+                // daily reset background এ
+                checkDailyReset(currentUser).catch(()=>{});
             }
 
-            if (currentUser.isBanned) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>`; return null; }
-            await checkDailyReset(currentUser);
-
+            // ── LocalStorage restore ──
             const savedLoot = localStorage.getItem('newtube_lootbox_' + currentUser.id);
-            if (savedLoot) { try { localAdData = JSON.parse(savedLoot); if (!localAdData.unclaimedGold && localAdData.unclaimedPoints) { localAdData.unclaimedGold = localAdData.unclaimedPoints; delete localAdData.unclaimedPoints; } } catch(e) {} }
-            updateLootboxUI();
-
+            if (savedLoot) {
+                try {
+                    localAdData = JSON.parse(savedLoot);
+                    if (!localAdData.unclaimedGold && localAdData.unclaimedPoints) {
+                        localAdData.unclaimedGold = localAdData.unclaimedPoints;
+                        delete localAdData.unclaimedPoints;
+                    }
+                } catch(e) {}
+            }
             const savedVideo = localStorage.getItem('newtube_video_mine_' + currentUser.id);
             if (savedVideo) {
-                try { let vData = JSON.parse(savedVideo); localVideoMined = vData.mined || 0; vServerStartTime = vData.startTime || 0; vServerSignature = vData.signature || ""; } catch(e) {}
+                try {
+                    let vData = JSON.parse(savedVideo);
+                    localVideoMined = vData.mined || 0;
+                    vServerStartTime = vData.startTime || 0;
+                    vServerSignature = vData.signature || "";
+                } catch(e) {}
             }
+
+            // ── UI update ──
+            updateLootboxUI();
             updateVideoUI();
             updateBalanceUI();
-
             document.getElementById('uid-text').textContent = currentUser.id;
             document.getElementById('profile-name-display').textContent = currentUser.firstName || currentUser.telegramUsername || 'User';
-            document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`;
+            try { document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`; } catch(_) {}
             updateAdButtonStats();
-            fetchVideosFromFirebase();
-            loadHomeRecentVideos();
+            setTimeout(() => {
+                try { fetchVideosFromFirebase(); } catch(e) {}
+                try { loadHomeRecentVideos(); } catch(e) {}
+            }, 300);
         }
 
         function updateAdButtonStats() {
@@ -1968,47 +1958,31 @@ Come back tomorrow!`);
         }
 
         // ── MAIN INIT ──
-        // Show loader immediately
-        function showAppLoader() {
-            const loader = document.getElementById('app-global-loader');
-            if (loader) loader.style.display = 'flex';
-        }
-        function hideAppLoader() {
-            const loader = document.getElementById('app-global-loader');
-            if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => { loader.style.display = 'none'; }, 400);
-            }
-        }
-
         async function main() {
-            showAppLoader();
             try { tg.ready(); } catch(e) {}
             try { tg.expand(); } catch(e) {}
             try { tg.setHeaderColor('#050508'); } catch(e) {}
 
-            // Telegram ready হওয়ার জন্য wait
-            await new Promise(r => setTimeout(r, 400));
-
-            if (!tg.initDataUnsafe?.user) {
-                hideAppLoader();
-                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:#050508;"><div style="font-size:3rem;">📱</div><h3 style="color:#888;font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
-                return;
+            // Telegram initData পাওয়ার জন্য সর্বোচ্চ 3s wait
+            let waited = 0;
+            while (!tg.initDataUnsafe?.user && waited < 3000) {
+                await new Promise(r => setTimeout(r, 300));
+                waited += 300;
             }
 
-            // ── Hard timeout: 8 সেকেন্ডে যা হোক loader hide
-            const loaderTimeout = setTimeout(() => {
-                console.warn('Loader timeout — forcing hide');
-                hideAppLoader();
-            }, 8000);
+            const tgUser = tg.initDataUnsafe?.user || {
+                id: 'guest_' + Date.now(),
+                first_name: 'Guest',
+                username: 'guest'
+            };
 
             try {
-                await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
+                await initializeUser(tgUser, tg.initDataUnsafe?.start_param || null);
             } catch(e) {
                 console.error('Init error:', e.message);
-            } finally {
-                clearTimeout(loaderTimeout);
-                hideAppLoader();
+                // error হলেও UI দেখাও
+                document.getElementById('profile-name-display').textContent = tgUser.first_name || 'User';
+                document.getElementById('uid-text').textContent = String(tgUser.id);
             }
 
             if (currentUser && !currentUser.isBanned) {
