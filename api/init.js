@@ -148,4 +148,4 @@ async function sendReferralNotification(referrerId, newUserName, goldAwarded) {
     } catch (e) {
         console.error('Referral notification error:', e.message);
     }
-}
+                    }
