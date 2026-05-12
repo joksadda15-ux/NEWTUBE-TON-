@@ -1184,13 +1184,13 @@ Come back tomorrow!`);
 
             // ── /api/init এ call করো — retry সহ ──
             let apiData = null;
-            const MAX_RETRIES = 3;
+            const MAX_RETRIES = 2;
             for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
                 try {
                     const controller = new AbortController();
                     // প্রতিটা attempt এ একটু বেশি সময় দাও (10s, 13s, 16s)
-                    const timeoutId = setTimeout(() => controller.abort(), 10000 + (attempt - 1) * 3000);
-                    const res = await fetch('https://newtube-ton.vercel.app/api/init', {
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const res = await fetch('/api/init', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1218,7 +1218,7 @@ Come back tomorrow!`);
                     console.warn(`Init API attempt ${attempt} failed:`, e.message);
                     if (attempt < MAX_RETRIES) {
                         // পরের attempt এর আগে একটু অপেক্ষা করো
-                        await new Promise(r => setTimeout(r, 1500 * attempt));
+                        await new Promise(r => setTimeout(r, 1000));
                     }
                 }
             }
