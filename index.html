@@ -1151,33 +1151,32 @@ Come back tomorrow!`);
             const userRef = doc(db, 'users', userId);
             const today = getTodayDateString();
 
-            // Firestore read — 8s timeout, fail হলে dummy user দিয়ে চালু
-            let userSnap;
+            // ── Firestore থেকে user load করো (timeout 12s) ──
+            let userSnap = null;
             try {
                 userSnap = await Promise.race([
                     getDoc(userRef),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 12000))
                 ]);
             } catch(e) {
-                console.error('Firestore failed:', e.message);
+                console.error('Firestore read failed:', e.message);
+            }
+
+            if (!userSnap) {
+                // Firestore fail — dummy user দিয়ে চালু করো
                 currentUser = {
                     id: userId, goldBalance: 0, diamondBalance: 0,
                     telegramUsername: tgUser.username || 'N/A',
                     firstName: tgUser.first_name || 'User',
-                    completedTasks: [], isBanned: false, lifetimeGoldEarned: 0,
-                    adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0,
-                    adsWatchedMonetag: 0, adsWatchedGiga: 0,
-                    dailyVideoMined: 0, lastResetDate: today,
-                    referralCount: 0, totalInvites: 0
+                    completedTasks: [], isBanned: false,
+                    lifetimeGoldEarned: 0, adsWatchedAdsgramDaily: 0,
+                    adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
+                    adsWatchedGiga: 0, dailyVideoMined: 0,
+                    lastResetDate: today, referralCount: 0, totalInvites: 0,
+                    _offlineMode: true
                 };
-                updateBalanceUI(); updateLootboxUI(); updateVideoUI();
-                document.getElementById('uid-text').textContent = userId;
-                document.getElementById('profile-name-display').textContent = tgUser.first_name || 'User';
-                try { document.getElementById('modalReferralLinkInput').value = 'http://t.me/NewTube12_bot/WatchTo_Earn?startapp=' + userId; } catch(_) {}
-                return;
-            }
-
-            if (!userSnap.exists()) {
+            } else if (!userSnap.exists()) {
+                // ── নতুন user — create করো ──
                 const data = {
                     goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0,
                     referralCount: 0, totalInvites: 0,
@@ -1193,26 +1192,30 @@ Come back tomorrow!`);
                 };
                 if (referrerCode && referrerCode !== userId) {
                     data.referredBy = referrerCode;
-                    try {
-                        await updateDoc(doc(db, 'users', referrerCode), {
-                            totalInvites: increment(1),
-                            goldBalance: increment(REFERRAL_REWARD_GOLD),
-                            lifetimeGoldEarned: increment(REFERRAL_REWARD_GOLD)
-                        });
-                    } catch(e) {}
+                    // referrer কে gold দাও background এ — blocking নয়
+                    fetch('/api/init', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId, firstName: tgUser.first_name || 'User',
+                            username: tgUser.username || 'N/A', referrerCode
+                        })
+                    }).catch(()=>{});
                 }
-                await setDoc(userRef, data);
+                try { await setDoc(userRef, data); } catch(e) { console.error('setDoc failed:', e); }
                 currentUser = { id: userId, ...data };
             } else {
+                // ── বিদ্যমান user ──
                 currentUser = { id: userSnap.id, ...userSnap.data() };
+                if (currentUser.isBanned) {
+                    document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>`;
+                    return null;
+                }
+                // daily reset background এ
+                checkDailyReset(currentUser).catch(()=>{});
             }
 
-            if (currentUser.isBanned) {
-                document.body.innerHTML = '<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>';
-                return null;
-            }
-            await checkDailyReset(currentUser);
-
+            // ── LocalStorage restore ──
             const savedLoot = localStorage.getItem('newtube_lootbox_' + currentUser.id);
             if (savedLoot) {
                 try {
@@ -1223,8 +1226,6 @@ Come back tomorrow!`);
                     }
                 } catch(e) {}
             }
-            updateLootboxUI();
-
             const savedVideo = localStorage.getItem('newtube_video_mine_' + currentUser.id);
             if (savedVideo) {
                 try {
@@ -1234,15 +1235,19 @@ Come back tomorrow!`);
                     vServerSignature = vData.signature || "";
                 } catch(e) {}
             }
+
+            // ── UI update ──
+            updateLootboxUI();
             updateVideoUI();
             updateBalanceUI();
-
             document.getElementById('uid-text').textContent = currentUser.id;
             document.getElementById('profile-name-display').textContent = currentUser.firstName || currentUser.telegramUsername || 'User';
-            document.getElementById('modalReferralLinkInput').value = 'http://t.me/NewTube12_bot/WatchTo_Earn?startapp=' + userId;
+            try { document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`; } catch(_) {}
             updateAdButtonStats();
-            fetchVideosFromFirebase();
-            loadHomeRecentVideos();
+            setTimeout(() => {
+                try { fetchVideosFromFirebase(); } catch(e) {}
+                try { loadHomeRecentVideos(); } catch(e) {}
+            }, 300);
         }
 
         function updateAdButtonStats() {
