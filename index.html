@@ -443,7 +443,7 @@
         </div>
         <div style="text-align:center;">
             <div style="font-size:1.2rem; font-weight:800; color:#F5A623; letter-spacing:1px; margin-bottom:6px;">NEWTUBE</div>
-            <div style="font-size:0.75rem; color:#666688; font-weight:500;">Loading your account...</div>
+            <div id="loader-status-text" style="font-size:0.75rem; color:#666688; font-weight:500;">Loading your account...</div>
         </div>
         <div style="display:flex; gap:7px; margin-top:4px;">
             <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:dotBounce 1.2s ease-in-out infinite 0s;"></div>
@@ -1180,86 +1180,126 @@ Come back tomorrow!`);
 
         async function initializeUser(tgUser, referrerCode) {
             const userId = String(tgUser.id);
-            const userRef = doc(db, 'users', userId);
             const today = getTodayDateString();
 
-            // ── Firestore read — timeout 5 সেকেন্ড
-            let userSnap;
-            try {
-                userSnap = await Promise.race([
-                    getDoc(userRef),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 5000))
-                ]);
-            } catch(e) {
-                console.error('Firestore getDoc failed:', e.message);
-                // Firestore fail হলেও dummy user দিয়ে app চালু করো
+            // ── /api/init এ call করো — retry সহ ──
+            let apiData = null;
+            const MAX_RETRIES = 3;
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    const controller = new AbortController();
+                    // প্রতিটা attempt এ একটু বেশি সময় দাও (10s, 13s, 16s)
+                    const timeoutId = setTimeout(() => controller.abort(), 10000 + (attempt - 1) * 3000);
+                    const res = await fetch('https://newtube-ton.vercel.app/api/init', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId:       userId,
+                            firstName:    tgUser.first_name || 'User',
+                            username:     tgUser.username   || 'N/A',
+                            referrerCode: referrerCode      || null,
+                        }),
+                        signal: controller.signal,
+                    });
+                    clearTimeout(timeoutId);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json.ok && json.user) {
+                            apiData = json.user;
+                            break; // সফল — loop থেকে বের হও
+                        }
+                    }
+                    // Server error হলে 403 (banned) check
+                    if (res.status === 403) {
+                        document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>`;
+                        return null;
+                    }
+                } catch (e) {
+                    console.warn(`Init API attempt ${attempt} failed:`, e.message);
+                    if (attempt < MAX_RETRIES) {
+                        // পরের attempt এর আগে একটু অপেক্ষা করো
+                        await new Promise(r => setTimeout(r, 1500 * attempt));
+                    }
+                }
+            }
+
+            if (!apiData) {
+                // সব retry fail — Firestore সরাসরি try করো (fallback)
+                console.warn('All API retries failed, trying Firestore directly...');
+                try {
+                    const userRef = doc(db, 'users', userId);
+                    const userSnap = await Promise.race([
+                        getDoc(userRef),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore timeout')), 8000))
+                    ]);
+                    if (userSnap.exists()) {
+                        apiData = { id: userId, ...userSnap.data() };
+                    }
+                } catch (fbErr) {
+                    console.error('Firestore fallback also failed:', fbErr.message);
+                }
+            }
+
+            if (!apiData) {
+                // সম্পূর্ণ offline — dummy user দিয়ে চালু করো
+                console.warn('Running in offline mode');
                 currentUser = {
                     id: userId,
                     goldBalance: 0, diamondBalance: 0,
                     telegramUsername: tgUser.username || 'N/A',
                     firstName: tgUser.first_name || 'User',
                     completedTasks: [], isBanned: false,
-                    lifetimeGoldEarned: 0, adsWatchedAdsgramDaily: 0,
-                    adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
-                    adsWatchedGiga: 0, dailyVideoMined: 0,
+                    lifetimeGoldEarned: 0,
+                    adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0,
+                    adsWatchedMonetag: 0, adsWatchedGiga: 0,
+                    dailyVideoMined: 0, totalInvites: 0,
                     lastResetDate: today, referralCount: 0,
                     _offlineMode: true
                 };
-                updateBalanceUI();
-                updateLootboxUI();
-                updateVideoUI();
-                document.getElementById('uid-text').textContent = userId;
-                document.getElementById('profile-name-display').textContent = tgUser.first_name || 'User';
-                try { document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`; } catch(_) {}
-                return;
-            }
-
-            if (!userSnap.exists()) {
-                const data = {
-                    goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0,
-                    referralCount: 0, totalInvites: 0,
-                    completedTasks: [], createdAt: serverTimestamp(),
-                    telegramUsername: tgUser.username || 'N/A',
-                    firstName: tgUser.first_name || 'User',
-                    isBanned: false, withdrawalCount: 0,
-                    lifetimeAdsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0,
-                    dailyVideoMined: 0, lastResetDate: today,
-                    welcomeBonusClaimed: false,
-                    tasksCompletedToday: 0, adsWatchedToday: 0,
-                    lastWithdrawDate: ''
-                };
-                if (referrerCode && referrerCode !== userId) {
-                    data.referredBy = referrerCode;
-                    try {
-                        await updateDoc(doc(db, 'users', referrerCode), { totalInvites: increment(1), goldBalance: increment(REFERRAL_REWARD_GOLD), lifetimeGoldEarned: increment(REFERRAL_REWARD_GOLD) });
-                    } catch (e) {}
-                }
-                await setDoc(userRef, data);
-                currentUser = { id: userId, ...data };
             } else {
-                currentUser = { id: userSnap.id, ...userSnap.data() };
+                currentUser = { ...apiData, id: userId };
+                if (currentUser.isBanned) {
+                    document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>`;
+                    return null;
+                }
             }
 
-            if (currentUser.isBanned) { document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:var(--red);">Account Banned.</h3>`; return null; }
-            await checkDailyReset(currentUser);
-
+            // ── LocalStorage থেকে lootbox ও video data restore ──
             const savedLoot = localStorage.getItem('newtube_lootbox_' + currentUser.id);
-            if (savedLoot) { try { localAdData = JSON.parse(savedLoot); if (!localAdData.unclaimedGold && localAdData.unclaimedPoints) { localAdData.unclaimedGold = localAdData.unclaimedPoints; delete localAdData.unclaimedPoints; } } catch(e) {} }
-            updateLootboxUI();
+            if (savedLoot) {
+                try {
+                    localAdData = JSON.parse(savedLoot);
+                    if (!localAdData.unclaimedGold && localAdData.unclaimedPoints) {
+                        localAdData.unclaimedGold = localAdData.unclaimedPoints;
+                        delete localAdData.unclaimedPoints;
+                    }
+                } catch(e) {}
+            }
 
             const savedVideo = localStorage.getItem('newtube_video_mine_' + currentUser.id);
             if (savedVideo) {
-                try { let vData = JSON.parse(savedVideo); localVideoMined = vData.mined || 0; vServerStartTime = vData.startTime || 0; vServerSignature = vData.signature || ""; } catch(e) {}
+                try {
+                    let vData = JSON.parse(savedVideo);
+                    localVideoMined = vData.mined || 0;
+                    vServerStartTime = vData.startTime || 0;
+                    vServerSignature = vData.signature || "";
+                } catch(e) {}
             }
+
+            // ── UI update ──
+            updateLootboxUI();
             updateVideoUI();
             updateBalanceUI();
-
             document.getElementById('uid-text').textContent = currentUser.id;
             document.getElementById('profile-name-display').textContent = currentUser.firstName || currentUser.telegramUsername || 'User';
-            document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`;
+            try { document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`; } catch(_) {}
             updateAdButtonStats();
-            fetchVideosFromFirebase();
-            loadHomeRecentVideos();
+
+            // ── Videos background এ load করো (loader block করবে না) ──
+            setTimeout(() => {
+                try { fetchVideosFromFirebase(); } catch(e) {}
+                try { loadHomeRecentVideos(); } catch(e) {}
+            }, 500);
         }
 
         function updateAdButtonStats() {
@@ -1981,14 +2021,24 @@ Come back tomorrow!`);
             }
         }
 
+        function setLoaderStatus(msg) {
+            const el = document.getElementById('loader-status-text');
+            if (el) el.textContent = msg;
+        }
+
         async function main() {
             showAppLoader();
+            setLoaderStatus('Connecting...');
             try { tg.ready(); } catch(e) {}
             try { tg.expand(); } catch(e) {}
             try { tg.setHeaderColor('#050508'); } catch(e) {}
+            // Telegram ready হওয়ার জন্য wait — বেশি দিন কারণ কখনো দেরি করে
+            await new Promise(r => setTimeout(r, 800));
 
-            // Telegram ready হওয়ার জন্য wait
-            await new Promise(r => setTimeout(r, 400));
+            // tg.initDataUnsafe.user না পেলে আরো 1.5s wait করো (retry)
+            if (!tg.initDataUnsafe?.user) {
+                await new Promise(r => setTimeout(r, 1500));
+            }
 
             if (!tg.initDataUnsafe?.user) {
                 hideAppLoader();
@@ -1996,16 +2046,19 @@ Come back tomorrow!`);
                 return;
             }
 
-            // ── Hard timeout: 8 সেকেন্ডে যা হোক loader hide
+            // ── Hard timeout: 40 সেকেন্ড — retry logic এর জন্য যথেষ্ট সময়
             const loaderTimeout = setTimeout(() => {
                 console.warn('Loader timeout — forcing hide');
                 hideAppLoader();
-            }, 8000);
+            }, 40000);
 
             try {
+                setLoaderStatus('Loading your account...');
                 await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
+                setLoaderStatus('Almost done...');
             } catch(e) {
                 console.error('Init error:', e.message);
+                setLoaderStatus('Retrying...');
             } finally {
                 clearTimeout(loaderTimeout);
                 hideAppLoader();
