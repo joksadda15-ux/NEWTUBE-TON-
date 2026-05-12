@@ -5,8 +5,8 @@
 const { getDb, admin } = require('./utils/firebase');
 const { handleCors } = require('./utils/cors');
 
-const REFERRAL_REWARD_GOLD = 2000;   // Gold given to referrer per valid new user
-const GOLD_PER_DIAMOND     = 1000;   // Exchange rate
+const REFERRAL_REWARD_GOLD = 2000;
+const BOT_TOKEN = process.env.BOT_TOKEN;
 
 module.exports = async function handler(req, res) {
     if (handleCors(req, res)) return;
@@ -31,46 +31,45 @@ module.exports = async function handler(req, res) {
         if (!snap.exists) {
             // ── NEW USER ──
             const data = {
-                goldBalance:             0,
-                diamondBalance:          0,
-                lifetimeGoldEarned:      0,
-                referralCount:           0,
-                totalInvites:            0,
-                completedTasks:          [],
-                createdAt:               admin.firestore.FieldValue.serverTimestamp(),
-                telegramUsername:        username  || 'N/A',
-                firstName:               firstName || 'User',
-                isBanned:                false,
-                withdrawalCount:         0,
-                lifetimeAdsWatched:      0,
-                adsWatchedAdsgramDaily:  0,
-                adsWatchedAdsgramSpecial:0,
-                adsWatchedMonetag:       0,
-                adsWatchedGiga:          0,
-                dailyVideoMined:         0,
-                lastResetDate:           today,
-                tasksCompletedToday:     0,
-                adsWatchedToday:         0,
-                lastWithdrawDate:        '',
+                goldBalance:              0,
+                diamondBalance:           0,
+                lifetimeGoldEarned:       0,
+                referralCount:            0,
+                totalInvites:             0,
+                completedTasks:           [],
+                createdAt:                admin.firestore.FieldValue.serverTimestamp(),
+                telegramUsername:         username  || 'N/A',
+                firstName:                firstName || 'User',
+                isBanned:                 false,
+                withdrawalCount:          0,
+                lifetimeAdsWatched:       0,
+                adsWatchedAdsgramDaily:   0,
+                adsWatchedAdsgramSpecial: 0,
+                adsWatchedMonetag:        0,
+                adsWatchedGiga:           0,
+                dailyVideoMined:          0,
+                lastResetDate:            today,
+                tasksCompletedToday:      0,
+                adsWatchedToday:          0,
+                lastWithdrawDate:         '',
+                welcomeBonusClaimed:      false,
             };
 
-            // Attach referrer
+            // Attach referrer & award gold
             if (referrerCode && referrerCode !== String(userId)) {
                 data.referredBy = String(referrerCode);
-                // Give referral gold to referrer
                 try {
                     const refRef = db.collection('users').doc(String(referrerCode));
                     const refSnap = await refRef.get();
                     if (refSnap.exists) {
-                        // No requirement - give gold immediately on join
                         await refRef.update({
                             totalInvites:       admin.firestore.FieldValue.increment(1),
                             goldBalance:        admin.firestore.FieldValue.increment(REFERRAL_REWARD_GOLD),
                             lifetimeGoldEarned: admin.firestore.FieldValue.increment(REFERRAL_REWARD_GOLD),
                             referralCount:      admin.firestore.FieldValue.increment(1),
                         });
-                        // Send Telegram notification immediately
-                        sendReferralNotification(referrerCode, tgUser.first_name || 'A user', REFERRAL_REWARD_GOLD);
+                        // Send Telegram notification to referrer — use firstName from request body
+                        sendReferralNotification(referrerCode, firstName || 'A new user', REFERRAL_REWARD_GOLD);
                     }
                 } catch (refErr) {
                     console.error('Referral update error:', refErr.message);
@@ -78,7 +77,10 @@ module.exports = async function handler(req, res) {
             }
 
             await userRef.set(data);
-            return res.status(200).json({ ok: true, isNew: true, user: { id: userId, ...data } });
+
+            // Return serializable data (remove serverTimestamp sentinel)
+            const returnData = { ...data, createdAt: new Date().toISOString() };
+            return res.status(200).json({ ok: true, isNew: true, user: { id: String(userId), ...returnData } });
 
         } else {
             // ── EXISTING USER ──
@@ -93,7 +95,7 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({
                 ok: true,
                 isNew: false,
-                user: { id: userId, ...user, ...updates },
+                user: { id: String(userId), ...user, ...updates },
             });
         }
     } catch (err) {
@@ -102,28 +104,48 @@ module.exports = async function handler(req, res) {
     }
 };
 
-// ─────────────────────────────────────────────
+// ── Daily reset helper ──
 async function checkAndResetDaily(user, today, userRef) {
     if (user.lastResetDate === today) return {};
     const updates = {
-        adsWatchedAdsgramDaily:  0,
-        adsWatchedAdsgramSpecial:0,
-        adsWatchedMonetag:       0,
-        adsWatchedGiga:          0,
-        dailyVideoMined:         0,
-        tasksCompletedToday:     0,
-        adsWatchedToday:         0,
-        lastResetDate:           today,
+        adsWatchedAdsgramDaily:   0,
+        adsWatchedAdsgramSpecial: 0,
+        adsWatchedMonetag:        0,
+        adsWatchedGiga:           0,
+        dailyVideoMined:          0,
+        tasksCompletedToday:      0,
+        adsWatchedToday:          0,
+        lastResetDate:            today,
     };
     await userRef.update(updates);
     return updates;
 }
 
+// ── Today's date (Dhaka timezone) ──
 function getTodayString() {
     return new Date().toLocaleDateString('en-US', {
         timeZone: 'Asia/Dhaka',
-        year:  'numeric',
-        month: '2-digit',
-        day:   '2-digit',
+        year:     'numeric',
+        month:    '2-digit',
+        day:      '2-digit',
     });
-                                  }
+}
+
+// ── Telegram notification to referrer ──
+async function sendReferralNotification(referrerId, newUserName, goldAwarded) {
+    if (!BOT_TOKEN || !referrerId) return;
+    try {
+        const message = `🎉 নতুন Referral!\n\n👤 ${newUserName} আপনার link দিয়ে join করেছে!\n🪙 +${goldAwarded.toLocaleString()} Gold আপনার account এ যোগ হয়েছে!`;
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: String(referrerId),
+                text: message,
+                parse_mode: 'HTML',
+            }),
+        });
+    } catch (e) {
+        console.error('Referral notification error:', e.message);
+    }
+}
