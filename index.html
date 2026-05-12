@@ -906,9 +906,10 @@
         </div>
     </div>
 
-    <script type="module">
-        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js");
-        const { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+
 
         const firebaseConfig = {
             apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
@@ -919,8 +920,8 @@
             messagingSenderId: "41011548816",
             appId: "1:41011548816:web:9c27139d9487b144ecbe15"
         };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
         const tg = window.Telegram.WebApp;
 
         let currentUser = null;
@@ -1139,7 +1140,7 @@ Come back tomorrow!`);
             if (user.lastResetDate !== today) {
                 const updates = { adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0, dailyVideoMined: 0, lastResetDate: today };
                 Object.assign(user, updates);
-                try { await updateDoc(doc(db, 'users', user.id), updates); } catch (e) {}
+                try { await doc(db.update('users', user.id), updates); } catch (e) {}
                 const savedLoot = localStorage.getItem('newtube_lootbox_' + user.id);
                 if (savedLoot) {
                     try {
@@ -1160,14 +1161,14 @@ Come back tomorrow!`);
 
         async function initializeUser(tgUser, referrerCode) {
             const userId = String(tgUser.id);
-            const userRef = doc(db, 'users', userId);
+            const userRef = db.collection('users').doc(userId);
             const today = getTodayDateString();
 
             // ── Firestore থেকে user load করো (timeout 12s) ──
             let userSnap = null;
             try {
                 userSnap = await Promise.race([
-                    getDoc(userRef),
+                    userRef.get(),
                     new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
                 ]);
             } catch(e) {
@@ -1187,12 +1188,12 @@ Come back tomorrow!`);
                     lastResetDate: today, referralCount: 0, totalInvites: 0,
                     _offlineMode: true
                 };
-            } else if (!userSnap.exists()) {
+            } else if (!userSnap.exists) {
                 // ── নতুন user — create করো ──
                 const data = {
                     goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0,
                     referralCount: 0, totalInvites: 0,
-                    completedTasks: [], createdAt: serverTimestamp(),
+                    completedTasks: [], createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     telegramUsername: tgUser.username || 'N/A',
                     firstName: tgUser.first_name || 'User',
                     isBanned: false, withdrawalCount: 0,
@@ -1214,7 +1215,7 @@ Come back tomorrow!`);
                         })
                     }).catch(()=>{});
                 }
-                try { await setDoc(userRef, data); } catch(e) { console.error('setDoc failed:', e); }
+                try { await userRef.set(data); } catch(e) { console.error('setDoc failed:', e); }
                 currentUser = { id: userId, ...data };
             } else {
                 // ── বিদ্যমান user ──
@@ -1467,7 +1468,7 @@ Come back tomorrow!`);
 
         async function getVideosFromCache() {
             if (_videoCache) return _videoCache; // already fetched
-            const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
+            const snap = await db.collection('videos').where('isActive', '==', true).limit(20).get();
             _videoCache = [];
             snap.forEach(d => _videoCache.push(d.data()));
             return _videoCache;
@@ -1580,21 +1581,21 @@ Come back tomorrow!`);
             isSubmittingWithdrawal = true;
             try {
                 // Wallet check
-                const walletCheckSnap = await getDocs(query(collection(db, 'withdrawals'), where('details', '==', details), limit(5)));
+                const walletCheckSnap = await db.collection('withdrawals').where('details', '==', details).limit(5).get();
                 let usedByOther = false;
                 walletCheckSnap.forEach(d => { if (d.data().userId !== currentUser.id) usedByOther = true; });
                 if (usedByOther) { isSubmittingWithdrawal = false; return alert('❌ This address is already used by another account.'); }
 
-                await runTransaction(db, async (t) => {
-                    const userRef = doc(db, 'users', currentUser.id);
+                await db.runTransaction( async (t) => {
+                    const userRef = db.collection('users').doc(currentUser.id);
                     const uData = (await t.get(userRef)).data();
                     if (uData.lastWithdrawDate === today) throw new Error("Already withdrawn today.");
                     if ((uData.diamondBalance || 0) < amount) throw new Error("Insufficient Diamonds.");
-                    t.set(doc(collection(db, 'withdrawals')), {
+                    t.set(doc(db.collection('withdrawals')), {
                         userId: currentUser.id, method, details, status: 'pending',
-                        createdAt: serverTimestamp(), diamondAmount: amount, currency: 'diamond'
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(), diamondAmount: amount, currency: 'diamond'
                     });
-                    t.update(userRef, { diamondBalance: increment(-amount), withdrawalCount: increment(1), lastWithdrawDate: today });
+                    t.update(userRef, { diamondBalance: firebase.firestore.FieldValue.increment(-amount), withdrawalCount: firebase.firestore.FieldValue.increment(1), lastWithdrawDate: today });
                 });
 
                 document.getElementById('withdrawalAmount').value = '';
@@ -1689,8 +1690,7 @@ Come back tomorrow!`);
             container.innerHTML = '<div class="loader"></div>';
             try {
                 // Only fetch withdrawals - transactions collection may not exist
-                const wSnap = await getDocs(
-                    query(collection(db, "withdrawals"), where("userId", "==", currentUser.id), limit(20))
+                const wSnap = await db.collection('withdrawals').where('userId', '==', currentUser.id).limit(20).get(
                 );
                 let list = [];
                 wSnap.forEach(d => list.push({ ...d.data(), isW: true, time: d.data().createdAt }));
@@ -1898,8 +1898,8 @@ Come back tomorrow!`);
             if (cachedSnap && (category === 'channel' ? tasksRenderedChannel : tasksRenderedPartner)) return;
             container.innerHTML = '<div class="loader"></div>';
             try {
-                const q = query(collection(db,'tasks'), where('isApproved','==',true), where('category','==',category), orderBy('createdAt','desc'), limit(30));
-                const snap = await getDocs(q);
+                const q = db.collection('tasks').where('isApproved','==',true).where('category','==',category).orderBy('createdAt','desc').limit(30);
+                const snap = await q.get();
                 if (category === 'channel') { tasksCacheChannel = snap; tasksRenderedChannel = true; }
                 else { tasksCachePartner = snap; tasksRenderedPartner = true; }
                 container.innerHTML = ''; let count = 0;
@@ -1966,7 +1966,7 @@ Come back tomorrow!`);
                     // Mark verified locally
                     currentUser.channelVerified = true;
                     try {
-                        await updateDoc(doc(db, 'users', currentUser.id), { channelVerified: true });
+                        await doc(db.update('users', currentUser.id), { channelVerified: true });
                     } catch(e) {}
                     document.getElementById('activationModalOverlay').classList.remove('show');
                     showSuccessModal('✅ Activated!', 'Account verified! Start earning Gold.');
