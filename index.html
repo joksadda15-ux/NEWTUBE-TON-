@@ -1520,50 +1520,62 @@
 
         document.getElementById('submitWithdrawalBtn').addEventListener('click', async (e) => {
             e.preventDefault(); if (isSubmittingWithdrawal) return;
-            const amount = parseFloat(document.getElementById('withdrawalAmount').value);
+            const amount  = parseFloat(document.getElementById('withdrawalAmount').value);
             const details = document.getElementById('accountDetails').value.trim();
-            const today = getTodayDateString();
-            const method = selectedWithdrawMethod;
-            const minReq = WITHDRAW_METHODS[method].min;
+            const today   = getTodayDateString();
+            const method  = selectedWithdrawMethod;
+            const minReq  = WITHDRAW_METHODS[method].min;
 
-            if (!details || isNaN(amount) || amount < minReq) return alert(`Min ${minReq} Diamond and address required.`);
-            if ((currentUser.diamondBalance || 0) < amount) return alert('Insufficient Diamonds.');
-            if (currentUser.lastWithdrawDate === today) return alert('1 withdrawal per day only.');
-
-            const adsToday = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
+            // ── Client-side guards ──
+            if (!details || isNaN(amount) || amount < minReq)
+                return alert(`Min ${minReq} Diamond and address required.`);
+            if ((currentUser.diamondBalance || 0) < amount)
+                return alert('Insufficient Diamonds.');
+            if (currentUser.lastWithdrawDate === today)
+                return alert('1 withdrawal per day only.');
+            const adsToday   = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
             const tasksTotal = currentUser.completedTasks?.length || 0;
-            if (tasksTotal < 5) return alert(`❌ Withdraw করতে minimum 5টি task complete করতে হবে।\nCompleted: ${tasksTotal}/5`);
-            if (adsToday < 20) return alert(`❌ Withdraw করতে আজকে 20টি ads দেখতে হবে।\nDone: ${adsToday}/20`);
+            if (tasksTotal < 5)  return alert(`❌ Minimum 5 task complete করতে হবে।\nCompleted: ${tasksTotal}/5`);
+            if (adsToday   < 20) return alert(`❌ আজকে 20টি ads দেখতে হবে।\nDone: ${adsToday}/20`);
+            if (!confirm(`Withdraw ${amount.toLocaleString()} 💎 via ${WITHDRAW_METHODS[method].label}?`)) return;
 
-            if (!confirm(`Withdraw ${amount} 💎 via ${WITHDRAW_METHODS[method].label}?`)) return;
-
+            // ── API call (handles Firestore + Telegram notifications) ──
             isSubmittingWithdrawal = true;
+            const btn = document.getElementById('submitWithdrawalBtn');
+            btn.disabled = true; btn.textContent = 'Processing...';
             try {
-                const walletCheckSnap = await getDocs(query(collection(db, 'withdrawals'), where('details', '==', details), limit(5)));
-                let usedByOther = false;
-                walletCheckSnap.forEach(d => { if (d.data().userId !== currentUser.id) usedByOther = true; });
-                if (usedByOther) { isSubmittingWithdrawal = false; return alert('❌ This address is already used by another account.'); }
-
-                await runTransaction(db, async (t) => {
-                    const userRef = doc(db, 'users', currentUser.id);
-                    const uData = (await t.get(userRef)).data();
-                    if (uData.lastWithdrawDate === today) throw new Error("Already withdrawn today.");
-                    if ((uData.diamondBalance || 0) < amount) throw new Error("Insufficient Diamonds.");
-                    t.set(doc(collection(db, 'withdrawals')), {
-                        userId: currentUser.id, method, details, status: 'pending',
-                        createdAt: serverTimestamp(), diamondAmount: amount, currency: 'diamond'
-                    });
-                    t.update(userRef, { diamondBalance: increment(-amount), withdrawalCount: increment(1), lastWithdrawDate: today });
+                const res  = await fetch(`${API_BASE}/withdraw`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ userId: String(currentUser.id), method, details, amount })
                 });
-
+                const data = await res.json();
+                if (!data.ok) {
+                    const msgs = {
+                        already_withdrawn_today:  '1 withdrawal per day only.',
+                        insufficient_diamonds:    'Insufficient Diamonds.',
+                        address_used_by_other:    '❌ This address is already used by another account.',
+                        need_5_tasks:             '❌ Minimum 5 tasks complete করতে হবে।',
+                        need_20_ads_today:        '❌ আজকে 20টি ads দেখতে হবে।',
+                    };
+                    alert(msgs[data.error] || `Error: ${data.error || 'Unknown'}`);
+                    return;
+                }
+                // Success
                 document.getElementById('withdrawalAmount').value = '';
-                document.getElementById('accountDetails').value = '';
+                document.getElementById('accountDetails').value  = '';
                 document.getElementById('withdrawModalOverlay').classList.remove('show');
-                showSuccessModal("Request Sent! ✅", `Withdrawal of ${amount} 💎 pending.`);
-                currentUser.diamondBalance = (currentUser.diamondBalance || 0) - amount;
-                currentUser.lastWithdrawDate = today;
+                showSuccessModal('Request Sent! ✅',
+                    `${amount.toLocaleString()} 💎 withdrawal submitted.<br><small style="color:rgba(255,255,255,0.6);">Telegram notification sent. Processing 12–48h.</small>`);
+                currentUser.diamondBalance    = (currentUser.diamondBalance || 0) - amount;
+                currentUser.lastWithdrawDate  = today;
                 updateBalanceUI();
-            } catch (err) { alert(err.message); } finally { isSubmittingWithdrawal = false; }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            } finally {
+                isSubmittingWithdrawal = false;
+                btn.disabled = false; btn.textContent = 'Submit';
+            }
         });
 
         // ── EXCHANGE: Gold → Diamond ──
@@ -1769,18 +1781,20 @@
                 }, 1000);
             } else if (state === 'claim') {
                 button.disabled = true; button.textContent = 'Checking...';
-                try {
-                    const reward = parseInt(button.dataset.reward || '250');
+                const reward = parseInt(button.dataset.reward || '250');
+
+                // ── CHANNEL TASK → API (membership check inside API) ──
+                if (category === 'channel') {
                     try {
-                        const res = await fetch('https://newtube-ton.vercel.app/api/tasks', {
-                            method: 'POST',
+                        const res  = await fetch(`${API_BASE}/taskComplete`, {
+                            method:  'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ userId: String(currentUser.id), taskId })
+                            body:    JSON.stringify({ userId: String(currentUser.id), taskId })
                         });
                         const data = await res.json();
                         if (!data.ok) {
                             if (data.error === 'not_member') {
-                                alert('⚠️ Join the channel/group first, then tap Verify!');
+                                alert('⚠️ Channel/Group-এ join করুন, তারপর Verify করুন!');
                             } else if (data.alreadyDone) {
                                 button.closest('[data-task-card]')?.remove(); return;
                             } else {
@@ -1799,7 +1813,34 @@
                         alert('Network error: ' + err.message);
                         button.disabled = false; button.textContent = 'Verify';
                     }
-                } catch(e) {}
+
+                // ── PARTNER TASK → Firestore directly (no membership check) ──
+                } else {
+                    try {
+                        const taskSnap = await getDoc(doc(db, 'tasks', taskId));
+                        if (!taskSnap.exists()) throw new Error('Task not found');
+                        const tData = taskSnap.data();
+                        const actualReward = tData.rewardGold || tData.rewardPoints || reward;
+                        const batch = writeBatch(db);
+                        batch.update(doc(db, 'users', currentUser.id), {
+                            completedTasks:      arrayUnion(taskId),
+                            goldBalance:         increment(actualReward),
+                            lifetimeGoldEarned:  increment(actualReward),
+                            tasksCompletedToday: increment(1),
+                        });
+                        batch.update(doc(db, 'tasks', taskId), { completionCount: increment(1) });
+                        await batch.commit();
+                        currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
+                        currentUser.goldBalance    = (currentUser.goldBalance || 0) + actualReward;
+                        currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
+                        updateBalanceUI();
+                        showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
+                        button.closest('[data-task-card]')?.remove();
+                    } catch(err) {
+                        alert('Error: ' + err.message);
+                        button.disabled = false; button.textContent = '✅ Claim';
+                    }
+                }
             }
         });
 
@@ -1841,43 +1882,53 @@
             } catch (err) { container.innerHTML = `<p style="text-align:center;color:var(--red);">Failed to load.</p>`; }
         }
 
-        // ── CHANNEL VERIFICATION ──
+        // ── JOIN CHECK & ENFORCEMENT (API-based) ──
+        const API_BASE = 'https://newtube-ton.vercel.app/api';
+        let _joinCheckInterval = null;
+
+        // Called on startup + periodically to re-check if user left
         async function checkMembershipAndEnforce() {
-            if (currentUser.channelVerified) return;
             try {
-                const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: String(currentUser.id), taskId: 'membership_check' })
-                });
-                if (!res.ok) return;
+                const res  = await fetch(`${API_BASE}/checkJoin?userId=${currentUser.id}`);
+                if (!res.ok) return; // API error → don't block user
                 const data = await res.json();
-                if (data.ok === false && data.error === 'not_member') {
+
+                if (!data.joined) {
+                    // Show join popup
                     document.getElementById('activationModalOverlay').classList.add('show');
+                    // Start periodic re-check every 60s so if user leaves later we catch it
+                    if (!_joinCheckInterval) {
+                        _joinCheckInterval = setInterval(() => checkMembershipAndEnforce(), 60000);
+                    }
+                } else {
+                    // User is in both — clear interval, hide popup
+                    clearInterval(_joinCheckInterval); _joinCheckInterval = null;
+                    document.getElementById('activationModalOverlay').classList.remove('show');
                 }
-            } catch (e) { console.log('Join check skipped:', e.message); }
+            } catch (e) { console.log('[checkJoin] skipped:', e.message); }
         }
 
         document.getElementById('activateAccountBtn').addEventListener('click', async () => {
             const btn = document.getElementById('activateAccountBtn');
             btn.textContent = "Verifying..."; btn.disabled = true;
             try {
-                const res = await fetch(`https://newtube-ton.vercel.app/api/verifyJoin?userId=${currentUser.id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id })
-                });
-                if (!res.ok) throw new Error('Server error: ' + res.status);
+                const res  = await fetch(`${API_BASE}/checkJoin?userId=${currentUser.id}`);
                 const data = await res.json();
                 if (data.joined) {
-                    currentUser.channelVerified = true;
-                    try { await updateDoc(doc(db, 'users', currentUser.id), { channelVerified: true }); } catch(e) {}
+                    // Mark verified in Firestore (non-blocking)
+                    updateDoc(doc(db, 'users', currentUser.id), { channelVerified: true }).catch(()=>{});
+                    clearInterval(_joinCheckInterval); _joinCheckInterval = null;
                     document.getElementById('activationModalOverlay').classList.remove('show');
-                    showSuccessModal('✅ Activated!', 'Account verified! Start earning Gold.');
+                    showSuccessModal('✅ Activated!', 'Account verified! Start earning Gold. 🎉');
                 } else {
-                    alert("❌ Join করুন প্রথমে!\n\nChannel ও Group দুটোতেই join করতে হবে, তারপর Verify করুন।");
+                    // Show which one is missing
+                    const missing = [];
+                    if (!data.channel) missing.push('📢 Official Channel');
+                    if (!data.group)   missing.push('👥 Community Group');
+                    alert(`❌ এখনও join করা হয়নি:\n\n${missing.join('\n')}\n\nদুটোতেই join করে তারপর Verify করুন।`);
                 }
             } catch (e) {
+                // API failure → don't block user
                 document.getElementById('activationModalOverlay').classList.remove('show');
             }
             btn.textContent = "✅ Verify & Continue"; btn.disabled = false;
@@ -1900,7 +1951,8 @@
                 await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
             } catch(e) { console.error('Init error:', e.message); }
             if (currentUser && !currentUser.isBanned) {
-                setTimeout(() => { try { checkMembershipAndEnforce(); } catch(e) {} }, 2000);
+                // Always check — user may have left channel/group after last session
+                setTimeout(() => checkMembershipAndEnforce().catch(()=>{}), 2000);
             }
         }
         main();
