@@ -1128,6 +1128,7 @@
             if (user.lastResetDate !== today) {
                 const updates = { adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0, dailyVideoMined: 0, lastResetDate: today };
                 Object.assign(user, updates);
+                // Write to Firestore only on actual reset day (not every open)
                 try { await updateDoc(doc(db, 'users', user.id), updates); } catch (e) {}
                 const savedLoot = localStorage.getItem('newtube_lootbox_' + user.id);
                 if (savedLoot) {
@@ -1144,7 +1145,7 @@
                 updateAdButtonStats(); updateVideoUI();
                 return true;
             }
-            return false;
+            return false; // No reset needed — no Firestore write
         }
 
         async function initializeUser(tgUser, referrerCode) {
@@ -1161,15 +1162,26 @@
             } catch(e) { console.error('Firestore read failed:', e.message); }
 
             if (!userSnap) {
+                // Firestore timeout — restore from localStorage cache so gold doesn't show 0
+                let cachedBalance = { goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0, totalInvites: 0, referralCount: 0 };
+                try {
+                    const savedCache = localStorage.getItem('newtube_user_cache_' + userId);
+                    if (savedCache) cachedBalance = { ...cachedBalance, ...JSON.parse(savedCache) };
+                } catch(e) {}
                 currentUser = {
-                    id: userId, goldBalance: 0, diamondBalance: 0,
+                    id: userId,
+                    goldBalance: cachedBalance.goldBalance,
+                    diamondBalance: cachedBalance.diamondBalance,
+                    lifetimeGoldEarned: cachedBalance.lifetimeGoldEarned,
+                    totalInvites: cachedBalance.totalInvites,
+                    referralCount: cachedBalance.referralCount,
                     telegramUsername: tgUser.username || 'N/A',
                     firstName: tgUser.first_name || 'User',
                     completedTasks: [], isBanned: false,
-                    lifetimeGoldEarned: 0, adsWatchedAdsgramDaily: 0,
+                    adsWatchedAdsgramDaily: 0,
                     adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
                     adsWatchedGiga: 0, dailyVideoMined: 0,
-                    lastResetDate: today, referralCount: 0, totalInvites: 0,
+                    lastResetDate: today,
                     _offlineMode: true
                 };
             } else if (!userSnap.exists()) {
@@ -1202,6 +1214,16 @@
                     document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:#F43F5E;">Account Banned.</h3>`;
                     return null;
                 }
+                // Save balance to localStorage so offline mode can restore it
+                try {
+                    localStorage.setItem('newtube_user_cache_' + userId, JSON.stringify({
+                        goldBalance: currentUser.goldBalance || 0,
+                        diamondBalance: currentUser.diamondBalance || 0,
+                        lifetimeGoldEarned: currentUser.lifetimeGoldEarned || 0,
+                        totalInvites: currentUser.totalInvites || 0,
+                        referralCount: currentUser.referralCount || 0
+                    }));
+                } catch(e) {}
                 checkDailyReset(currentUser).catch(()=>{});
             }
 
@@ -1261,6 +1283,18 @@
             if(!currentUser) return;
             const gold = Math.floor(currentUser.goldBalance || 0);
             const diamond = Math.floor(currentUser.diamondBalance || 0);
+            // Keep localStorage cache in sync so offline mode shows correct balance
+            try {
+                if (currentUser.id) {
+                    localStorage.setItem('newtube_user_cache_' + currentUser.id, JSON.stringify({
+                        goldBalance: gold,
+                        diamondBalance: diamond,
+                        lifetimeGoldEarned: currentUser.lifetimeGoldEarned || 0,
+                        totalInvites: currentUser.totalInvites || 0,
+                        referralCount: currentUser.referralCount || 0
+                    }));
+                }
+            } catch(e) {}
             document.getElementById('home-gold').textContent = gold.toLocaleString();
             document.getElementById('home-diamond').textContent = diamond.toLocaleString();
             document.getElementById('home-life').textContent = Math.floor(currentUser.lifetimeGoldEarned || 0).toLocaleString();
@@ -1317,14 +1351,26 @@
             if (event.data == YT.PlayerState.PLAYING) {
                 isVideoPlaying = true;
                 if (vServerStartTime === 0) {
-                    try {
-                        const res = await fetch(`${VERCEL_API_BASE}/api/videoStart`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
-                        const data = await res.json();
-                        if (data.success) {
-                            vServerStartTime = data.startTime; vServerSignature = data.signature;
-                            localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature }));
-                        } else { isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Server error. Reload app."); }
-                    } catch (e) { isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Connection failed."); }
+                    // Retry videoStart up to 3 times with 2s delay (handles Vercel cold start)
+                    let attempts = 0;
+                    const tryVideoStart = async () => {
+                        attempts++;
+                        try {
+                            const res = await fetch(`${VERCEL_API_BASE}/api/videoStart`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
+                            const data = await res.json();
+                            if (data.success) {
+                                vServerStartTime = data.startTime; vServerSignature = data.signature;
+                                localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature }));
+                            } else {
+                                if (attempts < 3) { await new Promise(r => setTimeout(r, 2000)); return tryVideoStart(); }
+                                isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Server error. Reload app.");
+                            }
+                        } catch (e) {
+                            if (attempts < 3) { await new Promise(r => setTimeout(r, 2000)); return tryVideoStart(); }
+                            isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Connection failed. Check your internet & try again.");
+                        }
+                    };
+                    tryVideoStart();
                 }
             } else { isVideoPlaying = false; }
         }
@@ -1417,9 +1463,13 @@
                         updateBalanceUI(); updateVideoUI();
                         if (ytPlayer) ytPlayer.playVideo();
                     } else {
+                        // ⚠️ Only clear localStorage if server says it's safe to do so
+                        // keepLocal: true = short watch time / temp error → preserve progress
+                        if (!data.keepLocal) {
+                            localVideoMined = 0; vServerStartTime = 0; vServerSignature = "";
+                            localStorage.removeItem('newtube_video_mine_' + currentUser.id);
+                        }
                         alert("Verification Failed: " + (data.message || data.error));
-                        localVideoMined = 0; vServerStartTime = 0; vServerSignature = "";
-                        localStorage.removeItem('newtube_video_mine_' + currentUser.id);
                         updateVideoUI();
                     }
                 } catch(e) { console.error(e); alert("Connection failed. Check your internet & try again."); }
@@ -1428,13 +1478,14 @@
             updateVideoUI();
         });
 
-        // Video cache (fetch once)
+        // Video cache (fetch once per session — saves repeated Firestore reads)
         let _videoCache = null;
         async function getVideosFromCache() {
             if (_videoCache) return _videoCache;
+            // Fetch once, filter client-side (saves composite index + reduces reads)
             const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
             _videoCache = [];
-            snap.forEach(d => _videoCache.push(d.data()));
+            snap.forEach(d => { const v = d.data(); if (v.isActive !== false) _videoCache.push(v); });
             return _videoCache;
         }
 
@@ -1814,22 +1865,21 @@
                         button.disabled = false; button.textContent = 'Verify';
                     }
 
-                // ── PARTNER TASK → Firestore directly (no membership check) ──
+                // ── PARTNER TASK → API (same as channel, no membership check) ──
                 } else {
                     try {
-                        const taskSnap = await getDoc(doc(db, 'tasks', taskId));
-                        if (!taskSnap.exists()) throw new Error('Task not found');
-                        const tData = taskSnap.data();
-                        const actualReward = tData.rewardGold || tData.rewardPoints || reward;
-                        const batch = writeBatch(db);
-                        batch.update(doc(db, 'users', currentUser.id), {
-                            completedTasks:      arrayUnion(taskId),
-                            goldBalance:         increment(actualReward),
-                            lifetimeGoldEarned:  increment(actualReward),
-                            tasksCompletedToday: increment(1),
+                        const res  = await fetch(`${API_BASE}/taskComplete`, {
+                            method:  'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body:    JSON.stringify({ userId: String(currentUser.id), taskId })
                         });
-                        batch.update(doc(db, 'tasks', taskId), { completionCount: increment(1) });
-                        await batch.commit();
+                        const data = await res.json();
+                        if (!data.ok) {
+                            if (data.alreadyDone) { button.closest('[data-task-card]')?.remove(); return; }
+                            alert('Error: ' + (data.error || 'Unknown'));
+                            button.disabled = false; button.textContent = '✅ Claim'; return;
+                        }
+                        const actualReward = data.rewardGold || reward;
                         currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
                         currentUser.goldBalance    = (currentUser.goldBalance || 0) + actualReward;
                         currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
@@ -1837,7 +1887,7 @@
                         showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
                         button.closest('[data-task-card]')?.remove();
                     } catch(err) {
-                        alert('Error: ' + err.message);
+                        alert('Network error: ' + err.message);
                         button.disabled = false; button.textContent = '✅ Claim';
                     }
                 }
