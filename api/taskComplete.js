@@ -1,15 +1,13 @@
 // api/taskComplete.js
-// Handles channel task completion:
-// 1. Checks user is member of the required channel via Telegram Bot API
-// 2. Checks task not already completed
-// 3. Credits gold atomically via Firestore batch
+// Handles channel & partner task completion.
+// Channel tasks: checks Telegram membership before crediting gold.
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 const BOT_TOKEN  = process.env.TELEGRAM_BOT_TOKEN;
-const GROUP_ID   = process.env.GROUP_ID;
-const CHANNEL_ID = process.env.CHANNEL_ID;
+const GROUP_ID   = process.env.GROUP_ID;      // e.g. -1001234567890
+const CHANNEL_ID = process.env.CHANNEL_ID;   // e.g. -1009876543210
 
 function getAdminApp() {
     if (getApps().length > 0) return getApps()[0];
@@ -22,16 +20,36 @@ function getAdminApp() {
     });
 }
 
+// Normalize chat_id — Telegram requires negative ID for groups/channels
+function normalizeChatId(id) {
+    if (!id) return null;
+    const str = String(id).trim();
+    // If it's already a username (@handle), return as-is
+    if (str.startsWith('@')) return str;
+    const num = parseInt(str, 10);
+    if (isNaN(num)) return str;
+    // Supergroups/channels must be negative; if positive add -100 prefix
+    if (num > 0) return -(num + 100000000000);  // rarely needed but safe
+    return num;
+}
+
 async function isMember(userId, chatId) {
+    if (!chatId || !BOT_TOKEN) return true; // skip check if not configured
     try {
-        const url = `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${chatId}&user_id=${userId}`;
+        const normalizedChatId = normalizeChatId(chatId);
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${normalizedChatId}&user_id=${userId}`;
         const r   = await fetch(url);
         const d   = await r.json();
-        if (!d.ok) return false;
+        if (!d.ok) {
+            console.warn('[isMember] Telegram API error:', d.description, 'chatId:', normalizedChatId);
+            // If Telegram returns "user not found" or chat not found, they're not a member
+            return false;
+        }
         const status = d.result?.status;
         return ['member', 'administrator', 'creator'].includes(status);
-    } catch {
-        return false;
+    } catch (e) {
+        console.error('[isMember] fetch error:', e.message);
+        return false; // on network error, fail safely
     }
 }
 
@@ -74,14 +92,24 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: false, alreadyDone: true, error: 'already_completed' });
         }
 
-        // 5. Check Telegram membership for channel tasks
+        // 5. ── CHANNEL TASK: Telegram membership check ──
         if (task.category === 'channel') {
-            const channelId = task.channelId || CHANNEL_ID;
-            const inChannel = await isMember(userId, channelId);
-            const inGroup   = GROUP_ID ? await isMember(userId, GROUP_ID) : true;
+            // Use task-specific channelId if set, else fall back to env CHANNEL_ID
+            const taskChannelId = task.channelId || CHANNEL_ID;
+
+            const [inChannel, inGroup] = await Promise.all([
+                isMember(userId, taskChannelId),
+                GROUP_ID ? isMember(userId, GROUP_ID) : Promise.resolve(true),
+            ]);
+
+            console.log(`[taskComplete] userId=${userId} taskId=${taskId} inChannel=${inChannel} inGroup=${inGroup} channelId=${taskChannelId} groupId=${GROUP_ID}`);
 
             if (!inChannel || !inGroup) {
-                return res.status(200).json({ ok: false, error: 'not_member' });
+                return res.status(200).json({
+                    ok: false,
+                    error: 'not_member',
+                    debug: { inChannel, inGroup } // visible in Vercel logs
+                });
             }
         }
 
