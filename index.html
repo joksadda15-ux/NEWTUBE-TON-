@@ -198,7 +198,7 @@
         .rate-strip-item strong { display: block; font-size: 0.75rem; color: var(--gold); font-weight: 700; }
 
         /* ── STATS GRID ── */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
         .stat-box {
             background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
             border-radius: 12px; padding: 12px 8px; text-align: center;
@@ -510,12 +510,8 @@
                         <div class="stat-val" id="home-life">0</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">Invites</div>
+                        <div class="stat-label">Total Invites</div>
                         <div class="stat-val" style="color:var(--text);" id="home-normal-ref">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">Refs Done</div>
-                        <div class="stat-val" style="color:var(--green);" id="home-valid-ref">0</div>
                     </div>
                 </div>
 
@@ -902,11 +898,16 @@
     <!-- Verification Modal -->
     <div id="activationModalOverlay" class="modal-overlay" style="z-index: 5000;">
         <div class="modal-box" style="text-align:center;">
-            <i class="fas fa-shield-alt" style="font-size:3rem; color:var(--gold); margin-bottom:15px;"></i>
-            <h3 style="margin:0 0 10px; font-size:1.2rem;">Join & Activate</h3>
-            <p style="color:var(--text2); font-size:0.85rem; margin-bottom:20px;">আমাদের Official Channel &amp; Group-এ join করে account activate করুন। <b style="color:var(--primary);">+10 Pts</b></p>
-            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:10px;"><i class="fab fa-telegram-plane"></i> 1. Official Channel</a>
-            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:15px;"><i class="fas fa-users"></i> 2. Community Group</a>
+            <i class="fas fa-shield-alt" style="font-size:3rem; color:var(--primary); margin-bottom:15px;"></i>
+            <h3 style="margin:0 0 8px; font-size:1.25rem; color:var(--text);">👋 স্বাগতম NEWTUBE TON-এ!</h3>
+            <p style="color:var(--text2); font-size:0.85rem; margin-bottom:8px; line-height:1.6;">
+                App ব্যবহার করতে আমাদের Official Channel ও Community Group-এ join করা <b style="color:var(--primary);">বাধ্যতামূলক।</b>
+            </p>
+            <p style="color:var(--text2); font-size:0.8rem; margin-bottom:18px; line-height:1.6;">
+                Join করার পর নিচের <b style="color:var(--gold);">Verify</b> বাটনে ক্লিক করুন।
+            </p>
+            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:10px; display:block;"><i class="fab fa-telegram-plane"></i> ১. Official Channel-এ Join করুন</a>
+            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:18px; display:block;"><i class="fas fa-users"></i> ২. Community Group-এ Join করুন</a>
             <button id="activateAccountBtn" class="btn gold-btn">✅ Verify &amp; Continue</button>
         </div>
     </div>
@@ -1299,7 +1300,6 @@
             document.getElementById('home-diamond').textContent = diamond.toLocaleString();
             document.getElementById('home-life').textContent = Math.floor(currentUser.lifetimeGoldEarned || 0).toLocaleString();
             document.getElementById('home-normal-ref').textContent = currentUser.totalInvites || 0;
-            document.getElementById('home-valid-ref').textContent = currentUser.referralCount || 0;
             const wEl = document.getElementById('withdrawDiamondBalance');
             if (wEl) wEl.textContent = `${diamond.toLocaleString()} 💎`;
             const mg = document.getElementById('modal-gold-bal');
@@ -1463,13 +1463,9 @@
                         updateBalanceUI(); updateVideoUI();
                         if (ytPlayer) ytPlayer.playVideo();
                     } else {
-                        // ⚠️ Only clear localStorage if server says it's safe to do so
-                        // keepLocal: true = short watch time / temp error → preserve progress
-                        if (!data.keepLocal) {
-                            localVideoMined = 0; vServerStartTime = 0; vServerSignature = "";
-                            localStorage.removeItem('newtube_video_mine_' + currentUser.id);
-                        }
                         alert("Verification Failed: " + (data.message || data.error));
+                        localVideoMined = 0; vServerStartTime = 0; vServerSignature = "";
+                        localStorage.removeItem('newtube_video_mine_' + currentUser.id);
                         updateVideoUI();
                     }
                 } catch(e) { console.error(e); alert("Connection failed. Check your internet & try again."); }
@@ -1796,7 +1792,9 @@
         }
 
         // ── TASK SYSTEM ──
+        // Single API base used by tasks, withdraw, checkJoin etc.
         const TASK_API_BASE = 'https://newtube-ton.vercel.app/api';
+        const API_BASE = TASK_API_BASE; // alias so all sections work
         let activeTaskTab = 'channel';
         let tasksCacheChannel = null;
         let tasksCachePartner = null;
@@ -1837,7 +1835,7 @@
                 // ── CHANNEL TASK → API (membership check inside API) ──
                 if (category === 'channel') {
                     try {
-                        const res  = await fetch(`${API_BASE}/taskComplete`, {
+                        const res  = await fetch(`${TASK_API_BASE}/taskComplete`, {
                             method:  'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body:    JSON.stringify({ userId: String(currentUser.id), taskId })
@@ -1865,21 +1863,30 @@
                         button.disabled = false; button.textContent = 'Verify';
                     }
 
-                // ── PARTNER TASK → API (same as channel, no membership check) ──
+                // ── PARTNER TASK → Direct Firestore (YouTube, Facebook, Bot etc. — no API/membership check) ──
                 } else {
                     try {
-                        const res  = await fetch(`${API_BASE}/taskComplete`, {
-                            method:  'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body:    JSON.stringify({ userId: String(currentUser.id), taskId })
-                        });
-                        const data = await res.json();
-                        if (!data.ok) {
-                            if (data.alreadyDone) { button.closest('[data-task-card]')?.remove(); return; }
-                            alert('Error: ' + (data.error || 'Unknown'));
-                            button.disabled = false; button.textContent = '✅ Claim'; return;
+                        const taskSnap = await getDoc(doc(db, 'tasks', taskId));
+                        if (!taskSnap.exists()) throw new Error('Task not found');
+                        const tData = taskSnap.data();
+                        const actualReward = tData.rewardGold || tData.rewardPoints || reward;
+
+                        if ((currentUser.completedTasks || []).includes(taskId)) {
+                            button.closest('[data-task-card]')?.remove(); return;
                         }
-                        const actualReward = data.rewardGold || reward;
+
+                        const batch = writeBatch(db);
+                        batch.update(doc(db, 'users', currentUser.id), {
+                            completedTasks:      arrayUnion(taskId),
+                            goldBalance:         increment(actualReward),
+                            lifetimeGoldEarned:  increment(actualReward),
+                            tasksCompletedToday: increment(1),
+                        });
+                        batch.update(doc(db, 'tasks', taskId), {
+                            completionCount: increment(1),
+                        });
+                        await batch.commit();
+
                         currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
                         currentUser.goldBalance    = (currentUser.goldBalance || 0) + actualReward;
                         currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
@@ -1887,7 +1894,7 @@
                         showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
                         button.closest('[data-task-card]')?.remove();
                     } catch(err) {
-                        alert('Network error: ' + err.message);
+                        alert('Error: ' + err.message);
                         button.disabled = false; button.textContent = '✅ Claim';
                     }
                 }
@@ -1933,7 +1940,6 @@
         }
 
         // ── JOIN CHECK & ENFORCEMENT (API-based) ──
-        const API_BASE = 'https://newtube-ton.vercel.app/api';
         let _joinCheckInterval = null;
 
         // Called on startup + periodically to re-check if user left
