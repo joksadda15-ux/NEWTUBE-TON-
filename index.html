@@ -21,6 +21,16 @@
     </script>
 
     <!-- AD INTEGRATIONS -->
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof AdexiumWidget !== 'undefined') {
+                const adexiumWidget = new AdexiumWidget({wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial'});
+                adexiumWidget.autoMode();
+            }
+        });
+    </script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
     <script src="https://ad.gigapub.tech/script?id=846"></script>
@@ -69,6 +79,56 @@
             -webkit-font-smoothing: antialiased; overflow-x: hidden; position: relative;
         }
 
+        
+        /* ── LOADING SCREEN ── */
+        #app-loader {
+            position: fixed; inset: 0; z-index: 99999;
+            background: #030509;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #app-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-logo {
+            font-size: 2.8rem; font-weight: 900; letter-spacing: -1px;
+            background: linear-gradient(135deg, #00E5FF, #8B5CF6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 8px; animation: loaderPulse 1.5s ease-in-out infinite;
+        }
+        .loader-sub {
+            font-size: 0.75rem; color: #475569; letter-spacing: 3px;
+            text-transform: uppercase; margin-bottom: 48px;
+        }
+        .loader-bar-wrap {
+            width: 180px; height: 3px; background: rgba(255,255,255,0.07);
+            border-radius: 99px; overflow: hidden;
+        }
+        .loader-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #00E5FF, #8B5CF6);
+            border-radius: 99px;
+            animation: loaderBar 1.8s ease forwards;
+        }
+        .loader-dots {
+            display: flex; gap: 8px; margin-top: 28px;
+        }
+        .loader-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #00E5FF; opacity: 0.3;
+            animation: loaderDot 1.2s ease-in-out infinite;
+        }
+        .loader-dot:nth-child(2) { animation-delay: 0.2s; background: #8B5CF6; }
+        .loader-dot:nth-child(3) { animation-delay: 0.4s; background: #F5A623; }
+        @keyframes loaderPulse {
+            0%, 100% { opacity: 1; } 50% { opacity: 0.6; }
+        }
+        @keyframes loaderBar {
+            0% { width: 0%; } 60% { width: 75%; } 100% { width: 100%; }
+        }
+        @keyframes loaderDot {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-6px); }
+        }
         /* ── ANIMATED PREMIUM BG ── */
         .bg-canvas {
             position: fixed; inset: 0; z-index: -2; overflow: hidden;
@@ -95,6 +155,33 @@
             100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
         }
 
+        
+        /* ── VIDEO ROTATION ── */
+        .video-rotate-btn {
+            position: absolute; top: 8px; right: 8px; z-index: 10;
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
+            color: white; border-radius: 8px; padding: 6px 10px;
+            font-size: 0.75rem; cursor: pointer; display: flex;
+            align-items: center; gap: 5px; backdrop-filter: blur(4px);
+            transition: background 0.2s;
+        }
+        .video-rotate-btn:hover { background: rgba(0,229,255,0.2); }
+        .video-wrapper {
+            position: relative; width: 100%; background: #000;
+            border-radius: 12px; overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .video-wrapper.rotated {
+            height: 100vw;
+            transform: rotate(90deg);
+            transform-origin: center center;
+            width: calc(100vh - 160px);
+            margin: calc((100vw - (100vh - 160px)) / 2) auto;
+        }
+        .video-wrapper.rotated #ytplayer {
+            width: 100% !important;
+            height: 100% !important;
+        }
         /* ── VIDEO THEME BG ── */
         .video-theme-bg {
             position: fixed; inset: 0; z-index: -1; pointer-events: none;
@@ -198,7 +285,7 @@
         .rate-strip-item strong { display: block; font-size: 0.75rem; color: var(--gold); font-weight: 700; }
 
         /* ── STATS GRID ── */
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
         .stat-box {
             background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
             border-radius: 12px; padding: 12px 8px; text-align: center;
@@ -441,6 +528,18 @@
     </style>
 </head>
 <body>
+    <!-- LOADING SCREEN -->
+    <div id="app-loader">
+        <div class="loader-logo">NEWTUBE</div>
+        <div class="loader-sub">TON · Premium Platform</div>
+        <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+        <div class="loader-dots">
+            <div class="loader-dot"></div>
+            <div class="loader-dot"></div>
+            <div class="loader-dot"></div>
+        </div>
+    </div>
+
 
     <!-- ANIMATED BACKGROUND -->
     <div class="bg-canvas"></div>
@@ -492,7 +591,7 @@
                             <div class="currency-icon">💎</div>
                             <div class="currency-amount" id="home-diamond">0</div>
                             <div class="currency-label">Diamond</div>
-                            <div class="currency-rate">1K 💎 = $1 / 120৳</div>
+                            <div class="currency-rate">1K 💎 = $1 / 120 BDT</div>
                         </div>
                     </div>
                     <div class="rate-strip">
@@ -510,8 +609,12 @@
                         <div class="stat-val" id="home-life">0</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">Total Invites</div>
+                        <div class="stat-label">Invites</div>
                         <div class="stat-val" style="color:var(--text);" id="home-normal-ref">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Refs Done</div>
+                        <div class="stat-val" style="color:var(--green);" id="home-valid-ref">0</div>
                     </div>
                 </div>
 
@@ -653,7 +756,12 @@
             <!-- Video Player -->
             <div class="video-player-card">
                 <div class="video-player-label">&#9679; LIVE STREAM</div>
+                <div class="video-wrapper" id="videoWrapper" style="position:relative; border-radius:12px; overflow:hidden;">
                 <div id="ytplayer" style="width:100%; height:210px; background:#000;"></div>
+                <button class="video-rotate-btn" onclick="toggleVideoRotate()" title="Rotate video">
+                    <i class="fas fa-rotate-right"></i> Rotate
+                </button>
+            </div>
             </div>
 
             <!-- Mining Box -->
@@ -731,7 +839,7 @@
 
             <div style="background:rgba(0,229,160,0.06); border:1px solid rgba(0,229,160,0.2); border-radius:10px; padding:11px 13px; margin-bottom:14px; font-size:0.8rem; color:var(--text2); line-height:1.6;">
                 <i class="fas fa-clock" style="color:var(--green);"></i>&nbsp;
-                Withdraw request দেওয়ার পর <b style="color:var(--green);">১২–৪৮ ঘণ্টার মধ্যে</b> payment পেয়ে যাবেন।
+                After submitting a withdraw request, you will receive payment within <b style="color:var(--green);">12–48 hours</b>.
             </div>
 
             <div style="text-align:center; margin-bottom:16px; background:rgba(0,0,0,0.3); border-radius:12px; padding:14px;">
@@ -898,16 +1006,11 @@
     <!-- Verification Modal -->
     <div id="activationModalOverlay" class="modal-overlay" style="z-index: 5000;">
         <div class="modal-box" style="text-align:center;">
-            <i class="fas fa-shield-alt" style="font-size:3rem; color:var(--primary); margin-bottom:15px;"></i>
-            <h3 style="margin:0 0 8px; font-size:1.25rem; color:var(--text);">👋 স্বাগতম NEWTUBE TON-এ!</h3>
-            <p style="color:var(--text2); font-size:0.85rem; margin-bottom:8px; line-height:1.6;">
-                App ব্যবহার করতে আমাদের Official Channel ও Community Group-এ join করা <b style="color:var(--primary);">বাধ্যতামূলক।</b>
-            </p>
-            <p style="color:var(--text2); font-size:0.8rem; margin-bottom:18px; line-height:1.6;">
-                Join করার পর নিচের <b style="color:var(--gold);">Verify</b> বাটনে ক্লিক করুন।
-            </p>
-            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:10px; display:block;"><i class="fab fa-telegram-plane"></i> ১. Official Channel-এ Join করুন</a>
-            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:18px; display:block;"><i class="fas fa-users"></i> ২. Community Group-এ Join করুন</a>
+            <i class="fas fa-shield-alt" style="font-size:3rem; color:var(--gold); margin-bottom:15px;"></i>
+            <h3 style="margin:0 0 10px; font-size:1.2rem;">Join & Activate</h3>
+            <p style="color:var(--text2); font-size:0.85rem; margin-bottom:20px;">Join our Official Channel &amp; Group to activate your account.</p>
+            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:10px;"><i class="fab fa-telegram-plane"></i> 1. Official Channel</a>
+            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:15px;"><i class="fas fa-users"></i> 2. Community Group</a>
             <button id="activateAccountBtn" class="btn gold-btn">✅ Verify &amp; Continue</button>
         </div>
     </div>
@@ -1300,6 +1403,7 @@
             document.getElementById('home-diamond').textContent = diamond.toLocaleString();
             document.getElementById('home-life').textContent = Math.floor(currentUser.lifetimeGoldEarned || 0).toLocaleString();
             document.getElementById('home-normal-ref').textContent = currentUser.totalInvites || 0;
+            document.getElementById('home-valid-ref').textContent = currentUser.referralCount || 0;
             const wEl = document.getElementById('withdrawDiamondBalance');
             if (wEl) wEl.textContent = `${diamond.toLocaleString()} 💎`;
             const mg = document.getElementById('modal-gold-bal');
@@ -1344,6 +1448,31 @@
         const ytScriptTag = document.createElement('script');
         ytScriptTag.src = "https://www.youtube.com/iframe_api";
         document.head.appendChild(ytScriptTag);
+
+        
+        
+        // ── VIDEO ROTATION ──
+        let isRotated = false;
+        function toggleVideoRotate() {
+            const wrapper = document.getElementById('videoWrapper');
+            if (!wrapper) return;
+            isRotated = !isRotated;
+            wrapper.classList.toggle('rotated', isRotated);
+            const btn = wrapper.querySelector('.video-rotate-btn');
+            if (btn) {
+                btn.innerHTML = isRotated
+                    ? '<i class="fas fa-rotate-left"></i> Normal'
+                    : '<i class="fas fa-rotate-right"></i> Rotate';
+            }
+        }
+
+        // ── HIDE LOADER ──
+        function hideLoader() {
+            const loader = document.getElementById('app-loader');
+            if (loader) loader.classList.add('hidden');
+        }
+        // Hide after app fully loads (max 2.5s)
+        setTimeout(hideLoader, 2500);
 
         window.onYouTubeIframeAPIReady = function() { window.ytApiReady = true; };
 
@@ -1582,8 +1711,8 @@
                 return alert('1 withdrawal per day only.');
             const adsToday   = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
             const tasksTotal = currentUser.completedTasks?.length || 0;
-            if (tasksTotal < 5)  return alert(`❌ Minimum 5 task complete করতে হবে।\nCompleted: ${tasksTotal}/5`);
-            if (adsToday   < 20) return alert(`❌ আজকে 20টি ads দেখতে হবে।\nDone: ${adsToday}/20`);
+            if (tasksTotal < 5)  return alert(`❌ Minimum 5 tasks required.\nCompleted: ${tasksTotal}/5`);
+            if (adsToday   < 20) return alert(`❌ You need to watch 20 ads today.\nDone: ${adsToday}/20`);
             if (!confirm(`Withdraw ${amount.toLocaleString()} 💎 via ${WITHDRAW_METHODS[method].label}?`)) return;
 
             // ── API call (handles Firestore + Telegram notifications) ──
@@ -1602,8 +1731,8 @@
                         already_withdrawn_today:  '1 withdrawal per day only.',
                         insufficient_diamonds:    'Insufficient Diamonds.',
                         address_used_by_other:    '❌ This address is already used by another account.',
-                        need_5_tasks:             '❌ Minimum 5 tasks complete করতে হবে।',
-                        need_20_ads_today:        '❌ আজকে 20টি ads দেখতে হবে।',
+                        need_5_tasks:             '❌ Minimum 5 tasks required.',
+                        need_20_ads_today:        '❌ You need to watch 20 ads today.',
                     };
                     alert(msgs[data.error] || `Error: ${data.error || 'Unknown'}`);
                     return;
@@ -1792,9 +1921,7 @@
         }
 
         // ── TASK SYSTEM ──
-        // Single API base used by tasks, withdraw, checkJoin etc.
         const TASK_API_BASE = 'https://newtube-ton.vercel.app/api';
-        const API_BASE = TASK_API_BASE; // alias so all sections work
         let activeTaskTab = 'channel';
         let tasksCacheChannel = null;
         let tasksCachePartner = null;
@@ -1835,7 +1962,7 @@
                 // ── CHANNEL TASK → API (membership check inside API) ──
                 if (category === 'channel') {
                     try {
-                        const res  = await fetch(`${TASK_API_BASE}/taskComplete`, {
+                        const res  = await fetch(`${API_BASE}/taskComplete`, {
                             method:  'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body:    JSON.stringify({ userId: String(currentUser.id), taskId })
@@ -1843,7 +1970,7 @@
                         const data = await res.json();
                         if (!data.ok) {
                             if (data.error === 'not_member') {
-                                alert('⚠️ Channel/Group-এ join করুন, তারপর Verify করুন!');
+                                alert('⚠️ Please join the Channel/Group first, then Verify!');
                             } else if (data.alreadyDone) {
                                 button.closest('[data-task-card]')?.remove(); return;
                             } else {
@@ -1863,30 +1990,21 @@
                         button.disabled = false; button.textContent = 'Verify';
                     }
 
-                // ── PARTNER TASK → Direct Firestore (YouTube, Facebook, Bot etc. — no API/membership check) ──
+                // ── PARTNER TASK → API (same as channel, no membership check) ──
                 } else {
                     try {
-                        const taskSnap = await getDoc(doc(db, 'tasks', taskId));
-                        if (!taskSnap.exists()) throw new Error('Task not found');
-                        const tData = taskSnap.data();
-                        const actualReward = tData.rewardGold || tData.rewardPoints || reward;
-
-                        if ((currentUser.completedTasks || []).includes(taskId)) {
-                            button.closest('[data-task-card]')?.remove(); return;
+                        const res  = await fetch(`${API_BASE}/taskComplete`, {
+                            method:  'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body:    JSON.stringify({ userId: String(currentUser.id), taskId })
+                        });
+                        const data = await res.json();
+                        if (!data.ok) {
+                            if (data.alreadyDone) { button.closest('[data-task-card]')?.remove(); return; }
+                            alert('Error: ' + (data.error || 'Unknown'));
+                            button.disabled = false; button.textContent = '✅ Claim'; return;
                         }
-
-                        const batch = writeBatch(db);
-                        batch.update(doc(db, 'users', currentUser.id), {
-                            completedTasks:      arrayUnion(taskId),
-                            goldBalance:         increment(actualReward),
-                            lifetimeGoldEarned:  increment(actualReward),
-                            tasksCompletedToday: increment(1),
-                        });
-                        batch.update(doc(db, 'tasks', taskId), {
-                            completionCount: increment(1),
-                        });
-                        await batch.commit();
-
+                        const actualReward = data.rewardGold || reward;
                         currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
                         currentUser.goldBalance    = (currentUser.goldBalance || 0) + actualReward;
                         currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
@@ -1894,7 +2012,7 @@
                         showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
                         button.closest('[data-task-card]')?.remove();
                     } catch(err) {
-                        alert('Error: ' + err.message);
+                        alert('Network error: ' + err.message);
                         button.disabled = false; button.textContent = '✅ Claim';
                     }
                 }
@@ -1940,6 +2058,7 @@
         }
 
         // ── JOIN CHECK & ENFORCEMENT (API-based) ──
+        const API_BASE = 'https://newtube-ton.vercel.app/api';
         let _joinCheckInterval = null;
 
         // Called on startup + periodically to re-check if user left
@@ -1981,7 +2100,7 @@
                     const missing = [];
                     if (!data.channel) missing.push('📢 Official Channel');
                     if (!data.group)   missing.push('👥 Community Group');
-                    alert(`❌ এখনও join করা হয়নি:\n\n${missing.join('\n')}\n\nদুটোতেই join করে তারপর Verify করুন।`);
+                    alert(`❌ Not joined yet:\n\n${missing.join('\n')}\n\nPlease join both and then Verify.`);
                 }
             } catch (e) {
                 // API failure → don't block user
