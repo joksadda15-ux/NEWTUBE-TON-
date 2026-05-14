@@ -1,13 +1,10 @@
 // api/taskComplete.js
-// Channel tasks: MUST verify Telegram membership before crediting gold.
-// If BOT_TOKEN or CHANNEL_ID is missing → hard fail (never silently pass).
+// Channel tasks: verify Telegram membership strictly before crediting gold.
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 const BOT_TOKEN  = process.env.TELEGRAM_BOT_TOKEN;
-const GROUP_ID   = process.env.GROUP_ID;
-const CHANNEL_ID = process.env.CHANNEL_ID;
 
 function getAdminApp() {
     if (getApps().length > 0) return getApps()[0];
@@ -20,24 +17,24 @@ function getAdminApp() {
     });
 }
 
-// Telegram supergroup/channel IDs must be negative (e.g. -1001234567890)
+// Handles both @username and numeric ID formats
 function normalizeChatId(id) {
     if (!id) return null;
     const str = String(id).trim();
-    if (str.startsWith('@')) return str;
+    if (str.startsWith('@')) return str; // @username — Telegram accepts this directly
     const num = parseInt(str, 10);
     if (isNaN(num)) return str;
-    if (num > 0) return `-100${num}`; // e.g. 1234567890 → -1001234567890
-    return String(num);               // already negative
+    if (num > 0) return `-100${num}`;   // positive → add -100 prefix
+    return String(num);                  // already negative
 }
 
-// STRICT: never returns true on config error — throws instead
+// Strict membership check — never silently passes
 async function isMember(userId, chatId) {
-    if (!BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN not set in Vercel environment variables');
-    if (!chatId)    throw new Error('chatId is empty — check CHANNEL_ID / GROUP_ID env vars');
+    if (!BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN missing in Vercel env vars');
+    if (!chatId)    return false;
 
     const normalizedChatId = normalizeChatId(chatId);
-    const url = `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${normalizedChatId}&user_id=${userId}`;
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(normalizedChatId)}&user_id=${userId}`;
 
     let d;
     try {
@@ -49,7 +46,7 @@ async function isMember(userId, chatId) {
 
     if (!d.ok) {
         console.warn('[isMember] Telegram error:', d.description, '| chatId:', normalizedChatId, '| userId:', userId);
-        return false; // bot not in chat, or user never messaged bot — treat as not member
+        return false;
     }
 
     const status = d.result?.status;
@@ -77,7 +74,7 @@ export default async function handler(req, res) {
         const task = taskSnap.data();
         if (!task.isApproved) return res.status(400).json({ ok: false, error: 'task_not_approved' });
 
-        // 2. Task limit
+        // 2. Task limit check
         if ((task.limit || 0) > 0 && (task.completionCount || 0) >= task.limit) {
             return res.status(200).json({ ok: false, error: 'task_limit_reached' });
         }
@@ -94,14 +91,22 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: false, alreadyDone: true, error: 'already_completed' });
         }
 
-        // 5. CHANNEL TASK → strict membership check (throws on config error)
+        // 5. CHANNEL TASK → strict membership check
+        //    Only checks the channel/group stored in the TASK itself (task.channelId / task.groupId)
+        //    Does NOT use global env GROUP_ID — each task is independent
         if (task.category === 'channel') {
-            const taskChannelId = task.channelId || CHANNEL_ID;
+            const taskChannelId = task.channelId || null;
+            const taskGroupId   = task.groupId   || null;  // optional second chat
+
+            if (!taskChannelId) {
+                // Task has no channelId set — block it, admin must fix the task
+                return res.status(400).json({ ok: false, error: 'task_missing_channelId', message: 'Task-এ channelId নেই। Admin panel থেকে ঠিক করুন।' });
+            }
 
             const inChannel = await isMember(userId, taskChannelId);
-            const inGroup   = GROUP_ID ? await isMember(userId, GROUP_ID) : true;
+            const inGroup   = taskGroupId ? await isMember(userId, taskGroupId) : true;
 
-            console.log(`[taskComplete] userId=${userId} taskId=${taskId} inChannel=${inChannel} inGroup=${inGroup}`);
+            console.log(`[taskComplete] userId=${userId} taskId=${taskId} channelId=${taskChannelId} groupId=${taskGroupId} inChannel=${inChannel} inGroup=${inGroup}`);
 
             if (!inChannel || !inGroup) {
                 return res.status(200).json({
@@ -112,7 +117,7 @@ export default async function handler(req, res) {
             }
         }
 
-        // 6. Credit gold
+        // 6. Credit gold atomically
         const reward = task.rewardGold || task.rewardPoints || 250;
         const batch  = db.batch();
         batch.update(userRef, {
@@ -132,4 +137,4 @@ export default async function handler(req, res) {
         console.error('[taskComplete]', err);
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message });
     }
-}
+            }
