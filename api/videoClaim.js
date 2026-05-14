@@ -7,10 +7,10 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 const SECRET           = process.env.VIDEO_HMAC_SECRET || 'newtube_video_secret_2025';
-const MIN_WATCH_MS     = 60 * 1000;        // minimum 60 seconds watch time
+const MIN_WATCH_MS     = 60 * 1000;            // minimum 60 seconds watch time
 const MAX_SESSION_MS   = 12 * 60 * 60 * 1000; // session token expires after 12 hours
-const VIDEO_BOX_MAX    = 2000;             // must match frontend
-const DAILY_VIDEO_MAX  = 5000;            // must match frontend
+const VIDEO_BOX_MAX    = 2000;                 // must match frontend
+const DAILY_VIDEO_MAX  = 5000;                 // must match frontend
 
 function getAdminApp() {
     if (getApps().length > 0) return getApps()[0];
@@ -48,12 +48,23 @@ export default async function handler(req, res) {
     // 2. Check minimum watch time (at least 60 seconds)
     const elapsed = Date.now() - Number(startTime);
     if (elapsed < MIN_WATCH_MS) {
-        return res.status(400).json({ success: false, error: 'watch_time_too_short', message: 'Watch at least 1 minute.' });
+        return res.status(400).json({
+            success: false,
+            error: 'watch_time_too_short',
+            message: 'Watch at least 1 minute.',
+            // ⚠️ keepLocal: true tells frontend NOT to clear localStorage
+            keepLocal: true
+        });
     }
 
     // 3. Check session not expired (> 12h is suspicious)
     if (elapsed > MAX_SESSION_MS) {
-        return res.status(400).json({ success: false, error: 'session_expired', message: 'Session expired. Reload app.' });
+        return res.status(400).json({
+            success: false,
+            error: 'session_expired',
+            message: 'Session expired. Reload app.',
+            keepLocal: false
+        });
     }
 
     // 4. Clamp claimed points to safe range
@@ -88,6 +99,7 @@ export default async function handler(req, res) {
             return toAdd;
         });
 
+        console.log(`[videoClaim] userId=${userId} pointsAdded=${pointsAdded}`);
         return res.status(200).json({ success: true, ok: true, pointsAdded });
 
     } catch (err) {
@@ -100,4 +112,4 @@ export default async function handler(req, res) {
         }
         return res.status(500).json({ success: false, error: 'server_error', message: err.message });
     }
-}
+    }
