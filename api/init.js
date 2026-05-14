@@ -1,6 +1,6 @@
 // api/init.js
 // Called when a new user joins via referral link.
-// Credits 2000 Gold to the referrer atomically.
+// Credits 2000 Gold to the referrer + sends Telegram notification.
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -26,7 +26,11 @@ async function sendTelegramMsg(chatId, text) {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+            body: JSON.stringify({
+                chat_id:    chatId,
+                text:       text,
+                parse_mode: 'HTML',
+            }),
         });
     } catch {}
 }
@@ -46,11 +50,13 @@ export default async function handler(req, res) {
         const app = getAdminApp();
         const db  = getFirestore(app);
 
-        const referrerRef = db.collection('users').doc(String(referrerCode));
+        const referrerRef  = db.collection('users').doc(String(referrerCode));
         const referrerSnap = await referrerRef.get();
         if (!referrerSnap.exists) return res.status(200).json({ ok: true, skipped: 'referrer_not_found' });
 
-        // Credit referrer
+        const referrer = referrerSnap.data();
+
+        // Credit referrer gold
         await referrerRef.update({
             goldBalance:        FieldValue.increment(REFERRAL_REWARD),
             lifetimeGoldEarned: FieldValue.increment(REFERRAL_REWARD),
@@ -58,20 +64,37 @@ export default async function handler(req, res) {
             totalInvites:       FieldValue.increment(1),
         });
 
-        // Notify referrer via Telegram bot
-        const referrer = referrerSnap.data();
-        if (referrer.telegramId || referrerCode) {
-            await sendTelegramMsg(
-                referrer.telegramId || referrerCode,
-                `🎉 নতুন রেফারেল!\n👤 <b>${firstName || 'Someone'}</b> (@${username || 'unknown'}) যোগ দিয়েছে।\n+${REFERRAL_REWARD.toLocaleString()} 🪙 Gold তোমার account-এ যোগ হয়েছে!`
-            );
-        }
+        // ── Referrer notification ──
+        // referrerCode IS the Telegram user ID (document ID = telegram ID)
+        const referrerTgId   = referrerCode;
+        const newUserName    = firstName || 'A new friend';
+        const newUserHandle  = username  ? `@${username}` : '';
 
-        // Notify admin
+        const referrerMsg =
+`🎉 <b>You received a Referral Bonus!</b>
+
+👤 <b>${newUserName}</b> ${newUserHandle}
+just joined NEWTUBE TON using your referral link!
+
+💰 Your Reward:
+<b>+${REFERRAL_REWARD.toLocaleString()} 🪙 Gold</b> has been added to your account!
+
+🔗 Keep inviting friends and earn <b>2,000 Gold</b> for each one!
+💎 1,000 Gold = 1 Diamond | 1,000 Diamond = $1`;
+
+        await sendTelegramMsg(referrerTgId, referrerMsg);
+
+        // ── Admin notification ──
         if (ADMIN_TG_ID) {
-            await sendTelegramMsg(ADMIN_TG_ID,
-                `🆕 New User: <b>${firstName}</b> (@${username})\nID: ${userId}\nReferred by: ${referrerCode}`
-            );
+            const adminMsg =
+`🆕 <b>New Referral Join!</b>
+
+👤 New User: <b>${newUserName}</b> ${newUserHandle}
+🆔 ID: <code>${userId}</code>
+🔗 Referred by: <code>${referrerCode}</code> (${referrer.firstName || 'Unknown'})
+🪙 Referrer credited: +${REFERRAL_REWARD.toLocaleString()} Gold`;
+
+            await sendTelegramMsg(ADMIN_TG_ID, adminMsg);
         }
 
         return res.status(200).json({ ok: true });
