@@ -911,10 +911,9 @@
         </div>
     </div>
 
-        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
-
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
@@ -925,8 +924,8 @@
             messagingSenderId: "41011548816",
             appId: "1:41011548816:web:9c27139d9487b144ecbe15"
         };
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         const tg = window.Telegram.WebApp;
 
         let currentUser = null;
@@ -1129,7 +1128,7 @@
             if (user.lastResetDate !== today) {
                 const updates = { adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0, dailyVideoMined: 0, lastResetDate: today };
                 Object.assign(user, updates);
-                try { await doc(db.update('users', user.id), updates); } catch (e) {}
+                try { await updateDoc(doc(db, 'users', user.id), updates); } catch (e) {}
                 const savedLoot = localStorage.getItem('newtube_lootbox_' + user.id);
                 if (savedLoot) {
                     try {
@@ -1150,13 +1149,13 @@
 
         async function initializeUser(tgUser, referrerCode) {
             const userId = String(tgUser.id);
-            const userRef = db.collection('users').doc(userId);
+            const userRef = doc(db, 'users', userId);
             const today = getTodayDateString();
 
             let userSnap = null;
             try {
                 userSnap = await Promise.race([
-                    userRef.get(),
+                    getDoc(userRef),
                     new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 12000))
                 ]);
             } catch(e) { console.error('Firestore read failed:', e.message); }
@@ -1173,11 +1172,11 @@
                     lastResetDate: today, referralCount: 0, totalInvites: 0,
                     _offlineMode: true
                 };
-            } else if (!userSnap.exists) {
+            } else if (!userSnap.exists()) {
                 const data = {
                     goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0,
                     referralCount: 0, totalInvites: 0,
-                    completedTasks: [], createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    completedTasks: [], createdAt: serverTimestamp(),
                     telegramUsername: tgUser.username || 'N/A',
                     firstName: tgUser.first_name || 'User',
                     isBanned: false, withdrawalCount: 0,
@@ -1195,7 +1194,7 @@
                         body: JSON.stringify({ userId, firstName: tgUser.first_name || 'User', username: tgUser.username || 'N/A', referrerCode })
                     }).catch(()=>{});
                 }
-                try { await userRef.set(data); } catch(e) { console.error('setDoc failed:', e); }
+                try { await setDoc(userRef, data); } catch(e) { console.error('setDoc failed:', e); }
                 currentUser = { id: userId, ...data };
             } else {
                 currentUser = { id: userSnap.id, ...userSnap.data() };
@@ -1319,10 +1318,13 @@
                 isVideoPlaying = true;
                 if (vServerStartTime === 0) {
                     try {
-                        // Local timestamp — no server needed
-                    vServerStartTime = Date.now();
-                    vServerSignature = String(currentUser.id) + ':' + vServerStartTime;
-                    localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature }));
+                        const res = await fetch(`${VERCEL_API_BASE}/api/videoStart`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
+                        const data = await res.json();
+                        if (data.success) {
+                            vServerStartTime = data.startTime; vServerSignature = data.signature;
+                            localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature }));
+                        } else { isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Server error. Reload app."); }
+                    } catch (e) { isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Connection failed."); }
                 }
             } else { isVideoPlaying = false; }
         }
@@ -1399,26 +1401,28 @@
             if (ok) {
                 btn.disabled = true; btn.textContent = "Verifying...";
                 try {
-                    try {
-                    const elapsed = (Date.now() - vServerStartTime) / 1000;
-                    if (elapsed < 30) { alert("Watch at least 30 seconds!"); btn.dataset.busy="false"; updateVideoUI(); return; }
-                    const dailyMined = currentUser.dailyVideoMined || 0;
-                    if (dailyMined >= DAILY_VIDEO_MAX) { alert(`Daily limit reached (${DAILY_VIDEO_MAX} Gold/day).`); btn.dataset.busy="false"; updateVideoUI(); return; }
-                    const actualAdd = Math.min(amtToClaim, DAILY_VIDEO_MAX - dailyMined);
-                    await db.collection('users').doc(String(currentUser.id)).update({
-                        goldBalance:        firebase.firestore.FieldValue.increment(actualAdd),
-                        lifetimeGoldEarned: firebase.firestore.FieldValue.increment(actualAdd),
-                        dailyVideoMined:    firebase.firestore.FieldValue.increment(actualAdd),
+                    const res = await fetch(`${VERCEL_API_BASE}/api/videoClaim`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id, startTime: vServerStartTime, signature: vServerSignature, claimedPoints: amtToClaim })
                     });
-                    currentUser.goldBalance = (currentUser.goldBalance || 0) + actualAdd;
-                    currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + actualAdd;
-                    currentUser.dailyVideoMined = (currentUser.dailyVideoMined || 0) + actualAdd;
-                    showSuccessModal("Gold Mined! ⛏️", `+${actualAdd} 🪙 Gold added!`);
-                    localVideoMined = 0; vServerStartTime = 0; vServerSignature = ""; videoPlaySeconds = 0;
-                    localStorage.removeItem('newtube_video_mine_' + currentUser.id);
-                    updateBalanceUI(); updateVideoUI();
-                    if (ytPlayer) ytPlayer.playVideo();
-                } catch(e) { console.error(e); alert("Failed: " + e.message); }
+                    const data = await res.json();
+                    if (data.success || data.ok) {
+                        const added = data.pointsAdded || amtToClaim;
+                        currentUser.goldBalance = (currentUser.goldBalance || 0) + added;
+                        currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + added;
+                        currentUser.dailyVideoMined = (currentUser.dailyVideoMined || 0) + added;
+                        showSuccessModal("Gold Mined! ⛏️", `+${added} 🪙 Gold added!`);
+                        localVideoMined = 0; vServerStartTime = 0; vServerSignature = ""; videoPlaySeconds = 0;
+                        localStorage.removeItem('newtube_video_mine_' + currentUser.id);
+                        updateBalanceUI(); updateVideoUI();
+                        if (ytPlayer) ytPlayer.playVideo();
+                    } else {
+                        alert("Verification Failed: " + (data.message || data.error));
+                        localVideoMined = 0; vServerStartTime = 0; vServerSignature = "";
+                        localStorage.removeItem('newtube_video_mine_' + currentUser.id);
+                        updateVideoUI();
+                    }
+                } catch(e) { console.error(e); alert("Connection failed. Check your internet & try again."); }
             }
             btn.dataset.busy = "false";
             updateVideoUI();
@@ -1428,7 +1432,7 @@
         let _videoCache = null;
         async function getVideosFromCache() {
             if (_videoCache) return _videoCache;
-            const snap = await db.collection('videos').where('isActive', '==', true).limit(20).get();
+            const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
             _videoCache = [];
             snap.forEach(d => _videoCache.push(d.data()));
             return _videoCache;
@@ -1600,9 +1604,9 @@
             if (diamondOut < 1) return alert('Not enough gold for even 1 Diamond. Min 1,000 Gold = 1 Diamond.');
             if (!confirm(`Convert ${goldAmt.toLocaleString()} 🪙 Gold → ${diamondOut} 💎 Diamond?`)) return;
             try {
-                await doc(db.update('users', currentUser.id), {
-                    goldBalance: firebase.firestore.FieldValue.increment(-goldAmt),
-                    diamondBalance: firebase.firestore.FieldValue.increment(diamondOut)
+                await updateDoc(doc(db, 'users', currentUser.id), {
+                    goldBalance: increment(-goldAmt),
+                    diamondBalance: increment(diamondOut)
                 });
                 currentUser.goldBalance = (currentUser.goldBalance || 0) - goldAmt;
                 currentUser.diamondBalance = (currentUser.diamondBalance || 0) + diamondOut;
@@ -1620,7 +1624,7 @@
             if (_historyCache) { renderHistoryList(_historyCache, container); return; }
             container.innerHTML = '<div class="loader"></div>';
             try {
-                const wSnap = await db.collection("withdrawals").where("userId", "==", currentUser.id).limit(20).get();
+                const wSnap = await getDocs(query(collection(db, "withdrawals"), where("userId", "==", currentUser.id), limit(20)));
                 let list = [];
                 wSnap.forEach(d => list.push({ ...d.data(), isW: true, time: d.data().createdAt }));
                 list.sort((a, b) => (b.time?.toMillis() || 0) - (a.time?.toMillis() || 0));
@@ -1653,11 +1657,11 @@
             const ok = await runAdAndVerifyTime('claimPromoBtn', showAdsgramDailyAd); if (!ok) return;
             const btn = document.getElementById('claimPromoBtn'); btn.disabled = true; btn.textContent = "Checking...";
             try {
-                await db.runTransaction( async (t) => {
-                    const promoRef = db.collection('promo_codes').doc(code); const p = (await t.get(promoRef)).data();
+                await runTransaction(db, async (t) => {
+                    const promoRef = doc(db, 'promo_codes', code); const p = (await t.get(promoRef)).data();
                     if (!p || !p.isActive || p.currentUses >= p.maxUses || p.usersClaimed?.includes(currentUser.id)) throw new Error("Invalid or already used code.");
-                    t.update(db.collection('users').doc(currentUser.id), { goldBalance: firebase.firestore.FieldValue.increment(p.rewardAmount), lifetimeGoldEarned: firebase.firestore.FieldValue.increment(p.rewardAmount) });
-                    t.update(promoRef, { currentUses: firebase.firestore.FieldValue.increment(1), usersClaimed: firebase.firestore.FieldValue.arrayUnion(currentUser.id) });
+                    t.update(doc(db, 'users', currentUser.id), { goldBalance: increment(p.rewardAmount), lifetimeGoldEarned: increment(p.rewardAmount) });
+                    t.update(promoRef, { currentUses: increment(1), usersClaimed: arrayUnion(currentUser.id) });
                     return p.rewardAmount;
                 }).then(amt => {
                     document.getElementById('promoModalOverlay').classList.remove('show');
@@ -1813,18 +1817,18 @@
                 // ── PARTNER TASK → Firestore directly (no membership check) ──
                 } else {
                     try {
-                        const taskSnap = await db.collection('tasks').doc(taskId.get());
-                        if (!taskSnap.exists) throw new Error('Task not found');
+                        const taskSnap = await getDoc(doc(db, 'tasks', taskId));
+                        if (!taskSnap.exists()) throw new Error('Task not found');
                         const tData = taskSnap.data();
                         const actualReward = tData.rewardGold || tData.rewardPoints || reward;
-                        const batch = db.batch();
-                        batch.update(db.collection('users').doc(currentUser.id), {
-                            completedTasks:      firebase.firestore.FieldValue.arrayUnion(taskId),
-                            goldBalance:         firebase.firestore.FieldValue.increment(actualReward),
-                            lifetimeGoldEarned:  firebase.firestore.FieldValue.increment(actualReward),
-                            tasksCompletedToday: firebase.firestore.FieldValue.increment(1),
+                        const batch = writeBatch(db);
+                        batch.update(doc(db, 'users', currentUser.id), {
+                            completedTasks:      arrayUnion(taskId),
+                            goldBalance:         increment(actualReward),
+                            lifetimeGoldEarned:  increment(actualReward),
+                            tasksCompletedToday: increment(1),
                         });
-                        batch.update(db.collection('tasks').doc(taskId), { completionCount: firebase.firestore.FieldValue.increment(1) });
+                        batch.update(doc(db, 'tasks', taskId), { completionCount: increment(1) });
                         await batch.commit();
                         currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
                         currentUser.goldBalance    = (currentUser.goldBalance || 0) + actualReward;
@@ -1846,7 +1850,7 @@
             if (cachedSnap && (category === 'channel' ? tasksRenderedChannel : tasksRenderedPartner)) return;
             container.innerHTML = '<div class="loader"></div>';
             try {
-                const q = query(db.collection('tasks'), where('isApproved','==',true), where('category','==',category), orderBy('createdAt','desc'), limit(30));
+                const q = query(collection(db,'tasks'), where('isApproved','==',true), where('category','==',category), orderBy('createdAt','desc'), limit(30));
                 const snap = await getDocs(q);
                 if (category === 'channel') { tasksCacheChannel = snap; tasksRenderedChannel = true; }
                 else { tasksCachePartner = snap; tasksRenderedPartner = true; }
@@ -1912,7 +1916,7 @@
                 const data = await res.json();
                 if (data.joined) {
                     // Mark verified in Firestore (non-blocking)
-                    updateDoc(db.collection('users').doc(currentUser.id), { channelVerified: true }).catch(()=>{});
+                    updateDoc(doc(db, 'users', currentUser.id), { channelVerified: true }).catch(()=>{});
                     clearInterval(_joinCheckInterval); _joinCheckInterval = null;
                     document.getElementById('activationModalOverlay').classList.remove('show');
                     showSuccessModal('✅ Activated!', 'Account verified! Start earning Gold. 🎉');
@@ -1964,7 +1968,6 @@
                 container.appendChild(p);
             }
         })();
-    
-</script>
+    </script>
 </body>
 </html>
