@@ -4,7 +4,9 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const BOT_TOKEN  = process.env.TELEGRAM_BOT_TOKEN;
+const BOT_TOKEN  = process.env.BOT_TOKEN;       // ← same as checkJoin.js / verifyJoin.js
+const CHANNEL_ID = process.env.CHANNEL_ID;
+const GROUP_ID   = process.env.GROUP_ID;
 
 function getAdminApp() {
     if (getApps().length > 0) return getApps()[0];
@@ -17,41 +19,34 @@ function getAdminApp() {
     });
 }
 
-// Handles both @username and numeric ID formats
 function normalizeChatId(id) {
     if (!id) return null;
     const str = String(id).trim();
-    if (str.startsWith('@')) return str; // @username — Telegram accepts this directly
+    if (str.startsWith('@')) return str;
     const num = parseInt(str, 10);
     if (isNaN(num)) return str;
-    if (num > 0) return `-100${num}`;   // positive → add -100 prefix
-    return String(num);                  // already negative
+    if (num > 0) return `-100${num}`;
+    return String(num);
 }
 
-// Strict membership check — never silently passes
 async function isMember(userId, chatId) {
-    if (!BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN missing in Vercel env vars');
-    if (!chatId)    return false;
-
+    if (!chatId) return false;
     const normalizedChatId = normalizeChatId(chatId);
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/getChatMember?chat_id=${encodeURIComponent(normalizedChatId)}&user_id=${userId}`;
-
-    let d;
     try {
         const r = await fetch(url);
-        d = await r.json();
+        const d = await r.json();
+        if (!d.ok) {
+            console.warn('[isMember] Telegram error:', d.description, '| chatId:', normalizedChatId, '| userId:', userId);
+            return false;
+        }
+        const status = d.result?.status;
+        console.log(`[isMember] userId=${userId} chatId=${normalizedChatId} status=${status}`);
+        return ['member', 'administrator', 'creator'].includes(status);
     } catch (e) {
-        throw new Error(`Telegram API network error: ${e.message}`);
-    }
-
-    if (!d.ok) {
-        console.warn('[isMember] Telegram error:', d.description, '| chatId:', normalizedChatId, '| userId:', userId);
+        console.error('[isMember] fetch error:', e.message);
         return false;
     }
-
-    const status = d.result?.status;
-    console.log(`[isMember] userId=${userId} chatId=${normalizedChatId} status=${status}`);
-    return ['member', 'administrator', 'creator'].includes(status);
 }
 
 export default async function handler(req, res) {
@@ -74,7 +69,7 @@ export default async function handler(req, res) {
         const task = taskSnap.data();
         if (!task.isApproved) return res.status(400).json({ ok: false, error: 'task_not_approved' });
 
-        // 2. Task limit check
+        // 2. Task limit
         if ((task.limit || 0) > 0 && (task.completionCount || 0) >= task.limit) {
             return res.status(200).json({ ok: false, error: 'task_limit_reached' });
         }
@@ -92,15 +87,13 @@ export default async function handler(req, res) {
         }
 
         // 5. CHANNEL TASK → strict membership check
-        //    Only checks the channel/group stored in the TASK itself (task.channelId / task.groupId)
-        //    Does NOT use global env GROUP_ID — each task is independent
+        // Uses task's own channelId/groupId — each task is independent
         if (task.category === 'channel') {
-            const taskChannelId = task.channelId || null;
-            const taskGroupId   = task.groupId   || null;  // optional second chat
+            const taskChannelId = task.channelId || CHANNEL_ID;
+            const taskGroupId   = task.groupId   || null;
 
             if (!taskChannelId) {
-                // Task has no channelId set — block it, admin must fix the task
-                return res.status(400).json({ ok: false, error: 'task_missing_channelId', message: 'Task-এ channelId নেই। Admin panel থেকে ঠিক করুন।' });
+                return res.status(400).json({ ok: false, error: 'task_missing_channelId' });
             }
 
             const inChannel = await isMember(userId, taskChannelId);
@@ -137,4 +130,4 @@ export default async function handler(req, res) {
         console.error('[taskComplete]', err);
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message });
     }
-            }
+}
