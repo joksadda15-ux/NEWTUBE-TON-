@@ -609,12 +609,8 @@
                         <div class="stat-val" id="home-life">0</div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">Invites</div>
+                        <div class="stat-label">Total Invites</div>
                         <div class="stat-val" style="color:var(--text);" id="home-normal-ref">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">Refs Done</div>
-                        <div class="stat-val" style="color:var(--green);" id="home-valid-ref">0</div>
                     </div>
                 </div>
 
@@ -1435,7 +1431,7 @@
             document.getElementById('home-diamond').textContent = diamond.toLocaleString();
             document.getElementById('home-life').textContent = Math.floor(currentUser.lifetimeGoldEarned || 0).toLocaleString();
             document.getElementById('home-normal-ref').textContent = currentUser.totalInvites || 0;
-            document.getElementById('home-valid-ref').textContent = currentUser.referralCount || 0;
+
             const wEl = document.getElementById('withdrawDiamondBalance');
             if (wEl) wEl.textContent = `${diamond.toLocaleString()} 💎`;
             const mg = document.getElementById('modal-gold-bal');
@@ -1919,25 +1915,32 @@
 
         // ── PROMO CODE ──
         document.getElementById('claimPromoBtn').addEventListener('click', async () => {
-            const code = document.getElementById('promoCodeInput').value.trim(); if (!code) return;
-            const ok = await runAdAndVerifyTime('claimPromoBtn', showAdsgramDailyAd); if (!ok) return;
-            const btn = document.getElementById('claimPromoBtn'); btn.disabled = true; btn.textContent = "Checking...";
+            const code = document.getElementById('promoCodeInput').value.trim();
+            if (!code) return;
+            const btn = document.getElementById('claimPromoBtn');
+            btn.disabled = true; btn.textContent = "Checking...";
             try {
-                await runTransaction(db, async (t) => {
-                    const promoRef = doc(db, 'promo_codes', code); const p = (await t.get(promoRef)).data();
-                    if (!p || !p.isActive || p.currentUses >= p.maxUses || p.usersClaimed?.includes(currentUser.id)) throw new Error("Invalid or already used code.");
-                    t.update(doc(db, 'users', currentUser.id), { goldBalance: increment(p.rewardAmount), lifetimeGoldEarned: increment(p.rewardAmount) });
-                    t.update(promoRef, { currentUses: increment(1), usersClaimed: arrayUnion(currentUser.id) });
-                    return p.rewardAmount;
-                }).then(amt => {
-                    document.getElementById('promoModalOverlay').classList.remove('show');
-                    showSuccessModal("Code Claimed! 🎁", `+${amt} 🪙 Gold added!`);
-                    document.getElementById('promoCodeInput').value = '';
-                    currentUser.goldBalance = (currentUser.goldBalance || 0) + amt;
-                    currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + amt;
-                    updateBalanceUI();
+                const res  = await fetch(`${TASK_API_BASE}/claimPromo`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ userId: String(currentUser.id), code })
                 });
-            } catch (e) { alert(e.message); } finally { btn.disabled = false; btn.textContent = "Claim Reward"; }
+                const data = await res.json();
+                if (!data.ok) {
+                    alert(data.message || data.error || 'Invalid or already used code.');
+                    return;
+                }
+                document.getElementById('promoModalOverlay').classList.remove('show');
+                document.getElementById('promoCodeInput').value = '';
+                currentUser.goldBalance        = (currentUser.goldBalance || 0) + data.rewardAmount;
+                currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + data.rewardAmount;
+                updateBalanceUI();
+                showSuccessModal("Code Claimed! 🎁", `+${data.rewardAmount.toLocaleString()} 🪙 Gold added!`);
+            } catch(e) {
+                alert('Error: ' + e.message);
+            } finally {
+                btn.disabled = false; btn.textContent = "Claim Reward";
+            }
         });
 
         // ── UI EVENTS ──
