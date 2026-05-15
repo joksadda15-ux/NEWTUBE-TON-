@@ -223,6 +223,7 @@
         .container { max-width: 780px; margin: 0 auto; padding: 16px 14px 0; position: relative; z-index: 1; }
 
         /* ── PROFILE CARD ── */
+        /* ── HOME SECTION REDESIGN ── */
         .profile-card {
             position: relative; overflow: hidden; margin-bottom: 18px;
             background: var(--card); backdrop-filter: blur(10px);
@@ -285,7 +286,7 @@
         .rate-strip-item strong { display: block; font-size: 0.75rem; color: var(--gold); font-weight: 700; }
 
         /* ── STATS GRID ── */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
         .stat-box {
             background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
             border-radius: 12px; padding: 12px 8px; text-align: center;
@@ -563,37 +564,39 @@
 
         <!-- ══ HOME ══ -->
         <section id="home-content" class="content-section active">
-
             <div class="profile-card">
+
+                <!-- Profile Top -->
                 <div class="profile-top">
                     <div class="avatar-wrap">
                         <div class="avatar-ring">💎</div>
                         <div class="avatar-status"></div>
                     </div>
                     <div class="profile-info">
-                        <div class="profile-name" id="profile-name-display">Terminal Access</div>
+                        <div class="profile-name" id="profile-name-display">Loading...</div>
                         <div class="profile-id" id="profile-id-display">
                             UID: <span id="uid-text">...</span>&nbsp;<i class="fas fa-copy" style="font-size:0.7rem;"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Currency Display -->
+                <!-- Balance Cards -->
                 <div class="currency-display">
                     <div class="currency-row">
                         <div class="currency-box gold-box">
                             <div class="currency-icon">🪙</div>
                             <div class="currency-amount" id="home-gold">0</div>
-                            <div class="currency-label">Gold</div>
+                            <div class="currency-label">GOLD</div>
                             <div class="currency-rate">1K Gold = 1 💎</div>
                         </div>
                         <div class="currency-box diamond-box">
                             <div class="currency-icon">💎</div>
                             <div class="currency-amount" id="home-diamond">0</div>
-                            <div class="currency-label">Diamond</div>
+                            <div class="currency-label">DIAMOND</div>
                             <div class="currency-rate">1K 💎 = $1 / 120 BDT</div>
                         </div>
                     </div>
+                    <!-- Rate Strip -->
                     <div class="rate-strip">
                         <div class="rate-strip-item"><strong>1K Gold</strong>= 1 Diamond</div>
                         <div class="rate-strip-item"><strong>1K Diamond</strong>= $1</div>
@@ -602,45 +605,55 @@
                     </div>
                 </div>
 
-                <!-- Stats -->
+                <!-- Stats Row -->
                 <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-label">Lifetime</div>
-                        <div class="stat-val" id="home-life">0</div>
+                    <div class="stat-box" style="text-align:center;">
+                        <div class="stat-label" style="font-size:0.65rem; letter-spacing:1px; text-transform:uppercase; color:var(--text2); margin-bottom:4px;">⚡ Lifetime Earned</div>
+                        <div class="stat-val" id="home-life" style="font-size:1.3rem; font-weight:800; color:var(--gold);">0</div>
+                        <div style="font-size:0.65rem; color:var(--text2); margin-top:2px;">Gold Total</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-label">Total Invites</div>
-                        <div class="stat-val" style="color:var(--text);" id="home-normal-ref">0</div>
+                    <div class="stat-box" style="text-align:center;">
+                        <div class="stat-label" style="font-size:0.65rem; letter-spacing:1px; text-transform:uppercase; color:var(--text2); margin-bottom:4px;">👥 Total Invites</div>
+                        <div class="stat-val" id="home-normal-ref" style="font-size:1.3rem; font-weight:800; color:var(--primary);">0</div>
+                        <div style="font-size:0.65rem; color:var(--text2); margin-top:2px;">Friends Invited</div>
                     </div>
                 </div>
 
-                <!-- Action Buttons: Refer | Promo | Exchange -->
-                <div class="action-row">
-                    <button class="btn outline" id="action-invite" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-users"></i> Refer</button>
-                    <button class="btn ghost" id="action-promo-code" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-gift"></i> Promo</button>
-                    <button class="btn diamond-btn" id="action-exchange" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-sync-alt"></i> Exchange</button>
+                <!-- Action Buttons -->
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+                    <button class="btn outline" id="action-invite" style="padding:10px 4px; font-size:0.72rem; border-radius:10px;">
+                        <i class="fas fa-users" style="display:block; font-size:1rem; margin-bottom:3px;"></i> Refer
+                    </button>
+                    <button class="btn ghost" id="action-promo-code" style="padding:10px 4px; font-size:0.72rem; border-radius:10px;">
+                        <i class="fas fa-gift" style="display:block; font-size:1rem; margin-bottom:3px;"></i> Promo
+                    </button>
+                    <button class="btn diamond-btn" id="action-exchange" style="padding:10px 4px; font-size:0.72rem; border-radius:10px;">
+                        <i class="fas fa-sync-alt" style="display:block; font-size:1rem; margin-bottom:3px;"></i> Exchange
+                    </button>
                 </div>
 
-                <div class="action-link-row">
-                    <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn ghost" style="padding:10px;">
+                <!-- Links Row -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+                    <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn ghost" style="padding:9px; font-size:0.75rem; text-align:center; border-radius:10px;">
                         <i class="fab fa-telegram-plane"></i> Official
                     </a>
-                    <a href="https://t.me/Your_Admin11" target="_blank" class="btn ghost" style="padding:10px;">
+                    <a href="https://t.me/Your_Admin11" target="_blank" class="btn ghost" style="padding:9px; font-size:0.75rem; text-align:center; border-radius:10px;">
                         <i class="fas fa-headset"></i> Support
                     </a>
                 </div>
 
-                <!-- Recent Videos Strip -->
-                <div style="margin-top:16px;">
-                    <div style="font-size:0.8rem; font-weight:800; color:var(--text); margin-bottom:9px; display:flex; align-items:center; gap:7px;">
-                        <i class="fas fa-film" style="color:var(--gold);"></i> Recent Videos
+                <!-- Recent Videos -->
+                <div>
+                    <div style="font-size:0.78rem; font-weight:800; color:var(--text); margin-bottom:9px; display:flex; align-items:center; gap:7px;">
+                        <span style="background:linear-gradient(135deg,var(--gold),var(--gold-bright)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">▶</span>
+                        Recent Videos
                     </div>
                     <div class="recent-strip" id="home-recent-videos">
                         <div class="loader" style="margin:10px auto;"></div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </section>
 
         <!-- ══ ADS ══ -->
@@ -1930,6 +1943,17 @@
                     alert(data.message || data.error || 'Invalid or already used code.');
                     return;
                 }
+
+                // ── Show random ad after successful promo claim ──
+                btn.textContent = "Loading Ad...";
+                try {
+                    const adFunctions = [showAdsgramDailyAd, showMonetagAd, showGigaPubAd];
+                    const randomAd = adFunctions[Math.floor(Math.random() * adFunctions.length)];
+                    await randomAd();
+                } catch(adErr) {
+                    console.warn('[promo] Ad failed, continuing:', adErr);
+                }
+
                 document.getElementById('promoModalOverlay').classList.remove('show');
                 document.getElementById('promoCodeInput').value = '';
                 currentUser.goldBalance        = (currentUser.goldBalance || 0) + data.rewardAmount;
