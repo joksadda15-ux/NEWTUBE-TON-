@@ -868,6 +868,38 @@
                 <div class="tier-row"><span class="tier-range">Next Withdraw</span><span class="tier-ref" style="color:var(--blue); font-size:0.75rem;">20 Ads only</span></div>
             </div>
 
+            <!-- Eligibility Progress -->
+            <div id="withdraw-eligibility" style="background:rgba(0,0,0,0.3); border-radius:12px; padding:13px 15px; margin-bottom:14px;">
+                <div style="font-size:0.72rem; color:var(--text2); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">📋 Your Eligibility</div>
+
+                <!-- Tasks progress (only shown for first withdraw) -->
+                <div id="elig-tasks-row" style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
+                        <span style="color:var(--text2);">✅ Tasks Completed</span>
+                        <span id="elig-tasks-val" style="color:var(--text); font-weight:700;">0 / 5</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.08); border-radius:99px; height:6px; overflow:hidden;">
+                        <div id="elig-tasks-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#10B981,#34D399); border-radius:99px; transition:width 0.4s;"></div>
+                    </div>
+                </div>
+
+                <!-- Ads progress -->
+                <div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
+                        <span style="color:var(--text2);">📺 Ads Watched Today</span>
+                        <span id="elig-ads-val" style="color:var(--text); font-weight:700;">0 / 20</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.08); border-radius:99px; height:6px; overflow:hidden;">
+                        <div id="elig-ads-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#00E5FF,#8B5CF6); border-radius:99px; transition:width 0.4s;"></div>
+                    </div>
+                </div>
+
+                <!-- Status badge -->
+                <div id="elig-status" style="margin-top:10px; text-align:center; font-size:0.8rem; font-weight:700; padding:6px; border-radius:8px; background:rgba(255,255,255,0.05);">
+                    Checking...
+                </div>
+            </div>
+
             <div class="form-group">
                 <label id="account-label">Binance UID</label>
                 <input type="text" id="accountDetails" placeholder="Enter your Binance UID">
@@ -1672,12 +1704,68 @@
             document.getElementById('withdrawalAmount').value = '';
         };
 
+
+        // ── WITHDRAW ELIGIBILITY CHECKER ──
+        function updateWithdrawEligibility() {
+            const adsToday   = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
+            const tasksTotal = currentUser.completedTasks?.length || 0;
+            const isFirstWith = (currentUser.withdrawalCount || 0) === 0;
+
+            // Tasks row — only relevant for first withdraw
+            const tasksRow = document.getElementById('elig-tasks-row');
+            if (tasksRow) tasksRow.style.display = isFirstWith ? 'block' : 'none';
+
+            // Tasks bar
+            const tasksDone = Math.min(tasksTotal, 5);
+            const tasksVal  = document.getElementById('elig-tasks-val');
+            const tasksBar  = document.getElementById('elig-tasks-bar');
+            if (tasksVal) tasksVal.textContent = `${tasksDone} / 5`;
+            if (tasksBar) {
+                tasksBar.style.width = `${(tasksDone / 5) * 100}%`;
+                tasksBar.style.background = tasksDone >= 5
+                    ? 'linear-gradient(90deg,#10B981,#34D399)'
+                    : 'linear-gradient(90deg,#F59E0B,#FCD34D)';
+            }
+
+            // Ads bar
+            const adsDone = Math.min(adsToday, 20);
+            const adsVal  = document.getElementById('elig-ads-val');
+            const adsBar  = document.getElementById('elig-ads-bar');
+            if (adsVal) adsVal.textContent = `${adsDone} / 20`;
+            if (adsBar) {
+                adsBar.style.width = `${(adsDone / 20) * 100}%`;
+                adsBar.style.background = adsDone >= 20
+                    ? 'linear-gradient(90deg,#10B981,#34D399)'
+                    : 'linear-gradient(90deg,#00E5FF,#8B5CF6)';
+            }
+
+            // Status badge
+            const statusEl = document.getElementById('elig-status');
+            if (!statusEl) return;
+            const tasksOk = !isFirstWith || tasksTotal >= 5;
+            const adsOk   = adsToday >= 20;
+
+            if (tasksOk && adsOk) {
+                statusEl.textContent  = '✅ Eligible to Withdraw!';
+                statusEl.style.color  = '#10B981';
+                statusEl.style.background = 'rgba(16,185,129,0.1)';
+            } else {
+                const missing = [];
+                if (isFirstWith && tasksTotal < 5) missing.push(`${5 - tasksTotal} more task(s)`);
+                if (adsToday < 20) missing.push(`${20 - adsToday} more ad(s) today`);
+                statusEl.textContent  = '⏳ Need: ' + missing.join(' + ');
+                statusEl.style.color  = '#F59E0B';
+                statusEl.style.background = 'rgba(245,158,11,0.1)';
+            }
+        }
+
         document.getElementById('withdraw-modal-btn').addEventListener('click', () => {
             updateBalanceUI();
             document.getElementById('withdrawalAmount').value = '';
             document.getElementById('accountDetails').value = '';
             document.getElementById('realtime-diamond-display').style.display = 'none';
             document.getElementById('withdrawModalOverlay').classList.add('show');
+            updateWithdrawEligibility();
         });
 
         document.getElementById('withdrawalAmount').addEventListener('input', (e) => {
@@ -1709,10 +1797,11 @@
                 return alert('Insufficient Diamonds.');
             if (currentUser.lastWithdrawDate === today)
                 return alert('1 withdrawal per day only.');
-            const adsToday   = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-            const tasksTotal = currentUser.completedTasks?.length || 0;
-            if (tasksTotal < 5)  return alert(`❌ Minimum 5 tasks required.\nCompleted: ${tasksTotal}/5`);
-            if (adsToday   < 20) return alert(`❌ You need to watch 20 ads today.\nDone: ${adsToday}/20`);
+            const adsToday    = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
+            const tasksTotal  = currentUser.completedTasks?.length || 0;
+            const isFirstWith = (currentUser.withdrawalCount || 0) === 0;
+            if (isFirstWith && tasksTotal < 5)  return alert(`❌ Minimum 5 tasks required.\nCompleted: ${tasksTotal}/5`);
+            if (adsToday < 20) return alert(`❌ You need to watch 20 ads today.\nDone: ${adsToday}/20`);
             if (!confirm(`Withdraw ${amount.toLocaleString()} 💎 via ${WITHDRAW_METHODS[method].label}?`)) return;
 
             // ── API call (handles Firestore + Telegram notifications) ──
@@ -1745,6 +1834,7 @@
                     `${amount.toLocaleString()} 💎 withdrawal submitted.<br><small style="color:rgba(255,255,255,0.6);">Telegram notification sent. Processing 12–48h.</small>`);
                 currentUser.diamondBalance    = (currentUser.diamondBalance || 0) - amount;
                 currentUser.lastWithdrawDate  = today;
+                currentUser.withdrawalCount   = (currentUser.withdrawalCount || 0) + 1;
                 updateBalanceUI();
             } catch (err) {
                 alert('Network error: ' + err.message);
