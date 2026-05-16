@@ -1832,6 +1832,7 @@
                 currentUser.lastWithdrawDate  = today;
                 currentUser.withdrawalCount   = (currentUser.withdrawalCount || 0) + 1;
                 updateBalanceUI();
+                _historyCache = null; // clear cache so new entry loads next time
             } catch (err) {
                 alert('Network error: ' + err.message);
             } finally {
@@ -1865,34 +1866,17 @@
             const diamondOut = Math.floor(goldAmt / GOLD_PER_DIAMOND);
             if (diamondOut < 1) return alert('Not enough gold for even 1 Diamond. Min 1,000 Gold = 1 Diamond.');
             if (!confirm(`Convert ${goldAmt.toLocaleString()} 🪙 Gold → ${diamondOut} 💎 Diamond?`)) return;
-
-            const btn = document.getElementById('confirmExchangeBtn');
-            btn.disabled = true; btn.textContent = 'Converting...';
             try {
-                const res  = await fetch(`${TASK_API_BASE}/withdraw?action=exchange`, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({
-                        action: 'exchange',
-                        userId: String(currentUser.id),
-                        goldAmount: goldAmt,
-                    })
+                await updateDoc(doc(db, 'users', currentUser.id), {
+                    goldBalance: increment(-goldAmt),
+                    diamondBalance: increment(diamondOut)
                 });
-                const data = await res.json();
-                if (!data.ok) {
-                    alert(data.message || data.error || 'Exchange failed. Try again.');
-                    return;
-                }
-                currentUser.goldBalance    = (currentUser.goldBalance    || 0) - goldAmt;
+                currentUser.goldBalance = (currentUser.goldBalance || 0) - goldAmt;
                 currentUser.diamondBalance = (currentUser.diamondBalance || 0) + diamondOut;
                 document.getElementById('exchangeModalOverlay').classList.remove('show');
                 updateBalanceUI();
-                showSuccessModal("Exchange Done! 💎", `+${diamondOut} 💎 Diamond received!`);
-            } catch(e) {
-                alert('Exchange failed. Try again.');
-            } finally {
-                btn.disabled = false; btn.textContent = 'Convert';
-            }
+                showSuccessModal("Exchange Done! 💎", `+${diamondOut} Diamond received!`);
+            } catch(e) { alert("Exchange failed. Try again."); }
         });
 
         // ── HISTORY ──
