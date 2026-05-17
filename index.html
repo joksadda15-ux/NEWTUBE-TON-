@@ -1866,17 +1866,26 @@
             const diamondOut = Math.floor(goldAmt / GOLD_PER_DIAMOND);
             if (diamondOut < 1) return alert('Not enough gold for even 1 Diamond. Min 1,000 Gold = 1 Diamond.');
             if (!confirm(`Convert ${goldAmt.toLocaleString()} 🪙 Gold → ${diamondOut} 💎 Diamond?`)) return;
+            const btn = document.getElementById('confirmExchangeBtn');
+            btn.disabled = true; btn.textContent = 'Converting...';
             try {
-                await updateDoc(doc(db, 'users', currentUser.id), {
-                    goldBalance: increment(-goldAmt),
-                    diamondBalance: increment(diamondOut)
+                const res  = await fetch(`${TASK_API_BASE}/withdraw`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ action: 'exchange', userId: String(currentUser.id), goldAmount: goldAmt })
                 });
-                currentUser.goldBalance = (currentUser.goldBalance || 0) - goldAmt;
+                const data = await res.json();
+                if (!data.ok) { alert(data.message || data.error || 'Exchange failed. Try again.'); return; }
+                currentUser.goldBalance    = (currentUser.goldBalance    || 0) - goldAmt;
                 currentUser.diamondBalance = (currentUser.diamondBalance || 0) + diamondOut;
                 document.getElementById('exchangeModalOverlay').classList.remove('show');
                 updateBalanceUI();
-                showSuccessModal("Exchange Done! 💎", `+${diamondOut} Diamond received!`);
-            } catch(e) { alert("Exchange failed. Try again."); }
+                showSuccessModal("Exchange Done! 💎", `+${diamondOut} 💎 Diamond received!`);
+            } catch(e) {
+                alert('Exchange failed. Try again.');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Convert';
+            }
         });
 
         // ── HISTORY ──
@@ -2056,7 +2065,7 @@
                 // ── CHANNEL TASK → API (membership check inside API) ──
                 if (category === 'channel') {
                     try {
-                        const res  = await fetch(`${API_BASE}/taskComplete`, {
+                        const res  = await fetch(`${TASK_API_BASE}/taskComplete`, {
                             method:  'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body:    JSON.stringify({ userId: String(currentUser.id), taskId })
@@ -2084,21 +2093,27 @@
                         button.disabled = false; button.textContent = 'Verify';
                     }
 
-                // ── PARTNER TASK → API (same as channel, no membership check) ──
+                // ── PARTNER TASK → Direct Firestore (YouTube, FB, Bot etc. — no membership check) ──
                 } else {
                     try {
-                        const res  = await fetch(`${API_BASE}/taskComplete`, {
-                            method:  'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body:    JSON.stringify({ userId: String(currentUser.id), taskId })
-                        });
-                        const data = await res.json();
-                        if (!data.ok) {
-                            if (data.alreadyDone) { button.closest('[data-task-card]')?.remove(); return; }
-                            alert('Error: ' + (data.error || 'Unknown'));
-                            button.disabled = false; button.textContent = '✅ Claim'; return;
+                        if ((currentUser.completedTasks || []).includes(taskId)) {
+                            button.closest('[data-task-card]')?.remove(); return;
                         }
-                        const actualReward = data.rewardGold || reward;
+                        const taskSnap = await getDoc(doc(db, 'tasks', taskId));
+                        if (!taskSnap.exists()) throw new Error('Task not found');
+                        const tData = taskSnap.data();
+                        const actualReward = tData.rewardGold || tData.rewardPoints || reward;
+                        const batch = writeBatch(db);
+                        batch.update(doc(db, 'users', currentUser.id), {
+                            completedTasks:      arrayUnion(taskId),
+                            goldBalance:         increment(actualReward),
+                            lifetimeGoldEarned:  increment(actualReward),
+                            tasksCompletedToday: increment(1),
+                        });
+                        batch.update(doc(db, 'tasks', taskId), {
+                            completionCount: increment(1),
+                        });
+                        await batch.commit();
                         currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
                         currentUser.goldBalance    = (currentUser.goldBalance || 0) + actualReward;
                         currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
@@ -2106,7 +2121,7 @@
                         showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
                         button.closest('[data-task-card]')?.remove();
                     } catch(err) {
-                        alert('Network error: ' + err.message);
+                        alert('Error: ' + err.message);
                         button.disabled = false; button.textContent = '✅ Claim';
                     }
                 }
