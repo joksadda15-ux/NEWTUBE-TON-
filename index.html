@@ -33,27 +33,6 @@
     </script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
-    <script>
-        // Monetag inApp interstitial — auto shows after app loads
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                if (typeof show_9442539 === 'function') {
-                    try {
-                        show_9442539({
-                            type: 'inApp',
-                            inAppSettings: {
-                                frequency: 2,
-                                capping: 0.1,
-                                interval: 30,
-                                timeout: 5,
-                                everyPage: false
-                            }
-                        });
-                    } catch(e) {}
-                }
-            }, 5000); // 5s after load so app renders first
-        });
-    </script>
     <script src="https://ad.gigapub.tech/script?id=846"></script>
 
     <style>
@@ -1961,17 +1940,6 @@
                     alert(data.message || data.error || 'Invalid or already used code.');
                     return;
                 }
-
-                // ── Random ad after successful promo claim ──
-                btn.textContent = "Loading Ad...";
-                try {
-                    const adFuncs = [showAdsgramDailyAd, showMonetagAd, showGigaPubAd];
-                    const randomAd = adFuncs[Math.floor(Math.random() * adFuncs.length)];
-                    await randomAd();
-                } catch(adErr) {
-                    console.warn('[promo] Ad skipped:', adErr);
-                }
-
                 document.getElementById('promoModalOverlay').classList.remove('show');
                 document.getElementById('promoCodeInput').value = '';
                 currentUser.goldBalance        = (currentUser.goldBalance || 0) + data.rewardAmount;
