@@ -1,7 +1,8 @@
 // api/withdraw.js
-// Handles TWO actions:
-//   action=exchange  → convert gold to diamond (client sends action:'exchange')
-//   default          → withdrawal request
+// Handles THREE actions:
+//   action=exchange   → convert gold to diamond
+//   action=milestone  → claim referral milestone reward
+//   default           → withdrawal request
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -36,6 +37,32 @@ async function sendTelegramMsg(chatId, text) {
 
 function getTodayString() {
     return new Date().toISOString().slice(0, 10);
+}
+
+// ── MILESTONE HANDLER ──
+const VALID_MILESTONES = { 5:2000, 10:6000, 15:10000, 20:15000, 30:20000, 50:45000, 100:100000, 200:250000, 500:1000000 };
+
+async function handleMilestone(db, userId, refers) {
+    const refCount = parseInt(refers);
+    const expectedReward = VALID_MILESTONES[refCount];
+    if (!expectedReward) throw { code: 'invalid_milestone', message: 'Invalid milestone.' };
+
+    const userRef = db.collection('users').doc(String(userId));
+    const reward  = await db.runTransaction(async (t) => {
+        const snap = await t.get(userRef);
+        if (!snap.exists) throw { code: 'user_not_found', message: 'User not found.' };
+        const user = snap.data();
+        if (user.isBanned) throw { code: 'banned', message: 'Account is banned.' };
+        if ((user.claimedMilestones || []).includes(refCount)) throw { code: 'already_claimed', message: 'Already claimed.' };
+        if ((user.totalInvites || 0) < refCount) throw { code: 'not_enough_invites', message: `Need ${refCount} invites. You have ${user.totalInvites || 0}.` };
+        t.update(userRef, {
+            goldBalance:        FieldValue.increment(expectedReward),
+            lifetimeGoldEarned: FieldValue.increment(expectedReward),
+            claimedMilestones:  FieldValue.arrayUnion(refCount),
+        });
+        return expectedReward;
+    });
+    return { ok: true, reward };
 }
 
 // ── EXCHANGE HANDLER ──
@@ -165,6 +192,9 @@ export default async function handler(req, res) {
         if (action === 'exchange') {
             const result = await handleExchange(db, body.userId, body.goldAmount);
             return res.status(200).json(result);
+        } else if (action === 'milestone') {
+            const result = await handleMilestone(db, body.userId, body.refers);
+            return res.status(200).json(result);
         } else {
             const result = await handleWithdraw(db, body);
             return res.status(200).json(result);
@@ -177,4 +207,4 @@ export default async function handler(req, res) {
         console.error('[withdraw]', err);
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message });
     }
-        }
+}
