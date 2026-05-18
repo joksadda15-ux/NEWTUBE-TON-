@@ -614,12 +614,6 @@
                     </div>
                 </div>
 
-                <!-- Referral Milestones -->
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:0.72rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">🏆 Referral Milestones</div>
-                    <div id="milestone-list" style="display:flex; flex-direction:column; gap:6px;"></div>
-                </div>
-
                 <!-- Action Buttons: Refer | Promo | Exchange -->
                 <div class="action-row">
                     <button class="btn outline" id="action-invite" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-users"></i> Refer</button>
@@ -1076,21 +1070,10 @@
         // 1,000 Diamond = $1 = 120 BDT = 0.5 TON
         const GOLD_PER_DIAMOND = 1000;
         const REFERRAL_REWARD_GOLD = 2000;
-        const REFERRAL_MILESTONES = [
-            { refers: 5,   reward: 2000   },
-            { refers: 10,  reward: 6000   },
-            { refers: 15,  reward: 10000  },
-            { refers: 20,  reward: 15000  },
-            { refers: 30,  reward: 20000  },
-            { refers: 50,  reward: 45000  },
-            { refers: 100, reward: 100000 },
-            { refers: 200, reward: 250000 },
-            { refers: 500, reward: 1000000},
-        ];
-        const VIDEO_GOLD_PER_HOUR = 500;   // 500 gold/hr = 12hr max = 6,000/day
-        const VIDEO_BOX_MIN = 100;          // min to claim video box
-        const VIDEO_BOX_MAX = 300;          // every 300 gold → ad required
-        const DAILY_VIDEO_MAX = 6000;       // 12 hours max daily
+        const VIDEO_GOLD_PER_HOUR = 200;
+        const VIDEO_BOX_MIN = 100;
+        const VIDEO_BOX_MAX = 200;
+        const DAILY_VIDEO_MAX = 200;
 
         const WITHDRAW_METHODS = {
             binance:    { label: 'Binance UID',       min: 100, placeholder: 'Enter your Binance UID',  rate: '1,000 💎 = 1 USDT',   currency: 'USDT'  },
@@ -1098,9 +1081,9 @@
             bkash:      { label: 'bKash Number',      min: 80,  placeholder: '01XXXXXXXXX',             rate: '1,000 💎 = 120 BDT',   currency: 'BDT'   }
         };
 
-        const LOOTBOX_MIN = 1000;           // min 1K gold to claim lootbox
-        const LOOTBOX_MAX = 3000;           // max 3K gold per claim
-        const LOOTBOX_DAILY_CLAIM_MAX = 3;  // 3 claims per day = 9K max
+        const LOOTBOX_MIN = 600;
+        const LOOTBOX_MAX = 3000;
+        const LOOTBOX_DAILY_CLAIM_MAX = 3;
         let localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
 
         // Video mining variables
@@ -1428,54 +1411,6 @@
             upd('btn-watch-giga',            'limit-giga',            currentUser.adsWatchedGiga,           localAdData.adsWatchedGiga,           AD_CONFIG.giga.limit);
         }
 
-        // ── REFERRAL MILESTONES ──
-        function renderMilestones() {
-            const container = document.getElementById('milestone-list');
-            if (!container || !currentUser) return;
-            const invites = currentUser.totalInvites || 0;
-            const claimed = currentUser.claimedMilestones || [];
-            container.innerHTML = '';
-            REFERRAL_MILESTONES.forEach(m => {
-                const done    = invites >= m.refers;
-                const isClaimed = claimed.includes(m.refers);
-                const pct     = Math.min(100, Math.floor((invites / m.refers) * 100));
-                const div = document.createElement('div');
-                div.style.cssText = 'background:rgba(255,255,255,0.04); border-radius:10px; padding:10px 12px; border:1px solid rgba(255,255,255,0.06);';
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <span style="font-size:0.78rem; color:var(--text); font-weight:600;">👥 ${m.refers} Refers → +${m.reward.toLocaleString()} 🪙</span>
-                        ${isClaimed
-                            ? `<span style="font-size:0.7rem; color:var(--green); font-weight:700;">✅ Claimed</span>`
-                            : done
-                                ? `<button onclick="claimMilestone(${m.refers},${m.reward})" style="background:linear-gradient(135deg,var(--gold),var(--gold-bright)); color:#000; border:none; border-radius:7px; padding:4px 10px; font-size:0.7rem; font-weight:700; cursor:pointer;">CLAIM</button>`
-                                : `<span style="font-size:0.7rem; color:var(--text2);">${invites}/${m.refers}</span>`
-                        }
-                    </div>
-                    <div style="background:rgba(255,255,255,0.08); border-radius:99px; height:4px; overflow:hidden;">
-                        <div style="height:100%; width:${pct}%; background:${isClaimed ? 'var(--green)' : done ? 'var(--gold)' : 'linear-gradient(90deg,var(--primary),var(--gold))'}; border-radius:99px; transition:width 0.4s;"></div>
-                    </div>`;
-                container.appendChild(div);
-            });
-        }
-
-        window.claimMilestone = async (refers, reward) => {
-            try {
-                const res  = await fetch(`${TASK_API_BASE}/withdraw`, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ action: 'milestone', userId: String(currentUser.id), refers, reward })
-                });
-                const data = await res.json();
-                if (!data.ok) { alert(data.message || data.error || 'Error'); return; }
-                currentUser.goldBalance        = (currentUser.goldBalance || 0) + reward;
-                currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + reward;
-                currentUser.claimedMilestones  = [...(currentUser.claimedMilestones || []), refers];
-                updateBalanceUI();
-                renderMilestones();
-                showSuccessModal('Milestone Claimed! 🏆', `+${reward.toLocaleString()} 🪙 Gold earned!`);
-            } catch(e) { alert('Error: ' + e.message); }
-        };
-
         function updateBalanceUI() {
             if(!currentUser) return;
             const gold = Math.floor(currentUser.goldBalance || 0);
@@ -1496,7 +1431,6 @@
             document.getElementById('home-diamond').textContent = diamond.toLocaleString();
             document.getElementById('home-life').textContent = Math.floor(currentUser.lifetimeGoldEarned || 0).toLocaleString();
             document.getElementById('home-normal-ref').textContent = currentUser.totalInvites || 0;
-            renderMilestones();
 
             const wEl = document.getElementById('withdrawDiamondBalance');
             if (wEl) wEl.textContent = `${diamond.toLocaleString()} 💎`;
@@ -1705,11 +1639,6 @@
             const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
             _videoCache = [];
             snap.forEach(d => { const v = d.data(); if (v.isActive !== false) _videoCache.push(v); });
-            // Shuffle randomly each session so videos rotate
-            for (let i = _videoCache.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [_videoCache[i], _videoCache[j]] = [_videoCache[j], _videoCache[i]];
-            }
             return _videoCache;
         }
 
