@@ -145,6 +145,10 @@
             -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
         }
         @keyframes gridMove { 0%{background-position:0 0;} 100%{background-position:40px 40px;} }
+        @keyframes milestoneGlow {
+            0%,100% { box-shadow:0 0 8px rgba(245,158,11,0.4); }
+            50%      { box-shadow:0 0 20px rgba(245,158,11,0.9); transform:scale(1.04); }
+        }
 
         .particles { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
         .particle { position: absolute; border-radius: 50%; animation: float linear infinite; }
@@ -614,12 +618,36 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons: Refer | Promo | Exchange -->
-                <div class="action-row">
-                    <button class="btn outline" id="action-invite" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-users"></i> Refer</button>
-                    <button class="btn ghost" id="action-promo-code" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-gift"></i> Promo</button>
-                    <button class="btn diamond-btn" id="action-exchange" style="padding:11px 6px; font-size:0.78rem;"><i class="fas fa-sync-alt"></i> Exchange</button>
+                <!-- Action Buttons: Refer | Promo | Exchange | Events -->
+                <div class="action-row" style="grid-template-columns:repeat(4,1fr);">
+                    <button class="btn outline" id="action-invite" style="padding:11px 4px; font-size:0.72rem;"><i class="fas fa-users"></i> Refer</button>
+                    <button class="btn ghost" id="action-promo-code" style="padding:11px 4px; font-size:0.72rem;"><i class="fas fa-gift"></i> Promo</button>
+                    <button class="btn diamond-btn" id="action-exchange" style="padding:11px 4px; font-size:0.72rem;"><i class="fas fa-sync-alt"></i> Exchange</button>
+                    <button class="btn" id="action-milestone" style="padding:11px 4px; font-size:0.72rem; background:linear-gradient(135deg,#f59e0b,#d97706); border:none; color:#000; font-weight:700; border-radius:10px; cursor:pointer;"><i class="fas fa-trophy"></i> Events</button>
                 </div>
+
+    <!-- Daily/Weekly Event Modal -->
+    <div id="milestoneModalOverlay" class="modal-overlay">
+        <div class="modal-box" style="max-height:88vh; overflow-y:auto; padding:0;">
+            <div style="background:linear-gradient(135deg,#f59e0b22,#8B5CF622); padding:18px 18px 12px; border-bottom:1px solid rgba(255,193,7,0.12); position:sticky; top:0; backdrop-filter:blur(12px); z-index:1;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div>
+                        <div style="font-size:1.05rem; font-weight:800; color:var(--gold);">🎯 Daily & Weekly Events</div>
+                        <div style="font-size:0.72rem; color:var(--text2); margin-top:2px;">Complete tasks — earn bonus Gold every day</div>
+                    </div>
+                    <button onclick="document.getElementById('milestoneModalOverlay').classList.remove('show')"
+                        style="background:rgba(255,255,255,0.08); border:none; color:var(--text2); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:0.8rem;">✕</button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button id="event-tab-daily" onclick="switchEventTab('daily')"
+                        style="flex:1; padding:7px; border-radius:8px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; background:var(--gold); color:#000;">⚡ Daily</button>
+                    <button id="event-tab-weekly" onclick="switchEventTab('weekly')"
+                        style="flex:1; padding:7px; border-radius:8px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; background:rgba(255,255,255,0.08); color:var(--text2);">📅 Weekly</button>
+                </div>
+            </div>
+            <div id="event-list" style="padding:14px; display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
 
                 <div class="action-link-row">
                     <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn ghost" style="padding:10px;">
@@ -1755,6 +1783,11 @@
             }
         }
 
+        document.getElementById('action-milestone').addEventListener('click', () => {
+            document.getElementById('milestoneModalOverlay').classList.add('show');
+            renderEventList();
+        });
+
         document.getElementById('withdraw-modal-btn').addEventListener('click', () => {
             updateBalanceUI();
             document.getElementById('withdrawalAmount').value = '';
@@ -2024,6 +2057,150 @@
         }
 
         // ── TASK SYSTEM ──
+
+        // ══════════════════════════════════════════
+        // ── DAILY / WEEKLY EVENT SYSTEM ──
+        // Progress tracked locally (0 Firebase reads)
+        // Claim = 1 API write only
+        // ══════════════════════════════════════════
+
+        const DAILY_EVENTS = [
+            { id: 'daily_ads20',   icon: '📺', title: 'Watch 20 Ads',      desc: 'Watch any 20 ads today',           reward: 500,  target: 20,  field: 'adsWatchedToday'      },
+            { id: 'daily_video1h', icon: '🎬', title: 'Watch 1hr Video',   desc: 'Watch at least 60 min of videos',  reward: 500,  target: 60,  field: 'videoMinutesToday'     },
+            { id: 'daily_task3',   icon: '✅', title: 'Complete 3 Tasks',  desc: 'Complete any 3 tasks today',       reward: 300,  target: 3,   field: 'tasksCompletedToday'   },
+            { id: 'daily_invite1', icon: '👥', title: 'Invite 1 Friend',   desc: 'Refer 1 new user today',           reward: 500,  target: 1,   field: 'dailyInvites'          },
+        ];
+
+        const WEEKLY_EVENTS = [
+            { id: 'weekly_invite5',  icon: '🚀', title: 'Invite 5 Friends',  desc: 'Refer 5 new users this week',  reward: 3000, target: 5,  field: 'weeklyInvites' },
+            { id: 'weekly_invite10', icon: '🔥', title: 'Invite 10 Friends', desc: 'Refer 10 new users this week', reward: 7000, target: 10, field: 'weeklyInvites' },
+        ];
+
+        let _activeEventTab = 'daily';
+
+        function getTodayKey()  { return new Date().toISOString().slice(0,10); }
+        function getWeekKey()   {
+            const d = new Date(); const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff)).toISOString().slice(0,10);
+        }
+
+        function getEventStorage(type) {
+            const key = type === 'daily' ? `nt_events_daily_${getTodayKey()}` : `nt_events_weekly_${getWeekKey()}`;
+            try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+        }
+        function setEventStorage(type, data) {
+            const key = type === 'daily' ? `nt_events_daily_${getTodayKey()}` : `nt_events_weekly_${getWeekKey()}`;
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        function getEventProgress(event, type) {
+            if (!currentUser) return 0;
+            if (event.field === 'dailyInvites')  return currentUser._dailyInvites  || 0;
+            if (event.field === 'weeklyInvites') return currentUser._weeklyInvites || 0;
+            if (event.field === 'videoMinutesToday') return Math.floor((currentUser.dailyVideoMined || 0) / 500 * 60);
+            return currentUser[event.field] || 0;
+        }
+
+        window.switchEventTab = (tab) => {
+            _activeEventTab = tab;
+            document.getElementById('event-tab-daily').style.background  = tab === 'daily'  ? 'var(--gold)' : 'rgba(255,255,255,0.08)';
+            document.getElementById('event-tab-daily').style.color        = tab === 'daily'  ? '#000' : 'var(--text2)';
+            document.getElementById('event-tab-weekly').style.background  = tab === 'weekly' ? 'var(--gold)' : 'rgba(255,255,255,0.08)';
+            document.getElementById('event-tab-weekly').style.color       = tab === 'weekly' ? '#000' : 'var(--text2)';
+            renderEventList();
+        };
+
+        function renderEventList() {
+            const container = document.getElementById('event-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const events   = _activeEventTab === 'daily' ? DAILY_EVENTS : WEEKLY_EVENTS;
+            const storage  = getEventStorage(_activeEventTab);
+            const typeLabel = _activeEventTab === 'daily' ? 'Resets at midnight' : 'Resets every Monday';
+
+            // Info bar
+            const info = document.createElement('div');
+            info.style.cssText = 'font-size:0.7rem; color:var(--text2); text-align:center; padding:4px 0 8px;';
+            info.textContent = '🕐 ' + typeLabel;
+            container.appendChild(info);
+
+            events.forEach(ev => {
+                const claimed  = storage[ev.id + '_claimed'] === true;
+                const progress = getEventProgress(ev, _activeEventTab);
+                const done     = progress >= ev.target;
+                const pct      = Math.min(100, Math.floor((progress / ev.target) * 100));
+
+                const div = document.createElement('div');
+                const borderColor = claimed ? 'rgba(16,185,129,0.3)' : done ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.07)';
+                const bgColor     = claimed ? 'rgba(16,185,129,0.05)' : done ? 'rgba(245,158,11,0.07)' : 'rgba(255,255,255,0.03)';
+                div.style.cssText = `background:${bgColor}; border-radius:12px; padding:13px 14px; border:1px solid ${borderColor};`;
+
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:9px;">
+                        <div style="display:flex; align-items:center; gap:9px;">
+                            <span style="font-size:1.3rem; line-height:1;">${ev.icon}</span>
+                            <div>
+                                <div style="font-size:0.82rem; font-weight:700; color:${claimed ? '#10B981' : done ? '#f59e0b' : 'var(--text)'};">
+                                    ${ev.title}
+                                </div>
+                                <div style="font-size:0.68rem; color:var(--text2); margin-top:1px;">${ev.desc}</div>
+                                <div style="font-size:0.72rem; color:var(--gold); font-weight:600; margin-top:2px;">+${ev.reward.toLocaleString()} 🪙 Gold</div>
+                            </div>
+                        </div>
+                        <div style="flex-shrink:0; margin-left:8px;">
+                        ${claimed
+                            ? `<span style="font-size:0.7rem; color:#10B981; background:rgba(16,185,129,0.15); padding:5px 10px; border-radius:20px; font-weight:700;">✅ Done</span>`
+                            : done
+                                ? `<button onclick="claimEventReward('${ev.id}','${_activeEventTab}',${ev.reward})"
+                                    style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#000; border:none; border-radius:20px;
+                                    padding:6px 13px; font-size:0.72rem; font-weight:800; cursor:pointer;
+                                    animation:milestoneGlow 1.5s ease-in-out infinite;">CLAIM</button>`
+                                : `<span style="font-size:0.7rem; color:var(--text2); background:rgba(255,255,255,0.06); padding:5px 10px; border-radius:20px;">${progress}/${ev.target}</span>`
+                        }
+                        </div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.08); border-radius:99px; height:5px; overflow:hidden;">
+                        <div style="height:100%; width:${pct}%;
+                            background:${claimed ? '#10B981' : done ? 'linear-gradient(90deg,#f59e0b,#fcd34d)' : 'linear-gradient(90deg,var(--primary),var(--gold))'};
+                            border-radius:99px; transition:width 0.5s ease;"></div>
+                    </div>`;
+                container.appendChild(div);
+            });
+        }
+
+        window.claimEventReward = async (eventId, type, reward) => {
+            const storage = getEventStorage(type);
+            if (storage[eventId + '_claimed']) return;
+
+            const btn = event?.target;
+            if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+            try {
+                const res  = await fetch(`${TASK_API_BASE}/withdraw`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ action: 'eventClaim', userId: String(currentUser.id), eventId, reward })
+                });
+                const data = await res.json();
+                if (!data.ok) { alert(data.message || 'Error'); if (btn) { btn.disabled = false; btn.textContent = 'CLAIM'; } return; }
+
+                // Mark claimed in localStorage (no extra Firestore read)
+                storage[eventId + '_claimed'] = true;
+                setEventStorage(type, storage);
+
+                currentUser.goldBalance        = (currentUser.goldBalance || 0) + reward;
+                currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + reward;
+                updateBalanceUI();
+                renderEventList();
+                showSuccessModal('Event Complete! 🎯', `+${reward.toLocaleString()} 🪙 Gold earned!`);
+            } catch(e) {
+                alert('Error: ' + e.message);
+                if (btn) { btn.disabled = false; btn.textContent = 'CLAIM'; }
+            }
+        };
+
+        // ── Open event modal ──
         const TASK_API_BASE = 'https://newtube-ton.vercel.app/api';
         let activeTaskTab = 'channel';
         let tasksCacheChannel = null;
