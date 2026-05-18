@@ -39,6 +39,30 @@ function getTodayString() {
     return new Date().toISOString().slice(0, 10);
 }
 
+// ── EVENT CLAIM HANDLER ──
+const VALID_EVENT_REWARDS = {
+    daily_ads20: 500, daily_video1h: 500, daily_task3: 300, daily_invite1: 500,
+    weekly_invite5: 3000, weekly_invite10: 7000,
+};
+
+async function handleEventClaim(db, userId, eventId, reward) {
+    const expectedReward = VALID_EVENT_REWARDS[eventId];
+    if (!expectedReward || expectedReward !== reward) throw { code: 'invalid_event', message: 'Invalid event.' };
+
+    const userRef = db.collection('users').doc(String(userId));
+    await db.runTransaction(async (t) => {
+        const snap = await t.get(userRef);
+        if (!snap.exists) throw { code: 'user_not_found', message: 'User not found.' };
+        const user = snap.data();
+        if (user.isBanned) throw { code: 'banned', message: 'Account is banned.' };
+        t.update(userRef, {
+            goldBalance:        FieldValue.increment(expectedReward),
+            lifetimeGoldEarned: FieldValue.increment(expectedReward),
+        });
+    });
+    return { ok: true, reward: expectedReward };
+}
+
 // ── MILESTONE HANDLER ──
 const VALID_MILESTONES = { 5:2000, 10:6000, 15:10000, 20:15000, 30:20000, 50:45000, 100:100000, 200:250000, 500:1000000 };
 
@@ -192,6 +216,9 @@ export default async function handler(req, res) {
         if (action === 'exchange') {
             const result = await handleExchange(db, body.userId, body.goldAmount);
             return res.status(200).json(result);
+        } else if (action === 'eventClaim') {
+            const result = await handleEventClaim(db, body.userId, body.eventId, body.reward);
+            return res.status(200).json(result);
         } else if (action === 'milestone') {
             const result = await handleMilestone(db, body.userId, body.refers);
             return res.status(200).json(result);
@@ -207,4 +234,4 @@ export default async function handler(req, res) {
         console.error('[withdraw]', err);
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message });
     }
-}
+            }
