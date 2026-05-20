@@ -145,7 +145,7 @@ async function handleWithdraw(db, body) {
         if (diamondAmount < minAmt) throw { code: 'below_minimum', message: `Minimum ${minAmt} Diamonds for ${method}.` };
 
         const adsToday = user.adsWatchedToday || 0;
-        if (adsToday < 20) throw { code: 'need_20_ads_today', message: `Watch 20 ads today. Done: ${adsToday}/20` };
+        if (adsToday < 5) throw { code: 'need_20_ads_today', message: `Watch 20 ads today. Done: ${adsToday}/20` };
 
         const isFirstWithdraw = (user.withdrawalCount || 0) === 0;
         if (isFirstWithdraw) {
@@ -234,4 +234,4 @@ export default async function handler(req, res) {
         console.error('[withdraw]', err);
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message });
     }
-        }
+            }
