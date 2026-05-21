@@ -126,10 +126,17 @@ async function handleExchange(db, userId, goldAmount) {
 }
 
 // ── APPROVE HANDLER ──
-async function handleApprove(db, withdrawalId, adminSecret) {
-    if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
-        throw { code: 'unauthorized', message: 'Invalid admin secret.' };
-    }
+async function verifyAdminToken(adminToken) {
+    if (!adminToken) throw { code: 'unauthorized', message: 'Missing admin token.' };
+    // Verify Firebase ID token using Firebase Admin SDK
+    const { getAuth } = await import('firebase-admin/auth');
+    const decoded = await getAuth().verifyIdToken(adminToken);
+    const ADMIN_UID = '6Mmtx15v09fxM22R8Sg2x9vYjtG3';
+    if (decoded.uid !== ADMIN_UID) throw { code: 'unauthorized', message: 'Not admin account.' };
+}
+
+async function handleApprove(db, withdrawalId, adminToken) {
+    await verifyAdminToken(adminToken);
     if (!withdrawalId) throw { code: 'missing_fields', message: 'Missing withdrawalId.' };
 
     const wRef   = db.collection('withdrawals').doc(withdrawalId);
@@ -158,10 +165,8 @@ async function handleApprove(db, withdrawalId, adminSecret) {
 }
 
 // ── REJECT HANDLER ──
-async function handleReject(db, withdrawalId, adminSecret) {
-    if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
-        throw { code: 'unauthorized', message: 'Invalid admin secret.' };
-    }
+async function handleReject(db, withdrawalId, adminToken) {
+    await verifyAdminToken(adminToken);
     if (!withdrawalId) throw { code: 'missing_fields', message: 'Missing withdrawalId.' };
 
     const wRef  = db.collection('withdrawals').doc(withdrawalId);
@@ -317,10 +322,10 @@ export default async function handler(req, res) {
             const result = await handleMilestone(db, body.userId, body.refers);
             return res.status(200).json(result);
         } else if (action === 'approve') {
-            const result = await handleApprove(db, body.withdrawalId, body.adminSecret);
+            const result = await handleApprove(db, body.withdrawalId, body.adminToken);
             return res.status(200).json(result);
         } else if (action === 'reject') {
-            const result = await handleReject(db, body.withdrawalId, body.adminSecret);
+            const result = await handleReject(db, body.withdrawalId, body.adminToken);
             return res.status(200).json(result);
         } else {
             const result = await handleWithdraw(db, body);
@@ -334,4 +339,4 @@ export default async function handler(req, res) {
         console.error('[withdraw]', err);
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message });
     }
-            }
+        }
