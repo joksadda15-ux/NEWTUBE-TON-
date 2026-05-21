@@ -7,9 +7,18 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const BOT_TOKEN       = process.env.BOT_TOKEN;
-const ADMIN_CHAT      = process.env.ADMIN_TELEGRAM_ID;
+const BOT_TOKEN        = process.env.BOT_TOKEN;
+const ADMIN_CHAT       = process.env.ADMIN_TELEGRAM_ID;
 const GOLD_PER_DIAMOND = 1000;
+
+// ── WITHDRAW CONFIG ──
+// Min Diamond amounts and conversion rates
+// IMPORTANT: Keep min values in sync with WITHDRAW_METHODS in index.html
+const WITHDRAW_CONFIG = {
+    binance:   { min: 100,  rate: 1/1000,         unit: 'USDT' },   // 1,000 💎 = 1 USDT
+    tonkeeper: { min: 50,   rate: 0.45/1000,      unit: 'TON'  },   // 1,000 💎 = 0.45 TON
+    bkash:     { min: 80,   rate: 120/1000,       unit: 'BDT'  },   // 1,000 💎 = 120 BDT
+};
 
 function getAdminApp() {
     if (getApps().length > 0) return getApps()[0];
@@ -93,7 +102,7 @@ async function handleMilestone(db, userId, refers) {
 async function handleExchange(db, userId, goldAmount) {
     const gold = Math.floor(Number(goldAmount));
     if (isNaN(gold) || gold < 5000)  throw { code: 'below_minimum',    message: 'Minimum 5,000 Gold to convert.' };
-    if (gold > 100000)               throw { code: 'above_maximum',    message: 'Maximum 100,000 Gold per exchange.' };
+    if (gold > 100000)               throw { code: 'above_maximum',     message: 'Maximum 100,000 Gold per exchange.' };
 
     const diamondOut = Math.floor(gold / GOLD_PER_DIAMOND);
     if (diamondOut < 1)              throw { code: 'insufficient_gold', message: 'Not enough Gold.' };
@@ -102,9 +111,9 @@ async function handleExchange(db, userId, goldAmount) {
 
     await db.runTransaction(async (t) => {
         const snap = await t.get(userRef);
-        if (!snap.exists)              throw { code: 'user_not_found',    message: 'User not found.' };
+        if (!snap.exists)                   throw { code: 'user_not_found',    message: 'User not found.' };
         const user = snap.data();
-        if (user.isBanned)             throw { code: 'banned',            message: 'Account is banned.' };
+        if (user.isBanned)                  throw { code: 'banned',            message: 'Account is banned.' };
         if ((user.goldBalance || 0) < gold) throw { code: 'insufficient_gold', message: 'Insufficient Gold balance.' };
 
         t.update(userRef, {
@@ -123,10 +132,21 @@ async function handleWithdraw(db, body) {
         throw { code: 'missing_fields', message: 'Missing required fields.' };
     }
 
+    const cfg = WITHDRAW_CONFIG[method];
+    if (!cfg) throw { code: 'invalid_method', message: 'Invalid withdrawal method.' };
+
     const diamondAmount = Math.floor(Number(amount));
     if (isNaN(diamondAmount) || diamondAmount <= 0) {
         throw { code: 'invalid_amount', message: 'Invalid amount.' };
     }
+
+    // Check minimum BEFORE hitting Firestore
+    if (diamondAmount < cfg.min) {
+        throw { code: 'below_minimum', message: `Minimum ${cfg.min} Diamonds for ${method}.` };
+    }
+
+    // Calculate converted currency value for notification
+    const convertedValue = (diamondAmount * cfg.rate).toFixed(method === 'binance' ? 4 : method === 'tonkeeper' ? 4 : 2);
 
     const userRef = db.collection('users').doc(String(userId));
 
@@ -136,13 +156,9 @@ async function handleWithdraw(db, body) {
         const user  = snap.data();
         const today = getTodayString();
 
-        if (user.isBanned)                          throw { code: 'banned',                  message: 'Account is banned.' };
-        if (user.lastWithdrawDate === today)        throw { code: 'already_withdrawn_today', message: 'Already withdrawn today.' };
-        if ((user.diamondBalance || 0) < diamondAmount) throw { code: 'insufficient_diamonds',  message: 'Insufficient Diamond balance.' };
-
-        const MINS   = { binance: 1000, tonkeeper: 500, bkash: 500 };
-        const minAmt = MINS[method] || 1000;
-        if (diamondAmount < minAmt) throw { code: 'below_minimum', message: `Minimum ${minAmt} Diamonds for ${method}.` };
+        if (user.isBanned)                               throw { code: 'banned',                 message: 'Account is banned.' };
+        if (user.lastWithdrawDate === today)             throw { code: 'already_withdrawn_today', message: 'Already withdrawn today.' };
+        if ((user.diamondBalance || 0) < diamondAmount) throw { code: 'insufficient_diamonds',   message: 'Insufficient Diamond balance.' };
 
         const adsToday = user.adsWatchedToday || 0;
         if (adsToday < 5) throw { code: 'need_20_ads_today', message: `Watch 5 ads today. Done: ${adsToday}/5` };
@@ -165,14 +181,17 @@ async function handleWithdraw(db, body) {
             method,
             walletAddress: details,
             diamondAmount,
+            convertedValue: `${convertedValue} ${cfg.unit}`,
             status:    'pending',
             createdAt: FieldValue.serverTimestamp(),
         });
 
         return {
-            withdrawId: wRef.id,
-            username:   user.telegramUsername || user.firstName || userId,
-            chatId:     user.telegramId || userId,
+            withdrawId:     wRef.id,
+            username:       user.telegramUsername || user.firstName || userId,
+            chatId:         user.telegramId || userId,
+            convertedValue,
+            unit:           cfg.unit,
         };
     });
 
@@ -180,6 +199,7 @@ async function handleWithdraw(db, body) {
     await sendTelegramMsg(result.chatId,
         `✅ <b>Withdraw Request Received</b>\n\n` +
         `💎 Amount: <b>${diamondAmount.toLocaleString()} Diamonds</b>\n` +
+        `💱 Value: <b>${result.convertedValue} ${result.unit}</b>\n` +
         `💳 Method: <b>${method}</b>\n` +
         `⏳ Processing: 12–48 hours\n\n` +
         `ID: <code>${result.withdrawId}</code>`
@@ -190,6 +210,7 @@ async function handleWithdraw(db, body) {
         `💸 <b>New Withdrawal Request</b>\n\n` +
         `👤 User: <b>${result.username}</b> (${userId})\n` +
         `💎 Amount: <b>${diamondAmount.toLocaleString()}</b>\n` +
+        `💱 Value: <b>${result.convertedValue} ${result.unit}</b>\n` +
         `💳 Method: <b>${method}</b>\n` +
         `📋 Address: <code>${details}</code>\n` +
         `🆔 ID: <code>${result.withdrawId}</code>`
