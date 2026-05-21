@@ -1245,12 +1245,24 @@
         });
 
         // ── AD CONFIG ──
-        const AD_CONFIG = {
+        let AD_CONFIG = {
             adsgramDaily:   { limit: 10, min: 150, max: 150 },
             adsgramSpecial: { limit: 5,  min: 250, max: 250 },
             monetag:        { limit: 20, min: 150, max: 150 },
             giga:           { limit: 20, min: 150, max: 150 }
         };
+
+        // Load ad rewards from Firebase config (set by Admin panel Settings)
+        try {
+            const adCfgSnap = await getDoc(doc(db, 'config', 'withdrawConfig'));
+            if (adCfgSnap.exists()) {
+                const cfg = adCfgSnap.data();
+                if (cfg.adsgramDaily)   { AD_CONFIG.adsgramDaily.min   = cfg.adsgramDaily;   AD_CONFIG.adsgramDaily.max   = cfg.adsgramDaily;   }
+                if (cfg.adsgramSpecial) { AD_CONFIG.adsgramSpecial.min = cfg.adsgramSpecial; AD_CONFIG.adsgramSpecial.max = cfg.adsgramSpecial; }
+                if (cfg.monetag)        { AD_CONFIG.monetag.min        = cfg.monetag;        AD_CONFIG.monetag.max        = cfg.monetag;        }
+                if (cfg.giga)           { AD_CONFIG.giga.min           = cfg.giga;           AD_CONFIG.giga.max           = cfg.giga;           }
+            }
+        } catch(e) { console.warn('Ad config load failed, using defaults:', e.message); }
 
         async function runAdAndVerifyTime(btnId, adFunc) {
             if (isAdRunning) { alert("⚠️ An ad is already playing."); return false; }
