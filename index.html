@@ -709,7 +709,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward">🪙 120 Gold</div>
+                    <div class="ad-reward">🪙 150 Gold</div>
                     <button id="btn-watch-adsgram-daily" class="btn outline task-btn">Watch</button>
                 </div>
             </div>
@@ -745,7 +745,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--secondary);">🪙 120 Gold</div>
+                    <div class="ad-reward" style="color:var(--secondary);">🪙 150 Gold</div>
                     <button id="btn-watch-monetag" class="btn outline task-btn" style="border-color:var(--secondary);color:var(--secondary);">Watch</button>
                 </div>
             </div>
@@ -763,7 +763,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--text);">🪙 120 Gold</div>
+                    <div class="ad-reward" style="color:var(--text);">🪙 150 Gold</div>
                     <button id="btn-watch-giga" class="btn outline task-btn" style="border-color:var(--red);color:var(--red);">Watch</button>
                 </div>
             </div>
@@ -1854,6 +1854,7 @@
                         address_used_by_other:    '❌ This address is already used by another account.',
                         need_5_tasks:             '❌ Minimum 5 tasks required.',
                         need_20_ads_today:        '❌ You need to watch 5 ads today.',
+                        below_minimum:            `❌ Minimum ${WITHDRAW_METHODS[method]?.min || 500} Diamonds required for ${method}.`,
                     };
                     alert(msgs[data.error] || `Error: ${data.error || 'Unknown'}`);
                     return;
