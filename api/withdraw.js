@@ -125,6 +125,79 @@ async function handleExchange(db, userId, goldAmount) {
     return { ok: true, goldSpent: gold, diamondReceived: diamondOut };
 }
 
+// ── APPROVE HANDLER ──
+async function handleApprove(db, withdrawalId, adminSecret) {
+    if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
+        throw { code: 'unauthorized', message: 'Invalid admin secret.' };
+    }
+    if (!withdrawalId) throw { code: 'missing_fields', message: 'Missing withdrawalId.' };
+
+    const wRef   = db.collection('withdrawals').doc(withdrawalId);
+    const wSnap  = await wRef.get();
+    if (!wSnap.exists) throw { code: 'not_found', message: 'Withdrawal not found.' };
+
+    const wd = wSnap.data();
+    if (wd.status !== 'pending') throw { code: 'already_processed', message: `Already ${wd.status}.` };
+
+    await wRef.update({ status: 'approved', processedAt: FieldValue.serverTimestamp() });
+
+    // Notify user
+    const userSnap = await db.collection('users').doc(String(wd.userId)).get();
+    const user     = userSnap.exists ? userSnap.data() : {};
+    const chatId   = user.telegramId || wd.userId;
+
+    await sendTelegramMsg(chatId,
+        `✅ <b>Withdrawal Approved!</b>\n\n` +
+        `💎 Amount: <b>${wd.diamondAmount?.toLocaleString()} Diamonds</b>\n` +
+        `💳 Method: <b>${wd.method}</b>\n` +
+        `📋 Address: <code>${wd.walletAddress}</code>\n\n` +
+        `💸 Your payment has been sent. Thank you!`
+    );
+
+    return { ok: true, message: 'Approved and user notified.' };
+}
+
+// ── REJECT HANDLER ──
+async function handleReject(db, withdrawalId, adminSecret) {
+    if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
+        throw { code: 'unauthorized', message: 'Invalid admin secret.' };
+    }
+    if (!withdrawalId) throw { code: 'missing_fields', message: 'Missing withdrawalId.' };
+
+    const wRef  = db.collection('withdrawals').doc(withdrawalId);
+    const wSnap = await wRef.get();
+    if (!wSnap.exists) throw { code: 'not_found', message: 'Withdrawal not found.' };
+
+    const wd = wSnap.data();
+    if (wd.status !== 'pending') throw { code: 'already_processed', message: `Already ${wd.status}.` };
+
+    const userRef = db.collection('users').doc(String(wd.userId));
+
+    await db.runTransaction(async (t) => {
+        // Refund diamonds
+        t.update(userRef, {
+            diamondBalance:  FieldValue.increment(wd.diamondAmount),
+            lastWithdrawDate: null,
+            withdrawalCount: FieldValue.increment(-1),
+        });
+        t.update(wRef, { status: 'rejected', processedAt: FieldValue.serverTimestamp() });
+    });
+
+    // Notify user
+    const userSnap = await userRef.get();
+    const user     = userSnap.exists ? userSnap.data() : {};
+    const chatId   = user.telegramId || wd.userId;
+
+    await sendTelegramMsg(chatId,
+        `❌ <b>Withdrawal Rejected</b>\n\n` +
+        `💎 <b>${wd.diamondAmount?.toLocaleString()} Diamonds</b> have been refunded to your account.\n` +
+        `💳 Method: <b>${wd.method}</b>\n\n` +
+        `Please try again or contact support.`
+    );
+
+    return { ok: true, message: 'Rejected, diamonds refunded, user notified.' };
+}
+
 // ── WITHDRAW HANDLER ──
 async function handleWithdraw(db, body) {
     const { userId, method, details, amount } = body;
@@ -242,6 +315,12 @@ export default async function handler(req, res) {
             return res.status(200).json(result);
         } else if (action === 'milestone') {
             const result = await handleMilestone(db, body.userId, body.refers);
+            return res.status(200).json(result);
+        } else if (action === 'approve') {
+            const result = await handleApprove(db, body.withdrawalId, body.adminSecret);
+            return res.status(200).json(result);
+        } else if (action === 'reject') {
+            const result = await handleReject(db, body.withdrawalId, body.adminSecret);
             return res.status(200).json(result);
         } else {
             const result = await handleWithdraw(db, body);
