@@ -567,63 +567,111 @@
 
         <!-- ══ HOME ══ -->
         <section id="home-content" class="content-section active">
-
             <div class="profile-card">
+
+                <!-- Profile Top -->
                 <div class="profile-top">
                     <div class="avatar-wrap">
                         <div class="avatar-ring">💎</div>
                         <div class="avatar-status"></div>
                     </div>
                     <div class="profile-info">
-                        <div class="profile-name" id="profile-name-display">Terminal Access</div>
+                        <div class="profile-name" id="profile-name-display">Loading...</div>
                         <div class="profile-id" id="profile-id-display">
                             UID: <span id="uid-text">...</span>&nbsp;<i class="fas fa-copy" style="font-size:0.7rem;"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Currency Display -->
-                <div class="currency-display">
-                    <div class="currency-row">
-                        <div class="currency-box gold-box">
-                            <div class="currency-icon">🪙</div>
-                            <div class="currency-amount" id="home-gold">0</div>
-                            <div class="currency-label">Gold</div>
-                            <div class="currency-rate">1K Gold = 1 💎</div>
-                        </div>
-                        <div class="currency-box diamond-box">
-                            <div class="currency-icon">💎</div>
-                            <div class="currency-amount" id="home-diamond">0</div>
-                            <div class="currency-label">Diamond</div>
-                            <div class="currency-rate">1K 💎 = $1 / 120 BDT</div>
-                        </div>
+                <!-- Gold & Diamond Cards -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <!-- Gold Card -->
+                    <div style="background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(245,166,35,0.05)); border:1px solid rgba(245,166,35,0.35); border-radius:16px; padding:14px 12px; position:relative; overflow:hidden;">
+                        <div style="position:absolute; top:-10px; right:-10px; font-size:3rem; opacity:0.07;">🪙</div>
+                        <div style="font-size:0.62rem; color:rgba(245,166,35,0.7); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Gold Balance</div>
+                        <div id="home-gold" style="font-size:1.45rem; font-weight:800; color:#F5A623; text-shadow:0 0 14px rgba(245,166,35,0.4); line-height:1;">0</div>
+                        <div style="font-size:0.62rem; color:rgba(245,166,35,0.5); margin-top:4px;">1,000 Gold = 1 💎</div>
                     </div>
-                    <div class="rate-strip">
-                        <div class="rate-strip-item"><strong>1K Gold</strong>= 1 Diamond</div>
-                        <div class="rate-strip-item"><strong>1K Diamond</strong>= $1</div>
-                        <div class="rate-strip-item"><strong>1K Diamond</strong>= 120 BDT</div>
-                        <div class="rate-strip-item"><strong>1K Diamond</strong>= 0.5 TON</div>
+                    <!-- Diamond Card -->
+                    <div style="background:linear-gradient(135deg,rgba(168,237,255,0.12),rgba(168,237,255,0.04)); border:1px solid rgba(168,237,255,0.3); border-radius:16px; padding:14px 12px; position:relative; overflow:hidden;">
+                        <div style="position:absolute; top:-10px; right:-10px; font-size:3rem; opacity:0.07;">💎</div>
+                        <div style="font-size:0.62rem; color:rgba(168,237,255,0.6); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Diamond Balance</div>
+                        <div id="home-diamond" style="font-size:1.45rem; font-weight:800; color:#A8EDFF; text-shadow:0 0 14px rgba(168,237,255,0.3); line-height:1;">0</div>
+                        <div style="font-size:0.62rem; color:rgba(168,237,255,0.4); margin-top:4px;">1,000 💎 = $1 USDT</div>
                     </div>
                 </div>
 
-                <!-- Stats -->
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-label">Lifetime</div>
-                        <div class="stat-val" id="home-life">0</div>
+                <!-- Rate Strip -->
+                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:9px 12px; display:flex; justify-content:space-between; margin-bottom:12px; overflow-x:auto; gap:8px;">
+                    <div style="text-align:center; flex-shrink:0;">
+                        <div style="font-size:0.68rem; font-weight:700; color:var(--gold);">1K Gold</div>
+                        <div style="font-size:0.6rem; color:var(--text2);">= 1 Diamond</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-label">Total Invites</div>
-                        <div class="stat-val" style="color:var(--text);" id="home-normal-ref">0</div>
+                    <div style="width:1px; background:rgba(255,255,255,0.08);"></div>
+                    <div style="text-align:center; flex-shrink:0;">
+                        <div style="font-size:0.68rem; font-weight:700; color:var(--diamond);">1K Diamond</div>
+                        <div style="font-size:0.6rem; color:var(--text2);">= $1 USDT</div>
+                    </div>
+                    <div style="width:1px; background:rgba(255,255,255,0.08);"></div>
+                    <div style="text-align:center; flex-shrink:0;">
+                        <div style="font-size:0.68rem; font-weight:700; color:var(--diamond);">1K Diamond</div>
+                        <div style="font-size:0.6rem; color:var(--text2);">= 120 BDT</div>
+                    </div>
+                    <div style="width:1px; background:rgba(255,255,255,0.08);"></div>
+                    <div style="text-align:center; flex-shrink:0;">
+                        <div style="font-size:0.68rem; font-weight:700; color:var(--diamond);">1K Diamond</div>
+                        <div style="font-size:0.6rem; color:var(--text2);">= 0.5 TON</div>
                     </div>
                 </div>
 
-                <!-- Action Buttons: Refer | Promo | Exchange | Events -->
-                <div class="action-row" style="grid-template-columns:repeat(4,1fr);">
-                    <button class="btn outline" id="action-invite" style="padding:11px 4px; font-size:0.72rem;"><i class="fas fa-users"></i> Refer</button>
-                    <button class="btn ghost" id="action-promo-code" style="padding:11px 4px; font-size:0.72rem;"><i class="fas fa-gift"></i> Promo</button>
-                    <button class="btn diamond-btn" id="action-exchange" style="padding:11px 4px; font-size:0.72rem;"><i class="fas fa-sync-alt"></i> Exchange</button>
-                    <button class="btn" id="action-milestone" style="padding:11px 4px; font-size:0.72rem; background:linear-gradient(135deg,#f59e0b,#d97706); border:none; color:#000; font-weight:700; border-radius:10px; cursor:pointer;"><i class="fas fa-trophy"></i> Events</button>
+                <!-- Stats Row -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px; text-align:center;">
+                        <div style="font-size:0.6rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">⚡ Lifetime Earned</div>
+                        <div id="home-life" style="font-size:1.2rem; font-weight:800; color:var(--gold);">0</div>
+                        <div style="font-size:0.58rem; color:var(--text2); margin-top:2px;">Total Gold</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px; text-align:center;">
+                        <div style="font-size:0.6rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">👥 Total Invites</div>
+                        <div id="home-normal-ref" style="font-size:1.2rem; font-weight:800; color:var(--primary);">0</div>
+                        <div style="font-size:0.58rem; color:var(--text2); margin-top:2px;">Friends Invited</div>
+                    </div>
+                </div>
+
+                <!-- Refer Bonus Banner -->
+                <div style="background:linear-gradient(135deg,rgba(245,166,35,0.12),rgba(139,92,246,0.1)); border:1px solid rgba(245,166,35,0.25); border-radius:14px; padding:11px 14px; margin-bottom:12px; display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.5rem;">🎁</span>
+                    <div>
+                        <div style="font-size:0.78rem; font-weight:700; color:var(--gold);">Earn +3,500 🪙 per Referral!</div>
+                        <div style="font-size:0.65rem; color:var(--text2); margin-top:1px;">Invite friends and earn Gold instantly</div>
+                    </div>
+                    <button id="action-invite-banner" style="margin-left:auto; background:linear-gradient(135deg,var(--gold),#d97706); border:none; color:#000; border-radius:8px; padding:6px 12px; font-size:0.7rem; font-weight:800; cursor:pointer; flex-shrink:0;">INVITE</button>
+                </div>
+
+                <!-- Action Buttons Row -->
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:10px;">
+                    <button id="action-invite" style="background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.3); color:var(--primary); border-radius:12px; padding:10px 4px; font-size:0.68rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                        <i class="fas fa-users" style="font-size:0.9rem;"></i>Refer
+                    </button>
+                    <button id="action-promo-code" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); color:#A78BFA; border-radius:12px; padding:10px 4px; font-size:0.68rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                        <i class="fas fa-gift" style="font-size:0.9rem;"></i>Promo
+                    </button>
+                    <button id="action-exchange" style="background:rgba(168,237,255,0.1); border:1px solid rgba(168,237,255,0.25); color:var(--diamond); border-radius:12px; padding:10px 4px; font-size:0.68rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                        <i class="fas fa-sync-alt" style="font-size:0.9rem;"></i>Exchange
+                    </button>
+                    <button id="action-milestone" style="background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(217,119,6,0.1)); border:1px solid rgba(245,158,11,0.4); color:#FCD34D; border-radius:12px; padding:10px 4px; font-size:0.68rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                        <i class="fas fa-trophy" style="font-size:0.9rem;"></i>Events
+                    </button>
+                </div>
+
+                <!-- Links Row -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+                    <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:var(--text2); border-radius:10px; padding:9px; font-size:0.72rem; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <i class="fab fa-telegram-plane" style="color:#2AABEE;"></i> Official
+                    </a>
+                    <a href="https://t.me/Your_Admin11" target="_blank" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:var(--text2); border-radius:10px; padding:9px; font-size:0.72rem; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <i class="fas fa-headset" style="color:var(--green);"></i> Support
+                    </a>
                 </div>
 
     <!-- Daily/Weekly Event Modal -->
@@ -649,14 +697,19 @@
         </div>
     </div>
 
-                <div class="action-link-row">
-                    <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn ghost" style="padding:10px;">
-                        <i class="fab fa-telegram-plane"></i> Official
-                    </a>
-                    <a href="https://t.me/Your_Admin11" target="_blank" class="btn ghost" style="padding:10px;">
-                        <i class="fas fa-headset"></i> Support
-                    </a>
+                <!-- Recent Videos -->
+                <div>
+                    <div style="font-size:0.78rem; font-weight:800; color:var(--text); margin-bottom:9px; display:flex; align-items:center; gap:7px;">
+                        <span style="background:linear-gradient(135deg,var(--gold),#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-size:0.9rem;">▶</span>
+                        Recent Videos
+                    </div>
+                    <div class="recent-strip" id="home-recent-videos">
+                        <div class="loader" style="margin:10px auto;"></div>
+                    </div>
                 </div>
+
+            </div>
+        </section>
 
                 <!-- Recent Videos Strip -->
                 <div style="margin-top:16px;">
@@ -709,7 +762,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward">🪙 150 Gold</div>
+                    <div class="ad-reward">🪙 120–200 Gold</div>
                     <button id="btn-watch-adsgram-daily" class="btn outline task-btn">Watch</button>
                 </div>
             </div>
@@ -727,7 +780,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--gold-bright);">🪙 250 Gold</div>
+                    <div class="ad-reward" style="color:var(--gold-bright);">🪙 250–350 Gold</div>
                     <button id="btn-watch-adsgram-special" class="btn task-btn" style="background:linear-gradient(135deg,#FFD166,#e8b930);color:#000;">Watch</button>
                 </div>
             </div>
@@ -745,7 +798,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--secondary);">🪙 150 Gold</div>
+                    <div class="ad-reward" style="color:var(--secondary);">🪙 120–200 Gold</div>
                     <button id="btn-watch-monetag" class="btn outline task-btn" style="border-color:var(--secondary);color:var(--secondary);">Watch</button>
                 </div>
             </div>
@@ -763,7 +816,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--text);">🪙 150 Gold</div>
+                    <div class="ad-reward" style="color:var(--text);">🪙 120–200 Gold</div>
                     <button id="btn-watch-giga" class="btn outline task-btn" style="border-color:var(--red);color:var(--red);">Watch</button>
                 </div>
             </div>
@@ -888,8 +941,8 @@
                 <div class="tier-row"><span class="tier-range">Method</span><span class="tier-ref" id="method-label">Binance UID</span></div>
                 <div class="tier-row"><span class="tier-range">Rate</span><span class="tier-ref" id="method-rate" style="color:var(--diamond);">1,000 💎 = 1 USDT</span></div>
                 <div class="tier-row"><span class="tier-range">Min Withdraw</span><span class="tier-ref" id="method-min">1,000 💎</span></div>
-                <div class="tier-row"><span class="tier-range">1st Withdraw</span><span class="tier-ref" style="color:var(--green); font-size:0.75rem;">5 Tasks + 20 Ads</span></div>
-                <div class="tier-row"><span class="tier-range">Next Withdraw</span><span class="tier-ref" style="color:var(--blue); font-size:0.75rem;">20 Ads only</span></div>
+                <div class="tier-row"><span class="tier-range">1st Withdraw</span><span class="tier-ref" style="color:var(--green); font-size:0.75rem;">5 Tasks + 5 Ads</span></div>
+                <div class="tier-row"><span class="tier-range">Next Withdraw</span><span class="tier-ref" style="color:var(--blue); font-size:0.75rem;">5 Ads only</span></div>
             </div>
 
             <!-- Eligibility Progress -->
@@ -1003,7 +1056,7 @@
         <div class="modal-box" style="text-align:center;">
             <i class="fas fa-user-plus" style="font-size:3rem; color:var(--gold); margin-bottom:14px;"></i>
             <h3 style="margin:0 0 5px; font-size:1.2rem;">Referral Network</h3>
-            <p style="font-size:0.82rem; color:var(--text2); margin-bottom:16px;">Earn <strong style="color:var(--gold);">+2,000 🪙 Gold</strong> per valid referral!</p>
+            <p style="font-size:0.82rem; color:var(--text2); margin-bottom:16px;">Earn <strong style="color:var(--gold);">+3,500 🪙 Gold</strong> per referral you invite!</p>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
                 <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(245,166,35,0.2); border-radius:11px; padding:11px;">
@@ -1097,11 +1150,11 @@
         // 1,000 Gold = 1 Diamond
         // 1,000 Diamond = $1 = 120 BDT = 0.5 TON
         const GOLD_PER_DIAMOND = 1000;
-        const REFERRAL_REWARD_GOLD = 2000;
-        const VIDEO_GOLD_PER_HOUR = 200;
-        const VIDEO_BOX_MIN = 100;
-        const VIDEO_BOX_MAX = 200;
-        const DAILY_VIDEO_MAX = 200;
+        const REFERRAL_REWARD_GOLD = 3500;
+        const VIDEO_GOLD_PER_HOUR = 500;   // 200-500 range, set to max
+        const VIDEO_BOX_MIN = 500;   // min 500 to claim
+        const VIDEO_BOX_MAX = 300;   // full box = 300 gold → ad required
+        const DAILY_VIDEO_MAX = 6000; // 12 hrs max daily
 
         const WITHDRAW_METHODS = {
             binance:    { label: 'Binance UID',       min: 100, placeholder: 'Enter your Binance UID',  rate: '1,000 💎 = 1 USDT',   currency: 'USDT'  },
@@ -1109,8 +1162,8 @@
             bkash:      { label: 'bKash Number',      min: 80,  placeholder: '01XXXXXXXXX',             rate: '1,000 💎 = 120 BDT',   currency: 'BDT'   }
         };
 
-        const LOOTBOX_MIN = 600;
-        const LOOTBOX_MAX = 3000;
+        const LOOTBOX_MIN = 1000;  // min 1K to claim
+        const LOOTBOX_MAX = 5000;  // max 5K per claim
         const LOOTBOX_DAILY_CLAIM_MAX = 3;
         let localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
 
@@ -1246,10 +1299,10 @@
 
         // ── AD CONFIG ──
         let AD_CONFIG = {
-            adsgramDaily:   { limit: 10, min: 150, max: 150 },
-            adsgramSpecial: { limit: 5,  min: 250, max: 250 },
-            monetag:        { limit: 20, min: 150, max: 150 },
-            giga:           { limit: 20, min: 150, max: 150 }
+            adsgramDaily:   { limit: 10, min: 120, max: 200 },
+            adsgramSpecial: { limit: 5,  min: 250, max: 350 },
+            monetag:        { limit: 20, min: 120, max: 200 },
+            giga:           { limit: 20, min: 120, max: 200 }
         };
 
         // Load ad rewards from Firebase config (set by Admin panel Settings)
@@ -2022,6 +2075,8 @@
             document.getElementById('inviteModalOverlay').classList.add('show');
         }
         document.getElementById('action-invite').addEventListener('click', openInviteModal);
+        const bannerBtn = document.getElementById('action-invite-banner');
+        if (bannerBtn) bannerBtn.addEventListener('click', openInviteModal);
 
         document.getElementById('modalCopyReferralLinkBtn').addEventListener('click', () => {
             const link = getMyReferralLink();
