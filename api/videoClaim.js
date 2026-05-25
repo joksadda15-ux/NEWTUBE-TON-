@@ -3,11 +3,11 @@ import crypto from 'crypto';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const SECRET           = process.env.VIDEO_HMAC_SECRET || 'newtube_video_secret_2025';
-const MIN_WATCH_MS     = 60 * 1000;
-const MAX_SESSION_MS   = 12 * 60 * 60 * 1000;
-const VIDEO_BOX_MAX    = 300;   // ← updated: matches frontend (every 300 gold = 1 ad)
-const DAILY_VIDEO_MAX  = 6000;  // ← updated: 12 hours max
+const SECRET          = process.env.VIDEO_HMAC_SECRET || 'newtube_video_secret_2025';
+const MIN_WATCH_MS    = 60 * 1000;
+const MAX_SESSION_MS  = 12 * 60 * 60 * 1000;
+const VIDEO_BOX_MAX   = 6000;  // matches frontend VIDEO_BOX_MAX
+const DAILY_VIDEO_MAX = 6000;  // 12 hours max daily
 
 function getAdminApp() {
     if (getApps().length > 0) return getApps()[0];
@@ -98,4 +98,4 @@ export default async function handler(req, res) {
             return res.status(403).json({ success: false, error: 'banned' });
         return res.status(500).json({ success: false, error: 'server_error', message: err.message });
     }
-                }
+}
