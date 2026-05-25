@@ -1,13 +1,10 @@
 // api/init.js
-// Called when a new user joins via referral link.
-// Credits 2000 Gold to the referrer + sends Telegram notification.
-
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const BOT_TOKEN       = process.env.BOT_TOKEN;          // ← fixed (was TELEGRAM_BOT_TOKEN)
+const BOT_TOKEN       = process.env.BOT_TOKEN;
 const ADMIN_TG_ID     = process.env.ADMIN_TELEGRAM_ID;
-const REFERRAL_REWARD = 2000;
+const REFERRAL_REWARD = 3500; // ← updated from 2000
 
 function getAdminApp() {
     if (getApps().length > 0) return getApps()[0];
@@ -20,13 +17,15 @@ function getAdminApp() {
     });
 }
 
-async function sendTelegramMsg(chatId, text) {
+async function sendTelegramMsg(chatId, text, replyMarkup = null) {
     if (!BOT_TOKEN || !chatId) return;
     try {
+        const body = { chat_id: chatId, text, parse_mode: 'HTML' };
+        if (replyMarkup) body.reply_markup = replyMarkup;
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+            body:    JSON.stringify(body),
         });
     } catch(e) {
         console.warn('[init] Telegram send failed:', e.message);
@@ -43,7 +42,6 @@ export default async function handler(req, res) {
     const { userId, firstName, username, referrerCode } = req.body || {};
     if (!userId) return res.status(400).json({ error: 'userId required' });
 
-    // Skip if no referrer or self-refer
     if (!referrerCode || String(referrerCode) === String(userId)) {
         return res.status(200).json({ ok: true, skipped: true });
     }
@@ -52,8 +50,8 @@ export default async function handler(req, res) {
         const app = getAdminApp();
         const db  = getFirestore(app);
 
-        const referrerRef  = db.collection('users').doc(String(referrerCode));
-        const newUserRef   = db.collection('users').doc(String(userId));
+        const referrerRef = db.collection('users').doc(String(referrerCode));
+        const newUserRef  = db.collection('users').doc(String(userId));
 
         const [referrerSnap, newUserSnap] = await Promise.all([
             referrerRef.get(),
@@ -64,16 +62,15 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true, skipped: 'referrer_not_found' });
         }
 
-        // Prevent duplicate referral — if new user already has referredBy set, skip
         if (newUserSnap.exists && newUserSnap.data().referredBy) {
             return res.status(200).json({ ok: true, skipped: 'already_referred' });
         }
 
-        const referrer     = referrerSnap.data();
-        const newUserName  = firstName || 'A new friend';
+        const referrer      = referrerSnap.data();
+        const newUserName   = firstName || 'A new friend';
         const newUserHandle = username ? `@${username}` : '';
 
-        // Credit referrer + mark new user as referred (atomic batch)
+        // Credit referrer + mark new user as referred
         const batch = db.batch();
         batch.update(referrerRef, {
             goldBalance:        FieldValue.increment(REFERRAL_REWARD),
@@ -86,16 +83,22 @@ export default async function handler(req, res) {
         }
         await batch.commit();
 
-        // ── Referrer notification ──
-        await sendTelegramMsg(referrerCode,
+        // ── Referrer notification with Open App button ──
+        await sendTelegramMsg(
+            referrerCode,
 `✅🎁 <b>You have received ${REFERRAL_REWARD.toLocaleString()} Gold!</b>
 
 👤 <b>${newUserName}</b> ${newUserHandle}
-joined NEWTUBE TON using your referral link!
+just joined NEWTUBE TON using your referral link!
 
 💰 <b>+${REFERRAL_REWARD.toLocaleString()} 🪙 Gold</b> added to your account!
 
-🔗 Keep inviting friends — earn <b>2,000 Gold</b> per referral!`
+🔗 Keep inviting — earn <b>${REFERRAL_REWARD.toLocaleString()} Gold</b> per referral!`,
+            {
+                inline_keyboard: [[
+                    { text: '🎮 Open NEWTUBE TON', url: 'http://t.me/NewTube12_bot/WatchTo_Earn' }
+                ]]
+            }
         );
 
         // ── Admin notification ──
@@ -110,7 +113,6 @@ joined NEWTUBE TON using your referral link!
             );
         }
 
-        console.log(`[init] Referral: ${userId} → referrer ${referrerCode} +${REFERRAL_REWARD} gold`);
         return res.status(200).json({ ok: true });
 
     } catch (err) {
