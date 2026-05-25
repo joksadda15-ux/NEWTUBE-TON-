@@ -1,13 +1,10 @@
 // api/claimLootbox.js
-// Claims the ad lootbox — credits gold to user in Firestore.
-// Called from frontend after user accumulates enough gold watching ads.
-
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const LOOTBOX_MIN       = 600;
-const LOOTBOX_MAX       = 3000;
-const DAILY_CLAIM_MAX   = 3;
+const LOOTBOX_MIN     = 1000; // ← updated from 600
+const LOOTBOX_MAX     = 5000; // ← updated from 3000
+const DAILY_CLAIM_MAX = 3;
 
 function getAdminApp() {
     if (getApps().length > 0) return getApps()[0];
@@ -21,7 +18,7 @@ function getAdminApp() {
 }
 
 function getTodayString() {
-    return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    return new Date().toISOString().slice(0, 10);
 }
 
 export default async function handler(req, res) {
@@ -48,8 +45,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        const app = getAdminApp();
-        const db  = getFirestore(app);
+        const app     = getAdminApp();
+        const db      = getFirestore(app);
         const userRef = db.collection('users').doc(String(userId));
 
         const pointsAdded = await db.runTransaction(async (t) => {
@@ -58,33 +55,29 @@ export default async function handler(req, res) {
             const user = snap.data();
             if (user.isBanned) throw new Error('banned');
 
-            // Daily claim count check
-            const today = getTodayString();
-            const lastClaimDate  = user.lastLootboxClaimDate || '';
+            const today           = getTodayString();
+            const lastClaimDate   = user.lastLootboxClaimDate || '';
             const dailyClaimCount = lastClaimDate === today ? (user.dailyLootboxClaims || 0) : 0;
             if (dailyClaimCount >= DAILY_CLAIM_MAX) throw new Error('daily_limit_reached');
 
             t.update(userRef, {
-                goldBalance:          FieldValue.increment(claimGold),
-                lifetimeGoldEarned:   FieldValue.increment(claimGold),
-                adsWatchedToday:      FieldValue.increment(adsWatched),
-                lifetimeAdsWatched:   FieldValue.increment(adsWatched),
+                goldBalance:              FieldValue.increment(claimGold),
+                lifetimeGoldEarned:       FieldValue.increment(claimGold),
+                adsWatchedToday:          FieldValue.increment(adsWatched),
+                lifetimeAdsWatched:       FieldValue.increment(adsWatched),
                 adsWatchedAdsgramDaily:   FieldValue.increment(adsWatchedAdsgramDaily),
                 adsWatchedAdsgramSpecial: FieldValue.increment(adsWatchedAdsgramSpecial),
                 adsWatchedMonetag:        FieldValue.increment(adsWatchedMonetag),
                 adsWatchedGiga:           FieldValue.increment(adsWatchedGiga),
-                dailyLootboxClaims:   dailyClaimCount + 1,
-                lastLootboxClaimDate: today,
+                dailyLootboxClaims:       dailyClaimCount + 1,
+                lastLootboxClaimDate:     today,
             });
-
             return claimGold;
         });
 
-        console.log(`[claimLootbox] userId=${userId} gold=${pointsAdded}`);
         return res.status(200).json({ ok: true, pointsAdded });
 
     } catch (err) {
-        console.error('[claimLootbox]', err);
         if (err.message === 'daily_limit_reached')
             return res.status(200).json({ ok: false, error: 'daily_limit_reached' });
         if (err.message === 'banned')
