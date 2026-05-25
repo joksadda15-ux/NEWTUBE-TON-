@@ -697,17 +697,6 @@
         </div>
     </div>
 
-                <!-- Recent Videos -->
-                <div>
-                    <div style="font-size:0.78rem; font-weight:800; color:var(--text); margin-bottom:9px; display:flex; align-items:center; gap:7px;">
-                        <span style="background:linear-gradient(135deg,var(--gold),#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-size:0.9rem;">▶</span>
-                        Recent Videos
-                    </div>
-                    <div class="recent-strip" id="home-recent-videos">
-                        <div class="loader" style="margin:10px auto;"></div>
-                    </div>
-                </div>
-
             </div>
         </section>
 
@@ -1152,8 +1141,8 @@
         const GOLD_PER_DIAMOND = 1000;
         const REFERRAL_REWARD_GOLD = 3500;
         const VIDEO_GOLD_PER_HOUR = 500;   // 200-500 range, set to max
-        const VIDEO_BOX_MIN = 500;   // min 500 to claim
-        const VIDEO_BOX_MAX = 300;   // full box = 300 gold → ad required
+        const VIDEO_BOX_MIN = 100;   // min 100 to claim
+        const VIDEO_BOX_MAX = 6000;  // full box = 6000 gold (matches daily limit)
         const DAILY_VIDEO_MAX = 6000; // 12 hrs max daily
 
         const WITHDRAW_METHODS = {
