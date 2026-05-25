@@ -721,7 +721,7 @@
             <!-- AD LOOTBOX -->
             <div class="lootbox-card">
                 <h3 style="margin:0 0 10px; color:var(--text); font-size:1.1rem;"><i class="fas fa-box-open" style="color:var(--gold);"></i> Ad Lootbox</h3>
-                <p style="font-size:0.82rem; color:var(--text2); margin-bottom:14px;">Watch ads to fill lootbox. Claim when ready. Max 3,000 Gold.</p>
+                <p style="font-size:0.82rem; color:var(--text2); margin-bottom:14px;">Watch ads to fill lootbox. Claim when ready. Max 5,000 Gold.</p>
                 <div style="font-size:2.2rem; font-weight:800; color:var(--gold); font-family:monospace; margin-bottom:14px; text-shadow: 0 0 14px var(--gold-glow);" id="lootboxGoldDisplay">0 🪙</div>
                 <div class="lootbox-progress-wrap">
                     <div class="lootbox-bar-bg"><div class="lootbox-bar-fill" id="lootboxProgressBar" style="width:0%"></div></div>
@@ -748,7 +748,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward">🪙 120–200 Gold</div>
+                    <div class="ad-reward">🪙 200 Gold</div>
                     <button id="btn-watch-adsgram-daily" class="btn outline task-btn">Watch</button>
                 </div>
             </div>
@@ -766,7 +766,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--gold-bright);">🪙 250–350 Gold</div>
+                    <div class="ad-reward" style="color:var(--gold-bright);">🪙 350 Gold</div>
                     <button id="btn-watch-adsgram-special" class="btn task-btn" style="background:linear-gradient(135deg,#FFD166,#e8b930);color:#000;">Watch</button>
                 </div>
             </div>
@@ -784,7 +784,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--secondary);">🪙 120–200 Gold</div>
+                    <div class="ad-reward" style="color:var(--secondary);">🪙 200 Gold</div>
                     <button id="btn-watch-monetag" class="btn outline task-btn" style="border-color:var(--secondary);color:var(--secondary);">Watch</button>
                 </div>
             </div>
@@ -802,7 +802,7 @@
                     </div>
                 </div>
                 <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--text);">🪙 120–200 Gold</div>
+                    <div class="ad-reward" style="color:var(--text);">🪙 200 Gold</div>
                     <button id="btn-watch-giga" class="btn outline task-btn" style="border-color:var(--red);color:var(--red);">Watch</button>
                 </div>
             </div>
@@ -832,13 +832,13 @@
                 <div class="mining-compact-left">
                     <div class="mining-compact-title">
                         <i class="fas fa-microchip"></i> Gold Mining Box
-                        <span style="font-size:0.62rem;color:var(--text2);font-weight:500;">1hr = 200 Gold | Box: 100–200</span>
+                        <span style="font-size:0.62rem;color:var(--text2);font-weight:500;">1hr = 500 Gold | Box: 500–5,000</span>
                     </div>
                     <div class="mining-compact-bar">
                         <div class="mining-compact-fill" id="videoMiningProgress" style="width:0%;"></div>
                     </div>
                     <div class="mining-compact-stats">
-                        <span id="videoDailyLimitDisplay">Daily: 0 / 200 Gold</span>
+                        <span id="videoDailyLimitDisplay">Daily: 0 / 6000 Gold</span>
                     </div>
                 </div>
                 <div class="mining-compact-right" style="display:flex; flex-direction:column; align-items:flex-end; gap:7px;">
@@ -1042,7 +1042,7 @@
         <div class="modal-box" style="text-align:center;">
             <i class="fas fa-user-plus" style="font-size:3rem; color:var(--gold); margin-bottom:14px;"></i>
             <h3 style="margin:0 0 5px; font-size:1.2rem;">Referral Network</h3>
-            <p style="font-size:0.82rem; color:var(--text2); margin-bottom:16px;">Earn <strong style="color:var(--gold);">+3,500 🪙 Gold</strong> per referral you invite!</p>
+            <p style="font-size:0.82rem; color:var(--text2); margin-bottom:16px;">Earn <strong style="color:var(--gold);">+3,500 🪙 Gold</strong> instantly per referral!</p>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
                 <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(245,166,35,0.2); border-radius:11px; padding:11px;">
@@ -1060,7 +1060,7 @@
                 <div style="font-size:0.8rem; color:var(--text2); line-height:1.9;">
                     <div>👥 <b style="color:#fff;">Step 1:</b> Share your link below</div>
                     <div>🎮 <b style="color:#fff;">Step 2:</b> Friend joins &amp; completes setup</div>
-                    <div>✅ <b style="color:#fff;">Step 3:</b> You get <b style="color:var(--gold);">+2,000 Gold</b> instantly!</div>
+                    <div>✅ <b style="color:#fff;">Step 3:</b> You get <b style="color:var(--gold);">+3,500 Gold</b> instantly!</div>
                 </div>
             </div>
 
@@ -1285,10 +1285,10 @@
 
         // ── AD CONFIG ──
         let AD_CONFIG = {
-            adsgramDaily:   { limit: 10, min: 120, max: 200 },
-            adsgramSpecial: { limit: 5,  min: 250, max: 350 },
-            monetag:        { limit: 20, min: 120, max: 200 },
-            giga:           { limit: 20, min: 120, max: 200 }
+            adsgramDaily:   { limit: 10, min: 200, max: 200 },
+            adsgramSpecial: { limit: 5,  min: 350, max: 350 },
+            monetag:        { limit: 20, min: 200, max: 200 },
+            giga:           { limit: 20, min: 200, max: 200 }
         };
 
         // Load ad rewards from Firebase config (set by Admin panel Settings)
@@ -1741,7 +1741,7 @@
                                 </div>
                                 <div class="video-row-title">${v.title}</div>
                             </div>
-                            <div class="video-row-pts">🪙 200/hr</div>
+                            <div class="video-row-pts">🪙 500/hr</div>
                         </div>`;
                 });
             } catch(e) { container.innerHTML = '<p style="text-align:center; padding:16px; color:var(--red); font-size:0.83rem;">Failed to load.</p>'; }
