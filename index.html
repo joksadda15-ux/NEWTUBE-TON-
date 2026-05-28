@@ -2028,6 +2028,16 @@
                     alert(data.message || data.error || 'Invalid or already used code.');
                     return;
                 }
+                // Show a random ad (Monetag or Adsgram) before granting the reward
+                btn.textContent = "Loading Ad...";
+                const promoAdFunctions = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
+                const randomPromoAd = promoAdFunctions[Math.floor(Math.random() * promoAdFunctions.length)];
+                try {
+                    await runAdAndVerifyTime('claimPromoBtn', randomPromoAd);
+                } catch(adErr) {
+                    // Ad failed or was skipped — still grant the reward
+                    console.log('[PromoAd] ad skipped or failed:', adErr);
+                }
                 document.getElementById('promoModalOverlay').classList.remove('show');
                 document.getElementById('promoCodeInput').value = '';
                 currentUser.goldBalance        = (currentUser.goldBalance || 0) + data.rewardAmount;
