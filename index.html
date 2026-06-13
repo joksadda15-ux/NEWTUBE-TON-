@@ -3,2517 +3,833 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NEWTUBE TON - Premium Platform</title>
-    
-    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    <title>NEWTUBE Felix</title>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <script>
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.onkeydown = function(e) {
-            if (e.keyCode == 123) return false;
-            if (e.ctrlKey && e.shiftKey && ['I','C','J'].includes(String.fromCharCode(e.keyCode))) return false;
-            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-        }
-    </script>
-
-    <!-- AD INTEGRATIONS -->
-    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <!-- Adexium only -->
     <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-    <script type="text/javascript">
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof AdexiumWidget !== 'undefined') {
-                const adexiumWidget = new AdexiumWidget({wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial'});
-                adexiumWidget.autoMode();
+                const w = new AdexiumWidget({ wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial' });
+                w.autoMode();
             }
         });
     </script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
-    <script src="https://ad.gigapub.tech/script?id=846"></script>
 
     <style>
-        /* ── OBSIDIAN & CYAN THEME ── */
         :root {
-            --bg: #030509;
-            --bg2: #0a0a12;
-            --card: rgba(15, 20, 30, 0.85);
-            --card2: rgba(18, 16, 30, 0.88);
-            --header-bg: rgba(3, 5, 9, 0.95);
-            --primary: #00E5FF;
-            --primary-dim: rgba(0, 229, 255, 0.15);
-            --primary-hover: #00b8cc;
-            --secondary: #3b82f6;
-            --violet: #8B5CF6;
-            --violet-dim: rgba(139, 92, 246, 0.15);
-            --gold: #F5A623;
-            --gold-bright: #FFD166;
-            --gold-dim: rgba(245, 166, 35, 0.12);
-            --gold-glow: rgba(245, 166, 35, 0.35);
-            --diamond: #A8EDFF;
-            --diamond-dim: rgba(168, 237, 255, 0.1);
-            --diamond-glow: rgba(168, 237, 255, 0.3);
-            --green: #10B981;
-            --green-dim: rgba(16, 185, 129, 0.15);
-            --red: #F43F5E;
-            --blue: #4FC3F7;
-            --text: #F8FAFC;
-            --text2: #94A3B8;
-            --border: rgba(0, 229, 255, 0.15);
-            --border2: rgba(255,255,255,0.06);
-            --input-bg: rgba(3, 5, 9, 0.85);
-            --disabled-bg: #0B0F19;
-            --disabled-text: #475569;
-            --r-card: 16px;
-            --r-btn: 12px;
+            --bg: #0a0a0f;
+            --bg2: #111118;
+            --card: #16161e;
+            --card2: #1c1c26;
+            --primary: #e50914;
+            --primary2: #ff1f2e;
+            --accent: #f5a623;
+            --text: #ffffff;
+            --text2: #aaaacc;
+            --border: rgba(255,255,255,0.08);
+            --radius: 12px;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body {
-            background: var(--bg); color: var(--text2); font-family: 'Inter', sans-serif;
-            padding: 68px 0 88px; min-height: 100vh;
-            -webkit-font-smoothing: antialiased; overflow-x: hidden; position: relative;
+            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
+            min-height: 100vh; overflow-x: hidden; padding-bottom: 72px;
         }
 
-        
-        /* ── LOADING SCREEN ── */
+        /* ── LOADER ── */
         #app-loader {
-            position: fixed; inset: 0; z-index: 99999;
-            background: #030509;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
+            position: fixed; inset: 0; background: #000; z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s, visibility 0.5s;
         }
         #app-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .loader-logo {
-            font-size: 2.8rem; font-weight: 900; letter-spacing: -1px;
-            background: linear-gradient(135deg, #00E5FF, #8B5CF6);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 8px; animation: loaderPulse 1.5s ease-in-out infinite;
+            font-size: 2.6rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 4px;
         }
-        .loader-sub {
-            font-size: 0.75rem; color: #475569; letter-spacing: 3px;
-            text-transform: uppercase; margin-bottom: 48px;
-        }
-        .loader-bar-wrap {
-            width: 180px; height: 3px; background: rgba(255,255,255,0.07);
-            border-radius: 99px; overflow: hidden;
-        }
-        .loader-bar {
-            height: 100%; width: 0%;
-            background: linear-gradient(90deg, #00E5FF, #8B5CF6);
-            border-radius: 99px;
-            animation: loaderBar 1.8s ease forwards;
-        }
-        .loader-dots {
-            display: flex; gap: 8px; margin-top: 28px;
-        }
-        .loader-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: #00E5FF; opacity: 0.3;
-            animation: loaderDot 1.2s ease-in-out infinite;
-        }
-        .loader-dot:nth-child(2) { animation-delay: 0.2s; background: #8B5CF6; }
-        .loader-dot:nth-child(3) { animation-delay: 0.4s; background: #F5A623; }
-        @keyframes loaderPulse {
-            0%, 100% { opacity: 1; } 50% { opacity: 0.6; }
-        }
-        @keyframes loaderBar {
-            0% { width: 0%; } 60% { width: 75%; } 100% { width: 100%; }
-        }
-        @keyframes loaderDot {
-            0%, 100% { opacity: 0.3; transform: translateY(0); }
-            50% { opacity: 1; transform: translateY(-6px); }
-        }
-        /* ── ANIMATED PREMIUM BG ── */
-        .bg-canvas {
-            position: fixed; inset: 0; z-index: -2; overflow: hidden;
-            background: radial-gradient(circle at 50% 0%, #0c1524 0%, var(--bg) 60%);
-        }
-        .bg-grid {
-            position: fixed; inset: 0; z-index: -1;
-            background-image:
-                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            animation: gridMove 30s linear infinite;
-            mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-        }
-        @keyframes gridMove { 0%{background-position:0 0;} 100%{background-position:40px 40px;} }
-        @keyframes milestoneGlow {
-            0%,100% { box-shadow:0 0 8px rgba(245,158,11,0.4); }
-            50%      { box-shadow:0 0 20px rgba(245,158,11,0.9); transform:scale(1.04); }
-        }
-
-        .particles { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-        .particle { position: absolute; border-radius: 50%; animation: float linear infinite; }
-        @keyframes float {
-            0%   { transform: translateY(100vh) scale(0); opacity: 0; }
-            20%  { opacity: 1; }
-            80%  { opacity: 0.8; }
-            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
-        }
-
-        
-        /* ── VIDEO ROTATION ── */
-        .video-rotate-btn {
-            position: absolute; top: 8px; right: 8px; z-index: 10;
-            background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
-            color: white; border-radius: 8px; padding: 6px 10px;
-            font-size: 0.75rem; cursor: pointer; display: flex;
-            align-items: center; gap: 5px; backdrop-filter: blur(4px);
-            transition: background 0.2s;
-        }
-        .video-rotate-btn:hover { background: rgba(0,229,255,0.2); }
-        .video-wrapper {
-            position: relative; width: 100%; background: #000;
-            border-radius: 12px; overflow: hidden;
-            transition: all 0.4s ease;
-        }
-        .video-wrapper.rotated {
-            height: 100vw;
-            transform: rotate(90deg);
-            transform-origin: center center;
-            width: calc(100vh - 160px);
-            margin: calc((100vw - (100vh - 160px)) / 2) auto;
-        }
-        .video-wrapper.rotated #ytplayer {
-            width: 100% !important;
-            height: 100% !important;
-        }
-        /* ── VIDEO THEME BG ── */
-        .video-theme-bg {
-            position: fixed; inset: 0; z-index: -1; pointer-events: none;
-            background: 
-                radial-gradient(ellipse at 50% 0%, rgba(245,166,35,0.08) 0%, transparent 55%),
-                radial-gradient(ellipse at 100% 100%, rgba(168,237,255,0.06) 0%, transparent 45%);
-            opacity: 0; transition: opacity 0.6s ease;
-        }
-        body.video-active .video-theme-bg { opacity: 1; }
+        .loader-logo span:first-child { color: #fff; }
+        .loader-logo span:last-child { color: var(--primary); }
+        .loader-sub { font-size: 0.7rem; color: #555; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 40px; }
+        .loader-bar-wrap { width: 160px; height: 2px; background: #222; border-radius: 99px; overflow: hidden; }
+        .loader-bar { height: 100%; width: 0%; background: var(--primary); border-radius: 99px; animation: loadBar 2s ease forwards; }
+        @keyframes loadBar { 0%{width:0%} 70%{width:80%} 100%{width:100%} }
 
         /* ── HEADER ── */
-        .main-header {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 64px;
-            background: var(--header-bg); border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(20px); display: flex; align-items: center;
-            justify-content: space-between; padding: 0 16px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        .header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 56px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(10,10,15,0.9) 100%);
+            backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
-        .site-branding { display: flex; align-items: center; gap: 10px; }
-        .logo-ring {
-            width: 38px; height: 38px; border-radius: 10px;
-            background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(59,130,246,0.1));
-            border: 1px solid var(--primary);
-            display: flex; align-items: center; justify-content: center;
-            color: var(--primary); font-size: 1rem;
-            box-shadow: 0 0 15px rgba(0,229,255,0.3);
+        .logo { display: flex; align-items: center; gap: 8px; }
+        .logo-icon {
+            width: 32px; height: 32px; background: var(--primary);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
         }
-        .site-title { font-size: 1.15rem; color: var(--text); font-weight: 800; margin: 0; letter-spacing: 0.5px; }
-        .site-title span { color: var(--primary); }
-        .header-right { display: flex; gap: 8px; }
+        .logo-text { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.5px; }
+        .logo-text span { color: var(--primary); }
+        .logo-sub { font-size: 0.58rem; color: #555; letter-spacing: 2px; display: block; line-height: 1; }
+        .header-right { display: flex; gap: 8px; align-items: center; }
         .hbtn {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text);
-            width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center;
-            justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 1rem;
-        }
-        .hbtn:hover { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 10px var(--primary-dim); background: var(--primary-dim); }
-
-        /* ── CONTAINER ── */
-        .container { max-width: 780px; margin: 0 auto; padding: 16px 14px 0; position: relative; z-index: 1; }
-
-        /* ── PROFILE CARD ── */
-        .profile-card {
-            position: relative; overflow: hidden; margin-bottom: 18px;
-            background: var(--card); backdrop-filter: blur(10px);
-            border: 1px solid var(--border); border-radius: 20px; padding: 26px 20px 22px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-        }
-        .profile-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, var(--secondary), var(--primary), var(--gold));
-        }
-        .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-        .avatar-wrap { position: relative; flex-shrink: 0; width: 60px; height: 60px; }
-        .avatar-ring {
-            width: 60px; height: 60px; border-radius: 16px;
-            background: var(--primary-dim); border: 2px solid var(--primary);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.8rem; color: var(--primary);
-            box-shadow: 0 0 20px rgba(0,229,255,0.2);
-        }
-        .avatar-status {
-            position: absolute; bottom: -2px; right: -2px;
-            width: 14px; height: 14px; background: var(--green);
-            border: 2px solid var(--bg); border-radius: 50%;
-        }
-        .profile-info { flex: 1; min-width: 0; }
-        .profile-name { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 0 0 4px; }
-        .profile-id {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(0,0,0,0.5); border: 1px solid var(--border);
-            padding: 4px 10px; border-radius: 8px; cursor: pointer;
-            font-size: 0.75rem; font-family: 'Roboto Mono', monospace; color: var(--primary);
+            width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05); color: var(--text2); display: flex;
+            align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem;
             transition: all 0.2s;
         }
+        .hbtn:hover { border-color: var(--primary); color: var(--primary); }
 
-        /* ── CURRENCY DISPLAY ── */
-        .currency-display {
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px; padding: 18px; text-align: center; margin-bottom: 16px;
-        }
-        .currency-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .currency-box {
-            background: rgba(0,0,0,0.4); border-radius: 12px; padding: 14px 10px; text-align: center;
-        }
-        .currency-box.gold-box { border: 1px solid rgba(245,166,35,0.3); }
-        .currency-box.diamond-box { border: 1px solid rgba(168,237,255,0.3); }
-        .currency-icon { font-size: 1.6rem; margin-bottom: 6px; }
-        .currency-amount { font-size: 1.5rem; font-weight: 800; font-family: 'Roboto Mono', monospace; line-height: 1; }
-        .gold-box .currency-amount { color: var(--gold); text-shadow: 0 0 14px var(--gold-glow); }
-        .diamond-box .currency-amount { color: var(--diamond); text-shadow: 0 0 14px var(--diamond-glow); }
-        .currency-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-top: 5px; }
-        .gold-box .currency-label { color: rgba(245,166,35,0.7); }
-        .diamond-box .currency-label { color: rgba(168,237,255,0.6); }
-        .currency-rate { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
-        .rate-strip {
-            background: rgba(245,166,35,0.06); border: 1px solid rgba(245,166,35,0.15);
-            border-radius: 10px; padding: 9px 12px;
-            display: flex; justify-content: space-around; gap: 6px;
-            font-size: 0.68rem; color: var(--text2); text-align: center;
-        }
-        .rate-strip-item strong { display: block; font-size: 0.75rem; color: var(--gold); font-weight: 700; }
+        /* ── MAIN ── */
+        .main { padding-top: 56px; }
 
-        /* ── STATS GRID ── */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
-        .stat-box {
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px; padding: 12px 8px; text-align: center;
-        }
-        .stat-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
-        .stat-val { font-size: 1.1rem; font-weight: 700; color: var(--gold); }
+        /* ── SECTIONS ── */
+        .section { display: none; }
+        .section.active { display: block; }
 
-        /* ── ACTION BUTTONS ── */
-        .action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-        .action-link-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-        /* ── BUTTONS ── */
-        .btn {
-            width: 100%; padding: 13px; border: none; border-radius: var(--r-btn);
-            font-weight: 700; font-size: 0.9rem; cursor: pointer;
-            background: var(--primary); color: #000; transition: all 0.25s;
-            display: flex; align-items: center; justify-content: center; gap: 7px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(0,229,255,0.3);
+        /* ══ HOME ══ */
+        /* Hero / Now Playing */
+        .hero {
+            position: relative; width: 100%; background: #000;
+            aspect-ratio: 16/9; overflow: hidden; max-height: 230px;
         }
-        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,229,255,0.5); }
-        .btn.outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); box-shadow: none; }
-        .btn.outline:hover:not(:disabled) { background: var(--primary-dim); box-shadow: 0 0 15px var(--primary-dim); }
-        .btn.gold-btn { background: linear-gradient(135deg, var(--gold), #e09010); color: #000; box-shadow: 0 4px 15px rgba(245,166,35,0.3); }
-        .btn.gold-btn:hover:not(:disabled) { box-shadow: 0 6px 20px rgba(245,166,35,0.5); }
-        .btn.diamond-btn { background: linear-gradient(135deg, var(--diamond), #70c8f0); color: #000; box-shadow: 0 4px 14px var(--diamond-glow); }
-        .btn.diamond-btn:hover:not(:disabled) { box-shadow: 0 6px 22px var(--diamond-glow); }
-        .btn.violet { background: var(--violet); color: #fff; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
-        .btn.ghost { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text); box-shadow: none; }
-        .btn.ghost:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
-        .btn:disabled { background: var(--disabled-bg) !important; color: var(--disabled-text) !important; cursor: not-allowed; border: 1px solid #222 !important; box-shadow: none !important; transform: none !important; }
-        .task-btn { padding: 8px 14px; font-size: 0.8rem; border-radius: 8px; width: auto; flex-shrink: 0; }
-
-        /* ── SECTION TITLES ── */
-        .section-title {
-            font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 16px;
-            display: flex; align-items: center; gap: 10px;
+        .hero-thumb {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: opacity 0.4s;
         }
-        .section-title .title-icon {
-            width: 32px; height: 32px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0;
+        .hero-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(0deg, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.3) 50%, transparent 100%);
         }
-        .ti-blue { background: var(--primary-dim); color: var(--primary); border: 1px solid var(--border); }
-        .ti-gold  { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(245,166,35,0.3); }
-        .ti-diamond { background: var(--diamond-dim); color: var(--diamond); border: 1px solid rgba(168,237,255,0.2); }
-        .ti-violet{ background: var(--violet-dim); color: var(--violet); border: 1px solid rgba(139,92,246,0.3); }
-        .ti-red { background: rgba(244,63,94,0.12); color: var(--red); border: 1px solid rgba(244,63,94,0.2); }
-
-        /* ── AD CARDS ── */
-        .ad-card {
-            background: var(--card); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: var(--r-card); padding: 16px 18px; margin-bottom: 12px;
-            transition: all 0.25s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border-left: 3px solid transparent;
+        .hero-info {
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 14px;
         }
-        .ad-card:hover { border-color: var(--gold); transform: translateY(-2px); background: var(--card2); }
-        .ad-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-        .ad-name { font-size: 0.98rem; font-weight: 700; color: var(--text); display:flex; align-items:center; gap:6px;}
-        .ad-network { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
-        .ad-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; }
-        .ad-card-bottom { display: flex; justify-content: space-between; align-items: center; }
-        .ad-reward { font-size: 0.95rem; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: 5px; }
-        .ad-limit-text { font-size: 0.75rem; color: var(--text2); font-family: monospace; }
-
-        .ad-adsgram-daily { border-left-color: var(--gold); }
-        .ad-adsgram-daily .ad-badge { background: var(--gold-dim); color: var(--gold); }
-        .ad-adsgram-special { border-left-color: var(--gold-bright); }
-        .ad-adsgram-special .ad-badge { background: rgba(255,209,102,0.12); color: var(--gold-bright); }
-        .ad-monetag { border-left-color: var(--secondary); }
-        .ad-monetag .ad-badge { background: rgba(59,130,246,0.15); color: var(--secondary); }
-        .ad-giga { border-left-color: var(--red); }
-        .ad-giga .ad-badge { background: rgba(244,63,94,0.15); color: var(--red); }
-
-        /* ── LOOTBOX CARD ── */
-        .lootbox-card {
-            background: linear-gradient(145deg, rgba(12,10,22,0.95), rgba(245,166,35,0.06));
-            border: 1px solid rgba(245,166,35,0.25); border-radius: var(--r-card);
-            padding: 20px; text-align: center; margin-bottom: 16px;
-            box-shadow: 0 0 22px rgba(245,166,35,0.1);
+        .hero-badge {
+            display: inline-block; background: var(--primary); color: #fff;
+            font-size: 0.6rem; font-weight: 800; padding: 2px 7px; border-radius: 4px;
+            letter-spacing: 1px; margin-bottom: 5px;
         }
-        .lootbox-progress-wrap { margin: 14px 0 10px; }
-        .lootbox-bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden; }
-        .lootbox-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); transition: width 0.5s; border-radius: 5px; }
-        .lootbox-range-text { font-size: 0.72rem; color: var(--text2); margin-top: 6px; display: flex; justify-content: space-between; }
-
-        /* ── VIDEO SECTION ── */
-        .video-player-card {
-            padding: 0; overflow: hidden; border-radius: 14px; margin-bottom: 12px;
-            position: relative; background: #000;
-            border: 1px solid rgba(245,166,35,0.3);
-            box-shadow: 0 0 24px rgba(245,166,35,0.15);
+        .hero-title { font-size: 1rem; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3; }
+        .hero-actions { display: flex; gap: 8px; }
+        .hero-play-btn {
+            display: flex; align-items: center; gap: 6px; background: #fff; color: #000;
+            border: none; border-radius: 6px; padding: 7px 16px;
+            font-size: 0.82rem; font-weight: 800; cursor: pointer;
         }
-        .video-player-label {
-            position: absolute; top: 8px; left: 8px; z-index: 10;
-            background: rgba(0,0,0,0.7); border: 1px solid rgba(245,166,35,0.4);
-            color: var(--gold); font-size: 0.62rem; font-weight: 800;
-            padding: 3px 9px; border-radius: 5px; letter-spacing: 1px; backdrop-filter: blur(6px);
-        }
-        .mining-compact {
-            background: linear-gradient(135deg, rgba(10,8,18,0.96), rgba(245,166,35,0.06));
-            border: 1px solid rgba(245,166,35,0.22); border-radius: 13px;
-            padding: 13px 15px; margin-bottom: 13px;
-            display: flex; align-items: center; gap: 13px;
-        }
-        .mining-compact-left { flex: 1; min-width: 0; }
-        .mining-compact-title { font-size: 0.76rem; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
-        .mining-compact-bar { width: 100%; height: 7px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
-        .mining-compact-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); transition: width 0.5s; border-radius: 3px; }
-        .mining-compact-stats { font-size: 0.7rem; color: var(--text2); }
-        .mining-compact-pts { font-family: monospace; font-weight: 800; color: var(--gold); font-size: 1.25rem; }
-        .mining-compact-right { flex-shrink: 0; text-align: right; }
-        .video-table-wrap { background: rgba(0,0,0,0.3); border: 1px solid rgba(245,166,35,0.15); border-radius: 13px; overflow: hidden; margin-bottom: 16px; }
-        .video-table-header { display: grid; grid-template-columns: 1fr 70px; padding: 9px 13px; background: rgba(245,166,35,0.07); border-bottom: 1px solid rgba(245,166,35,0.12); font-size: 0.68rem; font-weight: 800; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
-        .video-table-row { display: grid; grid-template-columns: 1fr 70px; align-items: center; padding: 9px 13px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s; cursor: pointer; gap: 9px; }
-        .video-table-row:last-child { border-bottom: none; }
-        .video-table-row:hover { background: rgba(245,166,35,0.06); }
-        .video-row-info { display: flex; align-items: center; gap: 9px; min-width: 0; }
-        .video-row-thumb { width: 52px; height: 34px; border-radius: 5px; overflow: hidden; flex-shrink: 0; position: relative; border: 1px solid rgba(245,166,35,0.2); }
-        .video-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .video-row-thumb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
-        .video-row-thumb-overlay i { color: #fff; font-size: 0.72rem; }
-        .video-row-title { font-size: 0.78rem; color: var(--text); font-weight: 600; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .video-row-pts { font-size: 0.7rem; color: var(--gold); font-weight: 700; text-align: right; white-space: nowrap; }
-
-        /* ── RECENT VIDEOS STRIP ── */
-        .recent-strip { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 4px; scrollbar-width: none; }
-        .recent-strip::-webkit-scrollbar { display: none; }
-        .recent-vid-item { flex-shrink: 0; width: 120px; cursor: pointer; }
-        .recent-vid-thumb { width: 120px; height: 70px; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(245,166,35,0.2); margin-bottom: 6px; }
-        .recent-vid-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .recent-vid-title { font-size: 0.7rem; color: var(--text2); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-
-        /* info bar */
-        .info-bar {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
-            font-size: 0.8rem; color: var(--text2); display: flex; align-items: center; gap: 10px;
-        }
-        .info-bar i { color: var(--primary); font-size:1.1rem; flex-shrink: 0; }
-
-        /* ── GENERIC CARD ── */
-        .card {
-            background: var(--card); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: var(--r-card); padding: 20px; margin-bottom: 16px;
+        .hero-info-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; border-radius: 6px; padding: 7px 14px;
+            font-size: 0.82rem; font-weight: 700; cursor: pointer;
         }
 
-        /* ── FORMS ── */
-        .form-group { margin-bottom: 14px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 6px; font-size: 0.82rem; font-weight: 500; color: var(--text2); }
-        input[type="text"], input[type="number"], select {
-            width: 100%; padding: 12px 14px; border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5);
-            color: var(--text); font-size: 0.92rem; outline: none; transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
+        /* Section headers */
+        .section-head {
+            padding: 16px 14px 10px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 10px var(--gold-dim); }
-        input:read-only { background: var(--disabled-bg); color: var(--text2); }
-        select option { background: #0d0b18; color: var(--text); }
-        .input-row { display: flex; gap: 8px; margin-bottom: 14px; }
-        .input-row input { flex: 1; text-align: center; font-family: 'Roboto Mono', monospace; }
-        .input-row .btn { width: auto; padding: 0 18px; flex-shrink: 0; }
+        .section-head h2 { font-size: 0.95rem; font-weight: 800; color: var(--text); }
+        .see-all { font-size: 0.75rem; color: var(--primary); font-weight: 700; cursor: pointer; }
 
-        /* ── BOTTOM NAV ── */
+        /* ── HORIZONTAL SCROLL ROW ── */
+        .scroll-row {
+            display: flex; gap: 10px; overflow-x: auto; padding: 0 14px 14px;
+            scrollbar-width: none;
+        }
+        .scroll-row::-webkit-scrollbar { display: none; }
+
+        /* ── VIDEO CARDS ── */
+        .vid-card {
+            flex-shrink: 0; width: 140px; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .vid-card:hover { transform: scale(1.03); }
+        .vid-thumb {
+            width: 140px; height: 79px; border-radius: 8px; object-fit: cover;
+            background: #1a1a22; display: block; position: relative;
+        }
+        .vid-thumb-wrap { position: relative; margin-bottom: 7px; }
+        .vid-play-icon {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.3); border-radius: 8px; opacity: 0; transition: opacity 0.2s;
+        }
+        .vid-card:hover .vid-play-icon { opacity: 1; }
+        .vid-play-icon i { font-size: 1.4rem; color: #fff; }
+        .vid-title { font-size: 0.72rem; font-weight: 600; color: var(--text); line-height: 1.4; }
+        .vid-cat { font-size: 0.62rem; color: var(--text2); margin-top: 2px; }
+
+        /* Wide card (featured) */
+        .vid-card-wide { width: 200px; }
+        .vid-card-wide .vid-thumb { width: 200px; height: 113px; }
+
+        /* ── CATEGORY CHIPS ── */
+        .cat-chips {
+            display: flex; gap: 8px; overflow-x: auto; padding: 12px 14px 4px;
+            scrollbar-width: none;
+        }
+        .cat-chips::-webkit-scrollbar { display: none; }
+        .cat-chip {
+            flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem;
+            font-weight: 700; cursor: pointer; border: 1px solid var(--border);
+            background: var(--card); color: var(--text2); transition: all 0.2s;
+        }
+        .cat-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* ── VIDEO GRID ── */
+        .vid-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px 14px;
+        }
+        .vid-grid-card { cursor: pointer; }
+        .vid-grid-thumb {
+            width: 100%; aspect-ratio: 16/9; border-radius: 8px; object-fit: cover;
+            background: var(--card2); display: block; margin-bottom: 6px;
+        }
+        .vid-grid-title { font-size: 0.75rem; font-weight: 600; color: var(--text); line-height: 1.35; }
+        .vid-grid-cat { font-size: 0.62rem; color: var(--text2); margin-top: 2px; }
+
+        /* ══ PLAYER SECTION ══ */
+        #player-section {
+            display: none; position: fixed; inset: 0; z-index: 500;
+            background: var(--bg); overflow-y: auto;
+            padding-bottom: 20px;
+        }
+        #player-section.open { display: block; }
+        .player-back {
+            position: absolute; top: 12px; left: 12px; z-index: 10;
+            width: 36px; height: 36px; background: rgba(0,0,0,0.7);
+            border-radius: 50%; border: none; color: #fff; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .player-wrapper {
+            position: relative; width: 100%; background: #000;
+            aspect-ratio: 16/9;
+        }
+        #ytplayer { width: 100%; height: 100%; }
+        .player-meta { padding: 14px; }
+        .player-title { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+        .player-cat {
+            display: inline-block; background: rgba(229,9,20,0.15); color: var(--primary);
+            border: 1px solid rgba(229,9,20,0.3); font-size: 0.68rem; font-weight: 700;
+            padding: 3px 9px; border-radius: 4px; margin-bottom: 12px;
+        }
+        .player-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+        .player-share-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+            color: var(--text); border-radius: 8px; padding: 8px 14px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+        }
+
+        /* ── UP NEXT ── */
+        .up-next-title { font-size: 0.88rem; font-weight: 800; padding: 0 14px 10px; color: var(--text); }
+        .up-next-row {
+            display: flex; gap: 10px; align-items: flex-start; padding: 0 14px 12px;
+            cursor: pointer;
+        }
+        .up-next-thumb { width: 110px; height: 62px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--card2); }
+        .up-next-info { flex: 1; }
+        .up-next-name { font-size: 0.78rem; font-weight: 600; color: var(--text); line-height: 1.4; }
+        .up-next-cat { font-size: 0.65rem; color: var(--text2); margin-top: 3px; }
+
+        /* ══ REFER SECTION ══ */
+        .refer-hero {
+            margin: 16px 14px; background: linear-gradient(135deg, rgba(229,9,20,0.15), rgba(245,166,35,0.1));
+            border: 1px solid rgba(229,9,20,0.25); border-radius: 16px; padding: 20px;
+            text-align: center;
+        }
+        .refer-icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .refer-title { font-size: 1.1rem; font-weight: 900; color: var(--text); margin-bottom: 4px; }
+        .refer-sub { font-size: 0.8rem; color: var(--text2); margin-bottom: 16px; line-height: 1.5; }
+        .refer-link-box {
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(245,166,35,0.3);
+            border-radius: 10px; padding: 11px 13px; margin-bottom: 14px;
+            font-size: 0.72rem; color: var(--accent); font-family: monospace;
+            word-break: break-all; text-align: left; line-height: 1.5;
+        }
+        .refer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .refer-btn-tg {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            background: linear-gradient(135deg, #229ED9, #1680b8); color: #fff;
+            border: none; border-radius: 9px; padding: 11px; font-size: 0.82rem;
+            font-weight: 700; cursor: pointer;
+        }
+        .refer-btn-copy {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+            color: var(--text); border-radius: 9px; padding: 11px; font-size: 0.82rem;
+            font-weight: 700; cursor: pointer;
+        }
+        .refer-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 14px 14px; }
+        .refer-stat-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 14px; text-align: center;
+        }
+        .refer-stat-num { font-size: 1.6rem; font-weight: 900; color: var(--accent); }
+        .refer-stat-label { font-size: 0.68rem; color: var(--text2); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .refer-steps { margin: 0 14px 20px; }
+        .refer-step {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 12px 14px; background: var(--card); border: 1px solid var(--border);
+            border-radius: 10px; margin-bottom: 8px;
+        }
+        .refer-step-num {
+            width: 28px; height: 28px; border-radius: 50%; background: var(--primary);
+            color: #fff; font-size: 0.78rem; font-weight: 800; display: flex;
+            align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .refer-step-text { font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+        .refer-step-text strong { color: var(--text); }
+
+        /* ══ BOTTOM NAV ══ */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
-            background: rgba(3,5,9,0.95); border-top: 1px solid rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px); display: flex; padding: 10px 0 20px;
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+            background: rgba(10,10,15,0.98); border-top: 1px solid var(--border);
+            display: flex; backdrop-filter: blur(16px); height: 60px;
         }
         .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-            text-decoration: none; color: var(--disabled-text); font-size: 0.68rem;
-            font-weight: 600; transition: all 0.25s; text-transform: uppercase;
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 3px; cursor: pointer; border: none;
+            background: transparent; color: #555; font-size: 0.6rem; font-weight: 700;
+            letter-spacing: 0.3px; text-transform: uppercase; transition: color 0.2s;
+            text-decoration: none;
         }
-        .nav-item i { font-size: 1.2rem; transition: transform 0.2s; }
+        .nav-item i { font-size: 1.15rem; }
         .nav-item.active { color: var(--primary); }
-        .nav-item.active i { transform: translateY(-3px); filter: drop-shadow(0 0 5px var(--primary)); }
+        .nav-item:hover { color: var(--text2); }
 
-        /* ── CONTENT SECTIONS ── */
-        .content-section { display: none; animation: fadeUp 0.3s ease forwards; }
-        .content-section.active { display: block; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+        /* ── TOAST ── */
+        #toast {
+            position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+            background: #1a1a2a; border: 1px solid rgba(229,9,20,0.4); color: #fff;
+            padding: 10px 20px; border-radius: 10px; font-size: 0.82rem; z-index: 9999;
+            opacity: 0; transition: opacity 0.3s; white-space: nowrap;
+        }
 
-        .loader { border: 3px solid rgba(0,229,255,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 28px; height: 28px; animation: spin 0.7s linear infinite; margin: 28px auto; }
+        /* ── LOADER SPINNER ── */
+        .spin {
+            width: 28px; height: 28px; border: 3px solid #222; border-top-color: var(--primary);
+            border-radius: 50%; animation: spin 0.7s linear infinite; margin: 24px auto;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── MODALS ── */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
-            display: none; justify-content: center; align-items: center;
-            backdrop-filter: blur(8px); padding: 16px;
-        }
-        .modal-overlay.show { display: flex; }
-        .modal-box {
-            background: #0B0F19; border: 1px solid rgba(245,166,35,0.2);
-            color: var(--text); padding: 24px; border-radius: 20px;
-            width: 100%; max-width: 360px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.8), 0 0 40px rgba(245,166,35,0.06);
-            animation: modalPop 0.3s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
-            max-height: 88vh; overflow-y: auto;
-        }
-        @keyframes modalPop { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
-        .modal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-        .modal-header-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .modal-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
-
-        /* ── WITHDRAW TIERS ── */
-        .tier-info {
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px; padding: 12px; margin-bottom: 14px;
-        }
-        .tier-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; }
-        .tier-row:last-child { border-bottom: none; }
-        .tier-range { color: var(--text2); }
-        .tier-ref { font-weight: 700; color: var(--gold); }
-
-        /* ── WITHDRAW METHOD TABS ── */
-        .method-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
-        .method-tab { flex: 1; padding: 10px 6px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.3); color: var(--text2); font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .method-tab.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
-        .method-tab i { display: block; font-size: 1rem; margin-bottom: 4px; }
-
-        /* ── EXCHANGE CARD ── */
-        .exchange-card {
-            background: linear-gradient(135deg, rgba(12,10,22,0.95), rgba(168,237,255,0.05));
-            border: 1px solid rgba(168,237,255,0.2); border-radius: var(--r-card);
-            padding: 20px; margin-bottom: 14px;
-        }
-
-        /* ── TABS ── */
-        .tab-bar { display: flex; gap: 8px; margin-bottom: 16px; }
-        .tab-btn {
-            flex: 1; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3); color: var(--text2); font-weight: 600; font-size: 0.85rem;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .tab-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
-
-        .success-icon { font-size: 3rem; margin-bottom: 12px; animation: iconPop 0.4s ease; }
-        @keyframes iconPop { 0%{transform:scale(0)} 80%{transform:scale(1.2)} 100%{transform:scale(1)} }
+        /* ── EMPTY STATE ── */
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
+        .empty-state i { font-size: 2.5rem; margin-bottom: 10px; color: #333; }
+        .empty-state p { font-size: 0.85rem; }
     </style>
 </head>
 <body>
-    <!-- LOADING SCREEN -->
-    <div id="app-loader">
-        <div class="loader-logo">NEWTUBE</div>
-        <div class="loader-sub">TON · Premium Platform</div>
-        <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
-        <div class="loader-dots">
-            <div class="loader-dot"></div>
-            <div class="loader-dot"></div>
-            <div class="loader-dot"></div>
+
+<!-- LOADER -->
+<div id="app-loader">
+    <div class="loader-logo"><span>NEW</span><span>TUBE</span></div>
+    <div class="loader-sub">Felix</div>
+    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="logo">
+        <div class="logo-icon"><i class="fas fa-play" style="font-size:0.85rem; color:#fff;"></i></div>
+        <div>
+            <div class="logo-text">NEW<span>TUBE</span></div>
+            <span class="logo-sub">FELIX</span>
+        </div>
+    </div>
+    <div class="header-right">
+        <div style="display:flex; flex-direction:column; align-items:flex-end;">
+            <span style="font-size:0.62rem; color:#666; text-transform:uppercase; letter-spacing:0.5px;">Friends</span>
+            <span id="hdr-invites" style="font-size:0.85rem; font-weight:800; color:var(--accent);">0</span>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+
+    <!-- ══ HOME ══ -->
+    <div id="home-section" class="section active">
+        <!-- Hero -->
+        <div class="hero" id="hero-wrap">
+            <img class="hero-thumb" id="hero-thumb" src="" alt="Featured">
+            <div class="hero-overlay"></div>
+            <div class="hero-info">
+                <div class="hero-badge">🔴 NOW STREAMING</div>
+                <div class="hero-title" id="hero-title">Loading...</div>
+                <div class="hero-actions">
+                    <button class="hero-play-btn" id="hero-play-btn"><i class="fas fa-play"></i> Play</button>
+                    <button class="hero-info-btn" id="hero-info-btn"><i class="fas fa-info-circle"></i> More</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category chips -->
+        <div class="cat-chips" id="cat-chips">
+            <div class="cat-chip active" data-cat="all">All</div>
+            <div class="cat-chip" data-cat="movie">🎬 Movies</div>
+            <div class="cat-chip" data-cat="series">📺 Series</div>
+            <div class="cat-chip" data-cat="music">🎵 Music</div>
+            <div class="cat-chip" data-cat="news">📰 News</div>
+            <div class="cat-chip" data-cat="education">📚 Education</div>
+            <div class="cat-chip" data-cat="sports">⚽ Sports</div>
+        </div>
+
+        <!-- Continue Watching row -->
+        <div id="continue-row-wrap">
+            <div class="section-head">
+                <h2>▶ Continue Watching</h2>
+            </div>
+            <div class="scroll-row" id="continue-row">
+                <div class="spin"></div>
+            </div>
+        </div>
+
+        <!-- Featured row -->
+        <div class="section-head">
+            <h2>🔥 Featured</h2>
+            <span class="see-all" onclick="document.getElementById('browse-section').classList.add('active'); document.getElementById('home-section').classList.remove('active'); setNav('browse');">See all</span>
+        </div>
+        <div class="scroll-row" id="featured-row">
+            <div class="spin"></div>
+        </div>
+
+        <!-- New additions -->
+        <div class="section-head" style="padding-top:4px;">
+            <h2>✨ New Additions</h2>
+        </div>
+        <div class="scroll-row" id="new-row">
+            <div class="spin"></div>
         </div>
     </div>
 
-
-    <!-- ANIMATED BACKGROUND -->
-    <div class="bg-canvas"></div>
-    <div class="bg-grid"></div>
-    <div class="particles" id="particles"></div>
-    <div class="video-theme-bg"></div>
-
-    <!-- HEADER -->
-    <header class="main-header">
-        <div class="site-branding">
-            <div class="logo-ring"><i class="fas fa-gem"></i></div>
-            <h1 class="site-title">NEW<span>TUBE</span> TON</h1>
-        </div>
-        <div class="header-right">
-            <button class="hbtn" id="withdraw-modal-btn"><i class="fas fa-wallet"></i></button>
-            <button class="hbtn" id="history-btn"><i class="fas fa-clock-rotate-left"></i></button>
-        </div>
-    </header>
-
-    <main class="container">
-
-        <!-- ══ HOME ══ -->
-        <section id="home-content" class="content-section active">
-            <div class="profile-card">
-
-                <!-- Profile Top -->
-                <div class="profile-top">
-                    <div class="avatar-wrap">
-                        <div class="avatar-ring">💎</div>
-                        <div class="avatar-status"></div>
-                    </div>
-                    <div class="profile-info">
-                        <div class="profile-name" id="profile-name-display">Loading...</div>
-                        <div class="profile-id" id="profile-id-display">
-                            UID: <span id="uid-text">...</span>&nbsp;<i class="fas fa-copy" style="font-size:0.7rem;"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gold & Diamond Cards -->
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                    <!-- Gold Card -->
-                    <div style="background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(245,166,35,0.05)); border:1px solid rgba(245,166,35,0.35); border-radius:16px; padding:14px 12px; position:relative; overflow:hidden;">
-                        <div style="position:absolute; top:-10px; right:-10px; font-size:3rem; opacity:0.07;">🪙</div>
-                        <div style="font-size:0.62rem; color:rgba(245,166,35,0.7); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Gold Balance</div>
-                        <div id="home-gold" style="font-size:1.45rem; font-weight:800; color:#F5A623; text-shadow:0 0 14px rgba(245,166,35,0.4); line-height:1;">0</div>
-                        <div style="font-size:0.62rem; color:rgba(245,166,35,0.5); margin-top:4px;">1,000 Gold = 1 💎</div>
-                    </div>
-                    <!-- Diamond Card -->
-                    <div style="background:linear-gradient(135deg,rgba(168,237,255,0.12),rgba(168,237,255,0.04)); border:1px solid rgba(168,237,255,0.3); border-radius:16px; padding:14px 12px; position:relative; overflow:hidden;">
-                        <div style="position:absolute; top:-10px; right:-10px; font-size:3rem; opacity:0.07;">💎</div>
-                        <div style="font-size:0.62rem; color:rgba(168,237,255,0.6); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Diamond Balance</div>
-                        <div id="home-diamond" style="font-size:1.45rem; font-weight:800; color:#A8EDFF; text-shadow:0 0 14px rgba(168,237,255,0.3); line-height:1;">0</div>
-                        <div style="font-size:0.62rem; color:rgba(168,237,255,0.4); margin-top:4px;">1,000 💎 = $1 USDT</div>
-                    </div>
-                </div>
-
-                <!-- Rate Strip -->
-                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:9px 12px; display:flex; justify-content:space-between; margin-bottom:12px; overflow-x:auto; gap:8px;">
-                    <div style="text-align:center; flex-shrink:0;">
-                        <div style="font-size:0.68rem; font-weight:700; color:var(--gold);">1K Gold</div>
-                        <div style="font-size:0.6rem; color:var(--text2);">= 1 Diamond</div>
-                    </div>
-                    <div style="width:1px; background:rgba(255,255,255,0.08);"></div>
-                    <div style="text-align:center; flex-shrink:0;">
-                        <div style="font-size:0.68rem; font-weight:700; color:var(--diamond);">1K Diamond</div>
-                        <div style="font-size:0.6rem; color:var(--text2);">= $1 USDT</div>
-                    </div>
-                    <div style="width:1px; background:rgba(255,255,255,0.08);"></div>
-                    <div style="text-align:center; flex-shrink:0;">
-                        <div style="font-size:0.68rem; font-weight:700; color:var(--diamond);">1K Diamond</div>
-                        <div style="font-size:0.6rem; color:var(--text2);">= 120 BDT</div>
-                    </div>
-                    <div style="width:1px; background:rgba(255,255,255,0.08);"></div>
-                    <div style="text-align:center; flex-shrink:0;">
-                        <div style="font-size:0.68rem; font-weight:700; color:var(--diamond);">1K Diamond</div>
-                        <div style="font-size:0.6rem; color:var(--text2);">= 0.5 TON</div>
-                    </div>
-                </div>
-
-                <!-- Stats Row -->
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
-                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px; text-align:center;">
-                        <div style="font-size:0.6rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">⚡ Lifetime Earned</div>
-                        <div id="home-life" style="font-size:1.2rem; font-weight:800; color:var(--gold);">0</div>
-                        <div style="font-size:0.58rem; color:var(--text2); margin-top:2px;">Total Gold</div>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px; text-align:center;">
-                        <div style="font-size:0.6rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">👥 Total Invites</div>
-                        <div id="home-normal-ref" style="font-size:1.2rem; font-weight:800; color:var(--primary);">0</div>
-                        <div style="font-size:0.58rem; color:var(--text2); margin-top:2px;">Friends Invited</div>
-                    </div>
-                </div>
-
-                <!-- Refer Bonus Banner -->
-                <div style="background:linear-gradient(135deg,rgba(245,166,35,0.12),rgba(139,92,246,0.1)); border:1px solid rgba(245,166,35,0.25); border-radius:14px; padding:11px 14px; margin-bottom:12px; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:1.5rem;">🎁</span>
-                    <div>
-                        <div style="font-size:0.78rem; font-weight:700; color:var(--gold);">Earn +3,500 🪙 per Referral!</div>
-                        <div style="font-size:0.65rem; color:var(--text2); margin-top:1px;">Invite friends and earn Gold instantly</div>
-                    </div>
-                    <button id="action-invite-banner" style="margin-left:auto; background:linear-gradient(135deg,var(--gold),#d97706); border:none; color:#000; border-radius:8px; padding:6px 12px; font-size:0.7rem; font-weight:800; cursor:pointer; flex-shrink:0;">INVITE</button>
-                </div>
-
-                <!-- Action Buttons Row -->
-                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:10px;">
-                    <button id="action-invite" style="background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.3); color:var(--primary); border-radius:12px; padding:10px 4px; font-size:0.68rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <i class="fas fa-users" style="font-size:0.9rem;"></i>Refer
-                    </button>
-                    <button id="action-promo-code" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); color:#A78BFA; border-radius:12px; padding:10px 4px; font-size:0.68rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <i class="fas fa-gift" style="font-size:0.9rem;"></i>Promo
-                    </button>
-                    <button id="action-exchange" style="background:rgba(168,237,255,0.1); border:1px solid rgba(168,237,255,0.25); color:var(--diamond); border-radius:12px; padding:10px 4px; font-size:0.68rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <i class="fas fa-sync-alt" style="font-size:0.9rem;"></i>Exchange
-                    </button>
-                    <button id="action-milestone" style="background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(217,119,6,0.1)); border:1px solid rgba(245,158,11,0.4); color:#FCD34D; border-radius:12px; padding:10px 4px; font-size:0.68rem; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <i class="fas fa-trophy" style="font-size:0.9rem;"></i>Events
-                    </button>
-                </div>
-
-                <!-- Links Row -->
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
-                    <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:var(--text2); border-radius:10px; padding:9px; font-size:0.72rem; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        <i class="fab fa-telegram-plane" style="color:#2AABEE;"></i> Official
-                    </a>
-                    <a href="https://t.me/Your_Admin11" target="_blank" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:var(--text2); border-radius:10px; padding:9px; font-size:0.72rem; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        <i class="fas fa-headset" style="color:var(--green);"></i> Support
-                    </a>
-                </div>
-
-    <!-- Daily/Weekly Event Modal -->
-    <div id="milestoneModalOverlay" class="modal-overlay">
-        <div class="modal-box" style="max-height:88vh; overflow-y:auto; padding:0;">
-            <div style="background:linear-gradient(135deg,#f59e0b22,#8B5CF622); padding:18px 18px 12px; border-bottom:1px solid rgba(255,193,7,0.12); position:sticky; top:0; backdrop-filter:blur(12px); z-index:1;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div>
-                        <div style="font-size:1.05rem; font-weight:800; color:var(--gold);">🎯 Daily & Weekly Events</div>
-                        <div style="font-size:0.72rem; color:var(--text2); margin-top:2px;">Complete tasks — earn bonus Gold every day</div>
-                    </div>
-                    <button onclick="document.getElementById('milestoneModalOverlay').classList.remove('show')"
-                        style="background:rgba(255,255,255,0.08); border:none; color:var(--text2); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:0.8rem;">✕</button>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <button id="event-tab-daily" onclick="switchEventTab('daily')"
-                        style="flex:1; padding:7px; border-radius:8px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; background:var(--gold); color:#000;">⚡ Daily</button>
-                    <button id="event-tab-weekly" onclick="switchEventTab('weekly')"
-                        style="flex:1; padding:7px; border-radius:8px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; background:rgba(255,255,255,0.08); color:var(--text2);">📅 Weekly</button>
-                </div>
-            </div>
-            <div id="event-list" style="padding:14px; display:flex; flex-direction:column; gap:8px;"></div>
+    <!-- ══ BROWSE ══ -->
+    <div id="browse-section" class="section" style="padding-top:12px;">
+        <div id="browse-grid" class="vid-grid">
+            <div style="grid-column:1/-1;" class="spin"></div>
         </div>
     </div>
 
-                <!-- Recent Videos Strip -->
-                <div style="margin-top:16px;">
-                    <div style="font-size:0.8rem; font-weight:800; color:var(--text); margin-bottom:9px; display:flex; align-items:center; gap:7px;">
-                        <i class="fas fa-film" style="color:var(--gold);"></i> Recent Videos
-                    </div>
-                    <div class="recent-strip" id="home-recent-videos">
-                        <div class="loader" style="margin:10px auto;"></div>
-                    </div>
-                </div>
-
+    <!-- ══ REFER ══ -->
+    <div id="refer-section" class="section" style="padding-top:12px;">
+        <div class="refer-hero">
+            <div class="refer-icon">🎬</div>
+            <div class="refer-title">Invite Friends</div>
+            <div class="refer-sub">Share NEWTUBE Felix with friends.<br>They join, you grow together!</div>
+            <div class="refer-link-box" id="refer-link-display">Loading...</div>
+            <div class="refer-btns">
+                <button class="refer-btn-tg" id="refer-tg-btn"><i class="fab fa-telegram-plane"></i> Share</button>
+                <button class="refer-btn-copy" id="refer-copy-btn"><i class="fas fa-copy"></i> Copy</button>
             </div>
-        </section>
+        </div>
 
-        <!-- ══ ADS ══ -->
-        <section id="ads-content" class="content-section">
-
-            <div class="section-title">
-                <div class="title-icon ti-blue"><i class="fas fa-satellite-dish"></i></div>
-                Network Missions
+        <div class="refer-stats">
+            <div class="refer-stat-card">
+                <div class="refer-stat-num" id="ref-invited-count">0</div>
+                <div class="refer-stat-label">Friends Invited</div>
             </div>
-
-            <!-- AD LOOTBOX -->
-            <div class="lootbox-card">
-                <h3 style="margin:0 0 10px; color:var(--text); font-size:1.1rem;"><i class="fas fa-box-open" style="color:var(--gold);"></i> Ad Lootbox</h3>
-                <p style="font-size:0.82rem; color:var(--text2); margin-bottom:14px;">Watch ads to fill lootbox. Claim when ready. Max 5,000 Gold.</p>
-                <div style="font-size:2.2rem; font-weight:800; color:var(--gold); font-family:monospace; margin-bottom:14px; text-shadow: 0 0 14px var(--gold-glow);" id="lootboxGoldDisplay">0 🪙</div>
-                <div class="lootbox-progress-wrap">
-                    <div class="lootbox-bar-bg"><div class="lootbox-bar-fill" id="lootboxProgressBar" style="width:0%"></div></div>
-                    <div class="lootbox-range-text"><span>Min: 600 Gold</span><span>Max: 3,000 Gold</span></div>
-                </div>
-                <button id="claimLootboxBtn" class="btn gold-btn" disabled style="margin-top:10px;"><i class="fas fa-download"></i> Claim Lootbox</button>
+            <div class="refer-stat-card">
+                <div class="refer-stat-num" id="ref-total-count">0</div>
+                <div class="refer-stat-label">Total Members</div>
             </div>
+        </div>
 
-            <div class="info-bar">
-                <i class="fas fa-info-circle"></i>
-                <div>Data resets daily at <strong>12:00 AM</strong>. Higher rewards on special networks.</div>
+        <div class="refer-steps">
+            <div style="font-size:0.88rem; font-weight:800; color:var(--text); margin-bottom:10px; padding:0 2px;">How It Works</div>
+            <div class="refer-step">
+                <div class="refer-step-num">1</div>
+                <div class="refer-step-text"><strong>Copy your link</strong> and share it with friends on Telegram, WhatsApp, or anywhere.</div>
             </div>
-
-            <!-- Adsgram Daily -->
-            <div class="ad-card ad-adsgram-daily">
-                <div class="ad-card-top">
-                    <div>
-                        <div class="ad-name"><i class="fas fa-bolt" style="color:var(--gold);"></i> AdsGram Daily</div>
-                        <div class="ad-network">Standard Video Network</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="ad-badge">ADSGRAM</div>
-                        <div class="ad-limit-text" id="limit-adsgram-daily">0/10</div>
-                    </div>
-                </div>
-                <div class="ad-card-bottom">
-                    <div class="ad-reward">🪙 200 Gold</div>
-                    <button id="btn-watch-adsgram-daily" class="btn outline task-btn">Watch</button>
-                </div>
+            <div class="refer-step">
+                <div class="refer-step-num">2</div>
+                <div class="refer-step-text"><strong>Friend opens the app</strong> using your link and starts watching.</div>
             </div>
-
-            <!-- Adsgram Special -->
-            <div class="ad-card ad-adsgram-special">
-                <div class="ad-card-top">
-                    <div>
-                        <div class="ad-name"><i class="fas fa-star" style="color:var(--gold-bright);"></i> AdsGram Special</div>
-                        <div class="ad-network">Premium Video Network</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="ad-badge">PREMIUM</div>
-                        <div class="ad-limit-text" id="limit-adsgram-special">0/5</div>
-                    </div>
-                </div>
-                <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--gold-bright);">🪙 350 Gold</div>
-                    <button id="btn-watch-adsgram-special" class="btn task-btn" style="background:linear-gradient(135deg,#FFD166,#e8b930);color:#000;">Watch</button>
-                </div>
-            </div>
-
-            <!-- Monetag -->
-            <div class="ad-card ad-monetag">
-                <div class="ad-card-top">
-                    <div>
-                        <div class="ad-name"><i class="fas fa-external-link-alt" style="color:var(--secondary);"></i> Monetag Web</div>
-                        <div class="ad-network">External Display Network</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="ad-badge">MONETAG</div>
-                        <div class="ad-limit-text" id="limit-monetag">0/20</div>
-                    </div>
-                </div>
-                <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--secondary);">🪙 200 Gold</div>
-                    <button id="btn-watch-monetag" class="btn outline task-btn" style="border-color:var(--secondary);color:var(--secondary);">Watch</button>
-                </div>
-            </div>
-
-            <!-- GigaPub -->
-            <div class="ad-card ad-giga">
-                <div class="ad-card-top">
-                    <div>
-                        <div class="ad-name"><i class="fas fa-hand-pointer" style="color:var(--red);"></i> GigaPub Display</div>
-                        <div class="ad-network">Interactive Ad Network</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="ad-badge">GIGAPUB</div>
-                        <div class="ad-limit-text" id="limit-giga">0/20</div>
-                    </div>
-                </div>
-                <div class="ad-card-bottom">
-                    <div class="ad-reward" style="color:var(--text);">🪙 200 Gold</div>
-                    <button id="btn-watch-giga" class="btn outline task-btn" style="border-color:var(--red);color:var(--red);">Watch</button>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- ══ VIDEO SECTION ══ -->
-        <section id="video-content" class="content-section">
-            <div class="section-title">
-                <div class="title-icon ti-red"><i class="fab fa-youtube"></i></div>
-                Watch Videos &amp; Earn Gold
-            </div>
-
-            <!-- Video Player -->
-            <div class="video-player-card">
-                <div class="video-player-label">&#9679; LIVE STREAM</div>
-                <div class="video-wrapper" id="videoWrapper" style="position:relative; border-radius:12px; overflow:hidden;">
-                <div id="ytplayer" style="width:100%; height:210px; background:#000;"></div>
-                <button class="video-rotate-btn" onclick="toggleVideoRotate()" title="Rotate video">
-                    <i class="fas fa-rotate-right"></i> Rotate
-                </button>
-            </div>
-            </div>
-
-            <!-- Mining Box -->
-            <div class="mining-compact">
-                <div class="mining-compact-left">
-                    <div class="mining-compact-title">
-                        <i class="fas fa-microchip"></i> Gold Mining Box
-                        <span style="font-size:0.62rem;color:var(--text2);font-weight:500;">1hr = 500 Gold | Box: 500–5,000</span>
-                    </div>
-                    <div class="mining-compact-bar">
-                        <div class="mining-compact-fill" id="videoMiningProgress" style="width:0%;"></div>
-                    </div>
-                    <div class="mining-compact-stats">
-                        <span id="videoDailyLimitDisplay">Daily: 0 / 6000 Gold</span>
-                    </div>
-                </div>
-                <div class="mining-compact-right" style="display:flex; flex-direction:column; align-items:flex-end; gap:7px;">
-                    <div class="mining-compact-pts" id="videoMinedDisplay">0 🪙</div>
-                    <button id="claimVideoPtsBtn" class="btn outline" disabled style="padding:8px 12px; font-size:0.75rem; width:auto; white-space:nowrap;"><i class="fas fa-lock"></i> Min 100</button>
-                </div>
-            </div>
-
-            <!-- Video Table -->
-            <h4 style="color:var(--text); margin-bottom:9px; font-weight:800; font-size:0.9rem; display:flex; align-items:center; gap:7px;"><i class="fas fa-film" style="color:var(--gold);"></i> Available Streams</h4>
-            <div class="video-table-wrap">
-                <div class="video-table-header">
-                    <span>Video</span>
-                    <span style="text-align:right;">Reward</span>
-                </div>
-                <div id="video-list-container">
-                    <div class="loader"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ══ TASKS ══ -->
-        <section id="task-content" class="content-section">
-            <div class="section-title">
-                <div class="title-icon ti-violet"><i class="fas fa-microchip"></i></div>
-                Smart Contracts
-            </div>
-
-            <div class="tab-bar">
-                <button id="tab-channel" class="tab-btn active" data-task-tab="channel">
-                    <i class="fab fa-telegram-plane"></i> Channels
-                </button>
-                <button id="tab-partner" class="tab-btn" data-task-tab="partner">
-                    <i class="fas fa-robot"></i> Partners
-                </button>
-            </div>
-
-            <div id="task-list-channel" style="display:grid; gap:12px;"></div>
-            <div id="task-list-partner" style="display:none; gap:12px;"></div>
-        </section>
-
-    </main>
-
-    <!-- ══ BOTTOM NAV ══ -->
-    <nav class="bottom-nav">
-        <a href="#" class="nav-item active" data-tab-target="#home-content"><i class="fas fa-layer-group"></i>Panel</a>
-        <a href="#" class="nav-item" data-tab-target="#ads-content"><i class="fas fa-bolt"></i>Extract</a>
-        <a href="#" class="nav-item" data-tab-target="#video-content"><i class="fas fa-play-circle"></i>Watch</a>
-        <a href="#" class="nav-item" data-tab-target="#task-content"><i class="fas fa-check-double"></i>Tasks</a>
-    </nav>
-
-    <!-- ══ MODALS ══ -->
-
-    <!-- Withdraw Modal -->
-    <div id="withdrawModalOverlay" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-header-icon" style="background:var(--gold-dim); color:var(--gold);"><i class="fas fa-wallet"></i></div>
-                <h3 class="modal-title">Withdraw Diamonds</h3>
-            </div>
-
-            <div style="background:rgba(0,229,160,0.06); border:1px solid rgba(0,229,160,0.2); border-radius:10px; padding:11px 13px; margin-bottom:14px; font-size:0.8rem; color:var(--text2); line-height:1.6;">
-                <i class="fas fa-clock" style="color:var(--green);"></i>&nbsp;
-                After submitting a withdraw request, you will receive payment within <b style="color:var(--green);">12–48 hours</b>.
-            </div>
-
-            <div style="text-align:center; margin-bottom:16px; background:rgba(0,0,0,0.3); border-radius:12px; padding:14px;">
-                <div style="font-size:0.72rem; color:var(--text2); margin-bottom:5px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Your Diamond Balance</div>
-                <div style="font-size:2rem; font-weight:800; color:var(--diamond); font-family:monospace;" id="withdrawDiamondBalance">0 💎</div>
-            </div>
-
-            <!-- Withdraw Method Selector -->
-            <div class="method-tabs">
-                <button class="method-tab active" data-method="binance" onclick="selectMethod('binance',this)">
-                    <i class="fas fa-coins"></i>Binance
-                </button>
-                <button class="method-tab" data-method="tonkeeper" onclick="selectMethod('tonkeeper',this)">
-                    <i class="fas fa-gem"></i>Tonkeeper
-                </button>
-                <button class="method-tab" data-method="bkash" onclick="selectMethod('bkash',this)">
-                    <i class="fas fa-mobile-alt"></i>bKash
-                </button>
-            </div>
-
-            <div class="tier-info" id="withdraw-method-info">
-                <div class="tier-row"><span class="tier-range">Method</span><span class="tier-ref" id="method-label">Binance UID</span></div>
-                <div class="tier-row"><span class="tier-range">Rate</span><span class="tier-ref" id="method-rate" style="color:var(--diamond);">1,000 💎 = 1 USDT</span></div>
-                <div class="tier-row"><span class="tier-range">Min Withdraw</span><span class="tier-ref" id="method-min">1,000 💎</span></div>
-                <div class="tier-row"><span class="tier-range">1st Withdraw</span><span class="tier-ref" style="color:var(--green); font-size:0.75rem;">5 Tasks + 5 Ads</span></div>
-                <div class="tier-row"><span class="tier-range">Next Withdraw</span><span class="tier-ref" style="color:var(--blue); font-size:0.75rem;">5 Ads only</span></div>
-            </div>
-
-            <!-- Eligibility Progress -->
-            <div id="withdraw-eligibility" style="background:rgba(0,0,0,0.3); border-radius:12px; padding:13px 15px; margin-bottom:14px;">
-                <div style="font-size:0.72rem; color:var(--text2); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">📋 Your Eligibility</div>
-
-                <!-- Tasks progress (only shown for first withdraw) -->
-                <div id="elig-tasks-row" style="margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
-                        <span style="color:var(--text2);">✅ Tasks Completed</span>
-                        <span id="elig-tasks-val" style="color:var(--text); font-weight:700;">0 / 5</span>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.08); border-radius:99px; height:6px; overflow:hidden;">
-                        <div id="elig-tasks-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#10B981,#34D399); border-radius:99px; transition:width 0.4s;"></div>
-                    </div>
-                </div>
-
-                <!-- Ads progress -->
-                <div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:4px;">
-                        <span style="color:var(--text2);">📺 Ads Watched Today</span>
-                        <span id="elig-ads-val" style="color:var(--text); font-weight:700;">0 / 5</span>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.08); border-radius:99px; height:6px; overflow:hidden;">
-                        <div id="elig-ads-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#00E5FF,#8B5CF6); border-radius:99px; transition:width 0.4s;"></div>
-                    </div>
-                </div>
-
-                <!-- Status badge -->
-                <div id="elig-status" style="margin-top:10px; text-align:center; font-size:0.8rem; font-weight:700; padding:6px; border-radius:8px; background:rgba(255,255,255,0.05);">
-                    Checking...
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label id="account-label">Binance UID</label>
-                <input type="text" id="accountDetails" placeholder="Enter your Binance UID">
-            </div>
-
-            <div class="form-group">
-                <label>Diamond Amount</label>
-                <input type="number" id="withdrawalAmount" placeholder="Min: see above">
-                <div id="realtime-diamond-display" style="margin-top:8px; padding:10px 12px; background:rgba(168,237,255,0.07); border:1px solid rgba(168,237,255,0.2); border-radius:9px; font-size:0.85rem; color:var(--diamond); font-weight:800; display:none;">
-                    ≈ <span id="calc-currency-val">0</span>
-                </div>
-            </div>
-
-            <div style="display:flex; gap:10px;">
-                <button class="btn outline close-modal-btn" style="flex:1;">Cancel</button>
-                <button id="submitWithdrawalBtn" class="btn gold-btn" style="flex:1;">Submit</button>
+            <div class="refer-step">
+                <div class="refer-step-num">3</div>
+                <div class="refer-step-text"><strong>Your invite count grows</strong> — track it right here anytime.</div>
             </div>
         </div>
     </div>
 
-    <!-- Exchange Modal -->
-    <div id="exchangeModalOverlay" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-header-icon" style="background:var(--diamond-dim); color:var(--diamond);"><i class="fas fa-sync-alt"></i></div>
-                <h3 class="modal-title">Gold → Diamond</h3>
-            </div>
-            <p style="font-size:0.85rem; color:var(--text2); margin-bottom:16px;">Convert your Gold to Diamonds. Rate: <strong style="color:var(--gold);">1,000 Gold = 1 Diamond</strong></p>
+</main>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
-                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(245,166,35,0.2); border-radius:10px; padding:13px; text-align:center;">
-                    <div style="font-size:0.7rem; color:var(--text2); font-weight:700; margin-bottom:5px;">YOUR GOLD</div>
-                    <div style="font-size:1.4rem; font-weight:800; color:var(--gold); font-family:monospace;" id="modal-gold-bal">0</div>
-                </div>
-                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(168,237,255,0.2); border-radius:10px; padding:13px; text-align:center;">
-                    <div style="font-size:0.7rem; color:var(--text2); font-weight:700; margin-bottom:5px;">YOUR DIAMONDS</div>
-                    <div style="font-size:1.4rem; font-weight:800; color:var(--diamond); font-family:monospace;" id="modal-diamond-bal">0</div>
-                </div>
-            </div>
-
-            <div style="background:rgba(168,237,255,0.05); border:1px solid rgba(168,237,255,0.15); border-radius:10px; padding:11px; margin-bottom:14px; font-size:0.8rem; color:var(--text2);">
-                <i class="fas fa-info-circle" style="color:var(--diamond);"></i>&nbsp;
-                Minimum: <strong style="color:var(--diamond);">5,000 Gold</strong> &nbsp;|&nbsp; Maximum: <strong style="color:var(--diamond);">100,000 Gold</strong>
-            </div>
-
-            <div class="form-group">
-                <label>Gold Amount to Convert (5K – 100K)</label>
-                <input type="number" id="exchangeGoldInput" placeholder="Enter gold amount (e.g. 5000)" min="5000" max="100000">
-                <div id="exchange-preview" style="margin-top:8px; font-size:0.9rem; color:var(--diamond); font-weight:800; display:none;">
-                    You receive: <span id="exchange-diamond-out">0</span> 💎 Diamond
-                </div>
-            </div>
-
-            <div style="display:flex; gap:10px;">
-                <button class="btn outline close-modal-btn" style="flex:1;">Cancel</button>
-                <button id="confirmExchangeBtn" class="btn diamond-btn" style="flex:1;"><i class="fas fa-sync-alt"></i> Convert</button>
-            </div>
+<!-- ══ PLAYER ══ -->
+<div id="player-section">
+    <div class="player-wrapper">
+        <button class="player-back" id="player-back-btn"><i class="fas fa-arrow-left"></i></button>
+        <div id="ytplayer"></div>
+    </div>
+    <div class="player-meta">
+        <div class="player-title" id="player-title">—</div>
+        <div class="player-cat" id="player-cat"></div>
+        <div class="player-actions">
+            <button class="player-share-btn" id="player-share-btn"><i class="fas fa-share-alt"></i> Share</button>
         </div>
     </div>
+    <div class="up-next-title">Up Next</div>
+    <div id="up-next-list"></div>
+</div>
 
-    <!-- Promo Code Modal -->
-    <div id="promoModalOverlay" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-header-icon" style="background:rgba(255,255,255,0.1); color:#fff;"><i class="fas fa-gift"></i></div>
-                <h3 class="modal-title">Promo Code</h3>
-            </div>
-            <p style="font-size:0.85rem; color:var(--text2); margin-bottom:15px;">Redeem secret codes for extra Gold. Ad verification required.</p>
-            <div class="form-group"><input type="text" id="promoCodeInput" placeholder="Enter code..."></div>
-            <button id="claimPromoBtn" class="btn gold-btn" style="margin-bottom:10px;">Claim Reward</button>
-            <button class="btn ghost close-modal-btn">Close</button>
-        </div>
-    </div>
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="switchTab('home')">
+        <i class="fas fa-home"></i>Home
+    </button>
+    <button class="nav-item" id="nav-browse" onclick="switchTab('browse')">
+        <i class="fas fa-th-large"></i>Browse
+    </button>
+    <button class="nav-item" id="nav-refer" onclick="switchTab('refer')">
+        <i class="fas fa-user-plus"></i>Refer
+    </button>
+</nav>
 
-    <!-- Invite Modal -->
-    <div id="inviteModalOverlay" class="modal-overlay">
-        <div class="modal-box" style="text-align:center;">
-            <i class="fas fa-user-plus" style="font-size:3rem; color:var(--gold); margin-bottom:14px;"></i>
-            <h3 style="margin:0 0 5px; font-size:1.2rem;">Referral Network</h3>
-            <p style="font-size:0.82rem; color:var(--text2); margin-bottom:16px;">Earn <strong style="color:var(--gold);">+3,500 🪙 Gold</strong> instantly per referral!</p>
+<div id="toast"></div>
+<input type="text" id="ref-link-input" readonly style="position:absolute;opacity:0;pointer-events:none;width:1px;">
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
-                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(245,166,35,0.2); border-radius:11px; padding:11px;">
-                    <div style="font-size:0.62rem; color:var(--text2); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Invited</div>
-                    <div style="font-size:1.4rem; font-weight:800; color:var(--gold);" id="modal-total-invites">0</div>
-                </div>
-                <div style="background:rgba(0,0,0,0.4); border:1px solid rgba(0,229,160,0.2); border-radius:11px; padding:11px;">
-                    <div style="font-size:0.62rem; color:var(--text2); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Gold Earned</div>
-                    <div style="font-size:1.2rem; font-weight:800; color:var(--green);" id="modal-ref-gold">0 🪙</div>
-                </div>
-            </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import {
+    getFirestore, collection, getDocs, getDoc,
+    doc, setDoc, updateDoc, increment, query, orderBy, limit, serverTimestamp, where
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-            <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(245,166,35,0.12); border-radius:12px; padding:13px; margin-bottom:14px; text-align:left;">
-                <div style="font-size:0.68rem; font-weight:800; color:var(--gold); letter-spacing:1px; margin-bottom:8px; text-transform:uppercase;">📋 How It Works</div>
-                <div style="font-size:0.8rem; color:var(--text2); line-height:1.9;">
-                    <div>👥 <b style="color:#fff;">Step 1:</b> Share your link below</div>
-                    <div>🎮 <b style="color:#fff;">Step 2:</b> Friend joins &amp; completes setup</div>
-                    <div>✅ <b style="color:#fff;">Step 3:</b> You get <b style="color:var(--gold);">+3,500 Gold</b> instantly!</div>
-                </div>
-            </div>
+// ── FIREBASE ──
+const firebaseConfig = {
+    apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
+    authDomain: "newtube-ton.firebaseapp.com",
+    projectId: "newtube-ton",
+    storageBucket: "newtube-ton.firebasestorage.app",
+    messagingSenderId: "41011548816",
+    appId: "1:41011548816:web:9c27139d9487b144ecbe15"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const API = 'https://newtube-ton.vercel.app';
 
-            <div style="background:rgba(0,0,0,0.5); border:1px solid rgba(245,166,35,0.25); border-radius:10px; padding:11px 13px; margin-bottom:14px; word-break:break-all; font-size:0.72rem; color:var(--gold); font-family:'Roboto Mono',monospace; text-align:left; line-height:1.5;" id="referralLinkDisplay">Loading...</div>
+// ── TELEGRAM ──
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+const tgUser = tg?.initDataUnsafe?.user || null;
 
-            <button id="telegramShareBtn" class="btn" style="margin-bottom:9px; background:linear-gradient(135deg,#229ED9,#1680b8); box-shadow:0 4px 14px rgba(34,158,217,0.35);">
-                <i class="fab fa-telegram-plane"></i>&nbsp; Share on Telegram
-            </button>
-            <button id="modalCopyReferralLinkBtn" class="btn outline" style="margin-bottom:9px;">
-                <i class="fas fa-copy"></i>&nbsp; Copy Link
-            </button>
-            <button class="btn ghost close-modal-btn">Close</button>
-            <input type="text" id="modalReferralLinkInput" readonly style="position:absolute;opacity:0;pointer-events:none;width:1px;">
-        </div>
-    </div>
+// ── STATE ──
+let currentUser = null;
+let allVideos   = [];
+let currentCat  = 'all';
+let currentPlayingId = null;
+let ytPlayer = null;
+let ytAPIReady = false;
 
-    <!-- Success Modal -->
-    <div id="successModalOverlay" class="modal-overlay" style="z-index: 3000;">
-        <div class="modal-box" style="max-width:280px; text-align:center; padding:30px 20px;">
-            <div class="success-icon" style="color:var(--green);"><i class="fas fa-check-circle"></i></div>
-            <h3 id="successModalTitle" style="margin:0 0 10px;">Success!</h3>
-            <p id="successModalMessage" style="color:var(--text2); margin:0; font-size:0.9rem;"></p>
-        </div>
-    </div>
+// ── YOUTUBE API ──
+window.onYouTubeIframeAPIReady = () => { ytAPIReady = true; };
+const ytScript = document.createElement('script');
+ytScript.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(ytScript);
 
-    <!-- History Modal -->
-    <div id="historyModalOverlay" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-header-icon" style="background:var(--gold-dim); color:var(--gold);"><i class="fas fa-history"></i></div>
-                <h3 class="modal-title">Transaction History</h3>
-            </div>
-            <div id="combined-history-list" style="max-height:50vh; overflow-y:auto; padding-right:5px;"></div>
-            <button class="btn ghost close-modal-btn" style="margin-top:15px;">Close</button>
-        </div>
-    </div>
+// ── INIT ──
+async function init() {
+    if (!tgUser) {
+        // Dev mode — fake user
+        currentUser = { id: 'test123', firstName: 'Viewer', telegramUsername: 'test', totalInvites: 0, referralCount: 0 };
+        await loadVideos();
+        hideLoader();
+        return;
+    }
 
-    <!-- Verification Modal -->
-    <div id="activationModalOverlay" class="modal-overlay" style="z-index: 5000;">
-        <div class="modal-box" style="text-align:center;">
-            <i class="fas fa-shield-alt" style="font-size:3rem; color:var(--gold); margin-bottom:15px;"></i>
-            <h3 style="margin:0 0 10px; font-size:1.2rem;">Join & Activate</h3>
-            <p style="color:var(--text2); font-size:0.85rem; margin-bottom:20px;">Join our Official Channel &amp; Group to activate your account.</p>
-            <a href="https://t.me/NEEWTON_OFFICIAL" target="_blank" class="btn outline" style="margin-bottom:10px;"><i class="fab fa-telegram-plane"></i> 1. Official Channel</a>
-            <a href="https://t.me/newTon_Gc" target="_blank" class="btn outline" style="margin-bottom:15px;"><i class="fas fa-users"></i> 2. Community Group</a>
-            <button id="activateAccountBtn" class="btn gold-btn">✅ Verify &amp; Continue</button>
-        </div>
-    </div>
+    const userId   = String(tgUser.id);
+    const userRef  = doc(db, 'users', userId);
+    const startParam = tg?.initDataUnsafe?.start_param || '';
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, orderBy, limit, addDoc, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, increment, arrayUnion, writeBatch } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
-            authDomain: "newtube-ton.firebaseapp.com",
-            databaseURL: "https://newtube-ton-default-rtdb.firebaseio.com",
-            projectId: "newtube-ton",
-            storageBucket: "newtube-ton.firebasestorage.app",
-            messagingSenderId: "41011548816",
-            appId: "1:41011548816:web:9c27139d9487b144ecbe15"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const tg = window.Telegram.WebApp;
-
-        let currentUser = null;
-        let isSubmittingWithdrawal = false;
-        let isAdRunning = false;
-        let selectedWithdrawMethod = 'binance';
-
-        // ── CURRENCY CONSTANTS ──
-        // 1,000 Gold = 1 Diamond
-        // 1,000 Diamond = $1 = 120 BDT = 0.5 TON
-        const GOLD_PER_DIAMOND = 1000;
-        const REFERRAL_REWARD_GOLD = 3500;
-        const VIDEO_GOLD_PER_HOUR = 500;   // 200-500 range, set to max
-        const VIDEO_BOX_MIN = 100;   // min 100 to claim
-        const VIDEO_BOX_MAX = 6000;  // full box = 6000 gold (matches daily limit)
-        const DAILY_VIDEO_MAX = 6000; // 12 hrs max daily
-
-        const WITHDRAW_METHODS = {
-            binance:    { label: 'Binance UID',       min: 100, placeholder: 'Enter your Binance UID',  rate: '1,000 💎 = 1 USDT',   currency: 'USDT'  },
-            tonkeeper:  { label: 'Tonkeeper Address', min: 50,  placeholder: 'UQ... Wallet Address',    rate: '1,000 💎 = 0.45 TON',  currency: 'TON'   },
-            bkash:      { label: 'bKash Number',      min: 80,  placeholder: '01XXXXXXXXX',             rate: '1,000 💎 = 120 BDT',   currency: 'BDT'   }
-        };
-
-        const LOOTBOX_MIN = 1000;  // min 1K to claim
-        const LOOTBOX_MAX = 5000;  // max 5K per claim
-        const LOOTBOX_DAILY_CLAIM_MAX = 3;
-        let localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-
-        // Video mining variables
-        let ytPlayer = null;
-        let isVideoPlaying = false;
-        let localVideoMined = 0;
-        let videoPlaySeconds = 0;
-        let vServerStartTime = 0;
-        let vServerSignature = "";
-        const TASK_API_BASE = 'https://newtube-ton.vercel.app/api';
-        const VERCEL_API_BASE = "https://newtube-ton.vercel.app";
-
-        let videoWatchTotalSeconds = 0;
-        let lastMonetagAdShownAt = 0;
-        const MONETAG_AD_INTERVAL_SECONDS = 600;
-
-        // ── AD FUNCTIONS ──
-        const showAdsgramDailyAd = () => new Promise((res, rej) => {
-            if (window.Adsgram) { window.Adsgram.init({blockId:"int-27565"}).show().then(res).catch(rej); }
-            else { setTimeout(res, 2000); }
-        });
-        const showAdsgramSpecialAd = () => new Promise((res, rej) => {
-            if (window.Adsgram) { window.Adsgram.init({blockId:"27566"}).show().then(res).catch(rej); }
-            else { setTimeout(res, 2000); }
-        });
-        const showMonetagAd = () => new Promise((res) => {
-            if (typeof show_9442539 === 'function') {
-                const t = setTimeout(res, 15000);
-                show_9442539().then(() => { clearTimeout(t); res(); }).catch(() => { clearTimeout(t); res(); });
-            } else { setTimeout(res, 2000); }
-        });
-        const showGigaPubAd = () => new Promise((res) => {
-            if (typeof window.showGiga === 'function') {
-                const t = setTimeout(res, 15000);
-                window.showGiga("main").then(() => { clearTimeout(t); res(); }).catch(() => { clearTimeout(t); res(); });
-            } else { setTimeout(res, 2000); }
-        });
-
-        // ── LOOTBOX UI ──
-        function updateLootboxUI() {
-            const display = document.getElementById('lootboxGoldDisplay');
-            const btn = document.getElementById('claimLootboxBtn');
-            const bar = document.getElementById('lootboxProgressBar');
-            const g = localAdData.unclaimedGold;
-            display.textContent = `${g.toLocaleString()} 🪙`;
-            const pct = Math.min(100, (g / LOOTBOX_MAX) * 100);
-            if (bar) bar.style.width = pct + '%';
-            if (btn.dataset.busy === "true") return;
-            const claimCount = currentUser ? getLootboxClaimCount() : 0;
-            const limitReached = claimCount >= LOOTBOX_DAILY_CLAIM_MAX;
-            if (limitReached) {
-                btn.disabled = true;
-                btn.innerHTML = `<i class="fas fa-lock"></i> Daily limit (${claimCount}/${LOOTBOX_DAILY_CLAIM_MAX})`;
-            } else if (g >= LOOTBOX_MIN) {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-download"></i> Claim ${g.toLocaleString()} 🪙 (${claimCount}/${LOOTBOX_DAILY_CLAIM_MAX})`;
-            } else {
-                btn.disabled = true;
-                btn.innerHTML = `<i class="fas fa-lock"></i> Min 600 Gold (${g}/${LOOTBOX_MIN})`;
-            }
-        }
-
-        function getLootboxClaimCount() {
-            const key = 'newtube_lootbox_claims_' + currentUser.id;
-            const today = new Date().toLocaleDateString('en-US', {timeZone:'Asia/Dhaka'});
-            try {
-                const saved = JSON.parse(localStorage.getItem(key) || '{}');
-                if (saved.date !== today) return 0;
-                return saved.count || 0;
-            } catch(e) { return 0; }
-        }
-        function incrementLootboxClaimCount() {
-            const key = 'newtube_lootbox_claims_' + currentUser.id;
-            const today = new Date().toLocaleDateString('en-US', {timeZone:'Asia/Dhaka'});
-            const count = getLootboxClaimCount() + 1;
-            localStorage.setItem(key, JSON.stringify({ date: today, count }));
-        }
-
-        document.getElementById('claimLootboxBtn').addEventListener('click', async () => {
-            if (localAdData.unclaimedGold < LOOTBOX_MIN) return;
-            // If gold exceeds max, clamp it — don't silently reset without claiming
-            if (localAdData.unclaimedGold > LOOTBOX_MAX) {
-                localAdData.unclaimedGold = LOOTBOX_MAX;
-                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-            }
-            const claimCount = getLootboxClaimCount();
-            if (claimCount >= LOOTBOX_DAILY_CLAIM_MAX) {
-                alert(`⚠️ Daily limit reached! You can claim the lootbox ${LOOTBOX_DAILY_CLAIM_MAX} times per day.\nCome back tomorrow!`);
-                return;
-            }
-            const btn = document.getElementById('claimLootboxBtn');
-            btn.disabled = true; btn.dataset.busy = "true"; btn.textContent = "Claiming...";
-            try {
-                const claimedGold = localAdData.unclaimedGold;
-                const res = await fetch('https://newtube-ton.vercel.app/api/claimLootbox', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId:                   String(currentUser.id),
-                        points:                   claimedGold,
-                        adsWatched:               localAdData.adsWatched               || 0,
-                        adsWatchedAdsgramDaily:   localAdData.adsWatchedAdsgramDaily    || 0,
-                        adsWatchedAdsgramSpecial: localAdData.adsWatchedAdsgramSpecial  || 0,
-                        adsWatchedMonetag:        localAdData.adsWatchedMonetag         || 0,
-                        adsWatchedGiga:           localAdData.adsWatchedGiga            || 0,
-                    })
-                });
-                const data = await res.json();
-                if (!data.ok) {
-                    alert('Claim failed: ' + (data.error || 'Unknown error'));
-                    btn.dataset.busy = 'false'; btn.disabled = false; btn.textContent = 'Claim Lootbox';
-                    updateLootboxUI(); return;
-                }
-                currentUser.goldBalance        = (currentUser.goldBalance || 0) + claimedGold;
-                currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + claimedGold;
-                currentUser.adsWatchedToday    = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-                incrementLootboxClaimCount();
-                const remaining = LOOTBOX_DAILY_CLAIM_MAX - getLootboxClaimCount();
-                showSuccessModal("Lootbox Claimed! 🎉", `+${claimedGold.toLocaleString()} 🪙 Gold added!<br><small style="color:rgba(255,255,255,0.6);">Claims left today: ${remaining}/${LOOTBOX_DAILY_CLAIM_MAX}</small>`);
-                localAdData = { unclaimedGold: 0, adsWatched: 0, adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0 };
-                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                updateBalanceUI(); updateAdButtonStats();
-            } catch(e) {
-                console.error('Lootbox claim error:', e);
-                alert('Claim failed: ' + e.message);
-            }
-            btn.dataset.busy = "false";
-            updateLootboxUI();
-        });
-
-        // ── AD CONFIG ──
-        let AD_CONFIG = {
-            adsgramDaily:   { limit: 10, min: 200, max: 200 },
-            adsgramSpecial: { limit: 5,  min: 350, max: 350 },
-            monetag:        { limit: 20, min: 200, max: 200 },
-            giga:           { limit: 20, min: 200, max: 200 }
-        };
-
-        // Load ad rewards from Firebase config (set by Admin panel Settings)
-        try {
-            const adCfgSnap = await getDoc(doc(db, 'config', 'withdrawConfig'));
-            if (adCfgSnap.exists()) {
-                const cfg = adCfgSnap.data();
-                if (cfg.adsgramDaily)   { AD_CONFIG.adsgramDaily.min   = cfg.adsgramDaily;   AD_CONFIG.adsgramDaily.max   = cfg.adsgramDaily;   }
-                if (cfg.adsgramSpecial) { AD_CONFIG.adsgramSpecial.min = cfg.adsgramSpecial; AD_CONFIG.adsgramSpecial.max = cfg.adsgramSpecial; }
-                if (cfg.monetag)        { AD_CONFIG.monetag.min        = cfg.monetag;        AD_CONFIG.monetag.max        = cfg.monetag;        }
-                if (cfg.giga)           { AD_CONFIG.giga.min           = cfg.giga;           AD_CONFIG.giga.max           = cfg.giga;           }
-            }
-        } catch(e) { console.warn('Ad config load failed, using defaults:', e.message); }
-
-        async function runAdAndVerifyTime(btnId, adFunc) {
-            if (isAdRunning) { alert("⚠️ An ad is already playing."); return false; }
-            const btn = document.getElementById(btnId); if (!btn) return false;
-            isAdRunning = true; btn.dataset.busy = "true"; btn.disabled = true;
-            const originalHTML = btn.innerHTML;
-            const minDuration = 6000; const startTime = Date.now();
-            const timer = setInterval(() => {
-                const left = Math.ceil((minDuration - (Date.now() - startTime)) / 1000);
-                btn.textContent = left > 0 ? `Wait ${left}s...` : "Checking...";
-            }, 500);
-            return new Promise(async (resolve) => {
-                let closedEarly = false;
-                const visHandler = () => { if (!document.hidden && (Date.now() - startTime) < minDuration) closedEarly = true; };
-                document.addEventListener('visibilitychange', visHandler);
-                try {
-                    const adStart = Date.now();
-                    if (adFunc) await adFunc();
-                    if ((Date.now() - adStart) > 500 && (Date.now() - adStart) < minDuration) closedEarly = true;
-                    const remaining = minDuration - (Date.now() - startTime);
-                    if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
-                } catch (e) { closedEarly = true; }
-                clearInterval(timer); document.removeEventListener('visibilitychange', visHandler);
-                isAdRunning = false; btn.dataset.busy = "false";
-                if (closedEarly) {
-                    alert("⚠️ Ad skipped too early. No reward.");
-                    btn.innerHTML = originalHTML; btn.disabled = false; resolve(false);
-                } else {
-                    btn.innerHTML = originalHTML; resolve(true);
-                }
-            });
-        }
-
-        function getTodayDateString() { return new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }); }
-
-        async function checkDailyReset(user) {
-            const today = getTodayDateString();
-            if (user.lastResetDate !== today) {
-                const updates = { adsWatchedAdsgramDaily: 0, adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0, adsWatchedGiga: 0, dailyVideoMined: 0, lastResetDate: today };
-                Object.assign(user, updates);
-                // Write to Firestore only on actual reset day (not every open)
-                try { await updateDoc(doc(db, 'users', user.id), updates); } catch (e) {}
-                const savedLoot = localStorage.getItem('newtube_lootbox_' + user.id);
-                if (savedLoot) {
-                    try {
-                        let parsedLoot = JSON.parse(savedLoot);
-                        parsedLoot.adsWatchedAdsgramDaily = 0; parsedLoot.adsWatchedAdsgramSpecial = 0;
-                        parsedLoot.adsWatchedMonetag = 0; parsedLoot.adsWatchedGiga = 0;
-                        localStorage.setItem('newtube_lootbox_' + user.id, JSON.stringify(parsedLoot));
-                        if (localAdData) { localAdData.adsWatchedAdsgramDaily = 0; localAdData.adsWatchedAdsgramSpecial = 0; localAdData.adsWatchedMonetag = 0; localAdData.adsWatchedGiga = 0; }
-                    } catch(e) {}
-                }
-                localStorage.removeItem('newtube_video_mine_' + user.id);
-                localVideoMined = 0; vServerStartTime = 0; vServerSignature = "";
-                updateAdButtonStats(); updateVideoUI();
-                return true;
-            }
-            return false; // No reset needed — no Firestore write
-        }
-
-        async function initializeUser(tgUser, referrerCode) {
-            const userId = String(tgUser.id);
-            const userRef = doc(db, 'users', userId);
-            const today = getTodayDateString();
-
-            let userSnap = null;
-            try {
-                userSnap = await Promise.race([
-                    getDoc(userRef),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 12000))
-                ]);
-            } catch(e) { console.error('Firestore read failed:', e.message); }
-
-            if (!userSnap) {
-                // Firestore timeout — restore from localStorage cache so gold doesn't show 0
-                let cachedBalance = { goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0, totalInvites: 0, referralCount: 0 };
-                try {
-                    const savedCache = localStorage.getItem('newtube_user_cache_' + userId);
-                    if (savedCache) cachedBalance = { ...cachedBalance, ...JSON.parse(savedCache) };
-                } catch(e) {}
-                currentUser = {
-                    id: userId,
-                    goldBalance: cachedBalance.goldBalance,
-                    diamondBalance: cachedBalance.diamondBalance,
-                    lifetimeGoldEarned: cachedBalance.lifetimeGoldEarned,
-                    totalInvites: cachedBalance.totalInvites,
-                    referralCount: cachedBalance.referralCount,
-                    telegramUsername: tgUser.username || 'N/A',
-                    firstName: tgUser.first_name || 'User',
-                    completedTasks: [], isBanned: false,
-                    adsWatchedAdsgramDaily: 0,
-                    adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
-                    adsWatchedGiga: 0, dailyVideoMined: 0,
-                    lastResetDate: today,
-                    _offlineMode: true
-                };
-            } else if (!userSnap.exists()) {
-                const data = {
-                    goldBalance: 0, diamondBalance: 0, lifetimeGoldEarned: 0,
-                    referralCount: 0, totalInvites: 0,
-                    completedTasks: [], createdAt: serverTimestamp(),
-                    telegramUsername: tgUser.username || 'N/A',
-                    firstName: tgUser.first_name || 'User',
-                    isBanned: false, withdrawalCount: 0,
-                    lifetimeAdsWatched: 0, adsWatchedAdsgramDaily: 0,
-                    adsWatchedAdsgramSpecial: 0, adsWatchedMonetag: 0,
-                    adsWatchedGiga: 0, dailyVideoMined: 0,
-                    lastResetDate: today, welcomeBonusClaimed: false,
-                    tasksCompletedToday: 0, adsWatchedToday: 0, lastWithdrawDate: ''
-                };
-                if (referrerCode && referrerCode !== userId) {
-                    data.referredBy = referrerCode;
-                    fetch('https://newtube-ton.vercel.app/api/init', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId, firstName: tgUser.first_name || 'User', username: tgUser.username || 'N/A', referrerCode })
-                    }).catch(()=>{});
-                }
-                try { await setDoc(userRef, data); } catch(e) { console.error('setDoc failed:', e); }
-                currentUser = { id: userId, ...data };
-            } else {
-                currentUser = { id: userSnap.id, ...userSnap.data() };
-                if (currentUser.isBanned) {
-                    document.body.innerHTML = `<h3 style="text-align:center;margin-top:50px;color:#F43F5E;">Account Banned.</h3>`;
-                    return null;
-                }
-                // Save balance to localStorage so offline mode can restore it
-                try {
-                    localStorage.setItem('newtube_user_cache_' + userId, JSON.stringify({
-                        goldBalance: currentUser.goldBalance || 0,
-                        diamondBalance: currentUser.diamondBalance || 0,
-                        lifetimeGoldEarned: currentUser.lifetimeGoldEarned || 0,
-                        totalInvites: currentUser.totalInvites || 0,
-                        referralCount: currentUser.referralCount || 0
-                    }));
-                } catch(e) {}
-                checkDailyReset(currentUser).catch(()=>{});
-            }
-
-            // LocalStorage restore
-            const savedLoot = localStorage.getItem('newtube_lootbox_' + currentUser.id);
-            if (savedLoot) {
-                try {
-                    localAdData = JSON.parse(savedLoot);
-                    if (!localAdData.unclaimedGold && localAdData.unclaimedPoints) {
-                        localAdData.unclaimedGold = localAdData.unclaimedPoints;
-                        delete localAdData.unclaimedPoints;
-                    }
-                } catch(e) {}
-            }
-            const savedVideo = localStorage.getItem('newtube_video_mine_' + currentUser.id);
-            if (savedVideo) {
-                try {
-                    let vData = JSON.parse(savedVideo);
-                    localVideoMined = vData.mined || 0;
-                    vServerStartTime = vData.startTime || 0;
-                    vServerSignature = vData.signature || "";
-                } catch(e) {}
-            }
-
-            updateLootboxUI();
-            updateVideoUI();
-            updateBalanceUI();
-            document.getElementById('uid-text').textContent = currentUser.id;
-            document.getElementById('profile-name-display').textContent = currentUser.firstName || currentUser.telegramUsername || 'User';
-            try { document.getElementById('modalReferralLinkInput').value = `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${userId}`; } catch(_) {}
-            updateAdButtonStats();
-            setTimeout(() => {
-                try { fetchVideosFromFirebase(); } catch(e) {}
-                try { loadHomeRecentVideos(); } catch(e) {}
-            }, 300);
-        }
-
-        function updateAdButtonStats() {
-            if (!currentUser) return;
-            const upd = (btnId, limitId, dbCount, localCount, max) => {
-                const btn = document.getElementById(btnId);
-                const lim = document.getElementById(limitId);
-                if(!btn || !lim) return;
-                const totalCount = (dbCount || 0) + (localCount || 0);
-                lim.textContent = `${totalCount}/${max}`;
-                if (btn.dataset.busy === "true") return;
-                if (totalCount >= max) { btn.disabled = true; btn.textContent = "Done"; }
-                else { btn.disabled = false; btn.textContent = "Watch"; btn.style.background = ''; btn.style.color = ''; }
+    try {
+        const snap = await getDoc(userRef);
+        if (!snap.exists()) {
+            // New user
+            const data = {
+                firstName: tgUser.first_name || 'Viewer',
+                telegramUsername: tgUser.username || '',
+                telegramId: userId,
+                totalInvites: 0,
+                referralCount: 0,
+                createdAt: serverTimestamp(),
+                isBanned: false,
             };
-            upd('btn-watch-adsgram-daily',   'limit-adsgram-daily',   currentUser.adsWatchedAdsgramDaily,   localAdData.adsWatchedAdsgramDaily,   AD_CONFIG.adsgramDaily.limit);
-            upd('btn-watch-adsgram-special', 'limit-adsgram-special', currentUser.adsWatchedAdsgramSpecial, localAdData.adsWatchedAdsgramSpecial, AD_CONFIG.adsgramSpecial.limit);
-            upd('btn-watch-monetag',         'limit-monetag',         currentUser.adsWatchedMonetag,        localAdData.adsWatchedMonetag,        AD_CONFIG.monetag.limit);
-            upd('btn-watch-giga',            'limit-giga',            currentUser.adsWatchedGiga,           localAdData.adsWatchedGiga,           AD_CONFIG.giga.limit);
-        }
+            await setDoc(userRef, data);
+            currentUser = { id: userId, ...data };
 
-        function updateBalanceUI() {
-            if(!currentUser) return;
-            const gold = Math.floor(currentUser.goldBalance || 0);
-            const diamond = Math.floor(currentUser.diamondBalance || 0);
-            // Keep localStorage cache in sync so offline mode shows correct balance
-            try {
-                if (currentUser.id) {
-                    localStorage.setItem('newtube_user_cache_' + currentUser.id, JSON.stringify({
-                        goldBalance: gold,
-                        diamondBalance: diamond,
-                        lifetimeGoldEarned: currentUser.lifetimeGoldEarned || 0,
-                        totalInvites: currentUser.totalInvites || 0,
-                        referralCount: currentUser.referralCount || 0
-                    }));
-                }
-            } catch(e) {}
-            document.getElementById('home-gold').textContent = gold.toLocaleString();
-            document.getElementById('home-diamond').textContent = diamond.toLocaleString();
-            document.getElementById('home-life').textContent = Math.floor(currentUser.lifetimeGoldEarned || 0).toLocaleString();
-            document.getElementById('home-normal-ref').textContent = currentUser.totalInvites || 0;
-
-            const wEl = document.getElementById('withdrawDiamondBalance');
-            if (wEl) wEl.textContent = `${diamond.toLocaleString()} 💎`;
-            const mg = document.getElementById('modal-gold-bal');
-            const md = document.getElementById('modal-diamond-bal');
-            if (mg) mg.textContent = gold.toLocaleString();
-            if (md) md.textContent = diamond.toLocaleString();
-        }
-
-        // ── AD HANDLERS ──
-        const handleAdClick = async (type, btnId, maxLimit, adFunc) => {
-            await checkDailyReset(currentUser);
-            if (localAdData.unclaimedGold >= LOOTBOX_MAX) { alert(`⚠️ Lootbox full (Max ${LOOTBOX_MAX} Gold). Claim first!`); return; }
-            const countName   = `adsWatched${type.charAt(0).toUpperCase() + type.slice(1)}`;
-            // Firestore value is authoritative — prevents localStorage clear exploit
-            const serverCount = currentUser[countName] || 0;
-            const localCount  = localAdData[countName]  || 0;
-            const totalCount  = serverCount + localCount;
-            if (totalCount >= maxLimit) return;
-            const ok = await runAdAndVerifyTime(btnId, adFunc);
-            if (ok) {
-                const min = AD_CONFIG[type].min; const max = AD_CONFIG[type].max;
-                let reward = Math.floor(Math.random() * (max - min + 1)) + min;
-                if (localAdData.unclaimedGold + reward > LOOTBOX_MAX) reward = LOOTBOX_MAX - localAdData.unclaimedGold;
-                localAdData.unclaimedGold += reward;
-                localAdData.adsWatched += 1;
-                localAdData[countName] = (localAdData[countName] || 0) + 1;
-                currentUser.adsWatchedToday = (currentUser.adsWatchedToday || 0) + 1;
-                localStorage.setItem('newtube_lootbox_' + currentUser.id, JSON.stringify(localAdData));
-                showSuccessModal("Ad Watched! 🎁", `+${reward} 🪙 Gold added to Lootbox`);
-                updateLootboxUI(); updateAdButtonStats();
-            }
-        };
-
-        const attachAdListener = (id, type, maxLimit, adFunc) => {
-            const btn = document.getElementById(id);
-            if(btn) btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); handleAdClick(type, id, maxLimit, adFunc); });
-        };
-        attachAdListener('btn-watch-adsgram-daily', 'adsgramDaily', AD_CONFIG.adsgramDaily.limit, showAdsgramDailyAd);
-        attachAdListener('btn-watch-adsgram-special', 'adsgramSpecial', AD_CONFIG.adsgramSpecial.limit, showAdsgramSpecialAd);
-        attachAdListener('btn-watch-monetag', 'monetag', AD_CONFIG.monetag.limit, showMonetagAd);
-        attachAdListener('btn-watch-giga', 'giga', AD_CONFIG.giga.limit, showGigaPubAd);
-
-        // ── YOUTUBE VIDEO MINING ──
-        window.ytApiReady = false;
-        const ytScriptTag = document.createElement('script');
-        ytScriptTag.src = "https://www.youtube.com/iframe_api";
-        document.head.appendChild(ytScriptTag);
-
-        
-        
-        // ── VIDEO ROTATION ──
-        let isRotated = false;
-        function toggleVideoRotate() {
-            const wrapper = document.getElementById('videoWrapper');
-            if (!wrapper) return;
-            isRotated = !isRotated;
-            wrapper.classList.toggle('rotated', isRotated);
-            const btn = wrapper.querySelector('.video-rotate-btn');
-            if (btn) {
-                btn.innerHTML = isRotated
-                    ? '<i class="fas fa-rotate-left"></i> Normal'
-                    : '<i class="fas fa-rotate-right"></i> Rotate';
-            }
-        }
-
-        // ── HIDE LOADER ──
-        function hideLoader() {
-            const loader = document.getElementById('app-loader');
-            if (loader) loader.classList.add('hidden');
-        }
-        // Hide after app fully loads (max 2.5s)
-        setTimeout(hideLoader, 2500);
-
-        window.onYouTubeIframeAPIReady = function() { window.ytApiReady = true; };
-
-        async function onPlayerStateChange(event) {
-            if (event.data == YT.PlayerState.PLAYING) {
-                isVideoPlaying = true;
-                if (vServerStartTime === 0) {
-                    // Retry videoStart up to 3 times with 2s delay (handles Vercel cold start)
-                    let attempts = 0;
-                    const tryVideoStart = async () => {
-                        attempts++;
-                        try {
-                            const res = await fetch(`${VERCEL_API_BASE}/api/videoStart`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id }) });
-                            const data = await res.json();
-                            if (data.success) {
-                                vServerStartTime = data.startTime; vServerSignature = data.signature;
-                                localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature }));
-                            } else {
-                                if (attempts < 3) { await new Promise(r => setTimeout(r, 2000)); return tryVideoStart(); }
-                                isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Server error. Reload app.");
-                            }
-                        } catch (e) {
-                            if (attempts < 3) { await new Promise(r => setTimeout(r, 2000)); return tryVideoStart(); }
-                            isVideoPlaying = false; if(ytPlayer) ytPlayer.pauseVideo(); alert("Connection failed. Check your internet & try again.");
-                        }
-                    };
-                    tryVideoStart();
-                }
-            } else { isVideoPlaying = false; }
-        }
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && isVideoPlaying && ytPlayer) ytPlayer.pauseVideo();
-        });
-
-        window.playYtVideo = function(vId) {
-            if (!window.ytApiReady) return alert("YouTube Player is loading...");
-            if (localVideoMined >= VIDEO_BOX_MAX) return alert(`Box is full! Claim your ${VIDEO_BOX_MAX} Gold first.`);
-            let dailyMined = currentUser.dailyVideoMined || 0;
-            if (dailyMined >= DAILY_VIDEO_MAX) return alert(`Daily limit reached (${DAILY_VIDEO_MAX} Gold/day). Come back tomorrow!`);
-            if (!ytPlayer) {
-                ytPlayer = new YT.Player('ytplayer', {
-                    height: '210', width: '100%', videoId: vId,
-                    playerVars: { autoplay: 1, controls: 0, rel: 0, modestbranding: 1 },
-                    events: { 'onStateChange': onPlayerStateChange }
-                });
-            } else { ytPlayer.loadVideoById(vId); }
-            document.querySelector('[data-tab-target="#video-content"]')?.click();
-        };
-
-        function updateVideoUI() {
-            const mined = localVideoMined;
-            const pct = Math.min(100, (mined / VIDEO_BOX_MAX) * 100);
-            const prog = document.getElementById('videoMiningProgress');
-            const disp = document.getElementById('videoMinedDisplay');
-            const btn = document.getElementById('claimVideoPtsBtn');
-            const daily = document.getElementById('videoDailyLimitDisplay');
-            if(prog) prog.style.width = pct + '%';
-            if(disp) disp.textContent = `${Math.floor(mined)} 🪙`;
-            if(daily) daily.textContent = `Daily: ${Math.floor(currentUser?.dailyVideoMined || 0)} / ${DAILY_VIDEO_MAX} Gold`;
-            if(btn) {
-                if(btn.dataset.busy === "true") return;
-                if(mined >= VIDEO_BOX_MIN) {
-                    btn.disabled = false;
-                    btn.innerHTML = `<i class="fas fa-box-open"></i> Claim ${Math.floor(mined)} 🪙`;
-                } else {
-                    btn.disabled = true;
-                    btn.innerHTML = `<i class="fas fa-lock"></i> Min ${VIDEO_BOX_MIN} Gold`;
-                }
-            }
-        }
-
-        // Video gold timer (every 15s)
-        setInterval(() => {
-            if (!isVideoPlaying || !currentUser) return;
-            videoPlaySeconds++; videoWatchTotalSeconds++;
-            if (videoWatchTotalSeconds - lastMonetagAdShownAt >= MONETAG_AD_INTERVAL_SECONDS && !isAdRunning) {
-                lastMonetagAdShownAt = videoWatchTotalSeconds;
-                try { showMonetagAd(); } catch(e) {}
-            }
-            if (videoPlaySeconds >= 15) {
-                const goldPerTick = VIDEO_GOLD_PER_HOUR / (60 * 4);
-                localVideoMined = Math.min(VIDEO_BOX_MAX, localVideoMined + goldPerTick);
-                videoPlaySeconds = 0;
-                updateVideoUI();
-                localStorage.setItem('newtube_video_mine_' + currentUser.id, JSON.stringify({ mined: localVideoMined, startTime: vServerStartTime, signature: vServerSignature }));
-                if (localVideoMined >= VIDEO_BOX_MAX && ytPlayer) ytPlayer.pauseVideo();
-            }
-        }, 1000);
-
-        // Claim Video Gold
-        document.getElementById('claimVideoPtsBtn').addEventListener('click', async () => {
-            if (localVideoMined < VIDEO_BOX_MIN) return;
-            if (vServerStartTime === 0 || !vServerSignature) return alert("Security token missing. Refresh app.");
-            const btn = document.getElementById('claimVideoPtsBtn');
-            const amtToClaim = Math.floor(localVideoMined);
-            btn.dataset.busy = "true";
-            const adFunctions = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd, showGigaPubAd];
-            const randomAdFunc = adFunctions[Math.floor(Math.random() * adFunctions.length)];
-            const ok = await runAdAndVerifyTime('claimVideoPtsBtn', randomAdFunc);
-            if (ok) {
-                btn.disabled = true; btn.textContent = "Verifying...";
+            // Handle referral
+            if (startParam && startParam !== userId) {
+                const referrerId = startParam;
                 try {
-                    const res = await fetch(`${VERCEL_API_BASE}/api/videoClaim`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: currentUser.id, startTime: vServerStartTime, signature: vServerSignature, claimedPoints: amtToClaim })
-                    });
-                    const data = await res.json();
-                    if (data.success || data.ok) {
-                        const added = data.pointsAdded || amtToClaim;
-                        currentUser.goldBalance = (currentUser.goldBalance || 0) + added;
-                        currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + added;
-                        currentUser.dailyVideoMined = (currentUser.dailyVideoMined || 0) + added;
-                        showSuccessModal("Gold Mined! ⛏️", `+${added} 🪙 Gold added!`);
-                        localVideoMined = 0; vServerStartTime = 0; vServerSignature = ""; videoPlaySeconds = 0;
-                        localStorage.removeItem('newtube_video_mine_' + currentUser.id);
-                        updateBalanceUI(); updateVideoUI();
-                        if (ytPlayer) ytPlayer.playVideo();
-                    } else {
-                        alert("Verification Failed: " + (data.message || data.error));
-                        localVideoMined = 0; vServerStartTime = 0; vServerSignature = "";
-                        localStorage.removeItem('newtube_video_mine_' + currentUser.id);
-                        updateVideoUI();
-                    }
-                } catch(e) { console.error(e); alert("Connection failed. Check your internet & try again."); }
-            }
-            btn.dataset.busy = "false";
-            updateVideoUI();
-        });
-
-        // Video cache (fetch once per session — saves repeated Firestore reads)
-        let _videoCache = null;
-        async function getVideosFromCache() {
-            if (_videoCache) return _videoCache;
-            // Fetch once, filter client-side (saves composite index + reduces reads)
-            const snap = await getDocs(query(collection(db, 'videos'), where('isActive', '==', true), limit(20)));
-            _videoCache = [];
-            snap.forEach(d => { const v = d.data(); if (v.isActive !== false) _videoCache.push(v); });
-            return _videoCache;
-        }
-
-        async function fetchVideosFromFirebase() {
-            const container = document.getElementById('video-list-container');
-            container.innerHTML = '<div class="loader"></div>';
-            try {
-                const videos = await getVideosFromCache();
-                container.innerHTML = '';
-                if (!videos.length) { container.innerHTML = '<p style="text-align:center; padding:16px; color:var(--text2); font-size:0.83rem;">No videos available.</p>'; return; }
-                videos.forEach(v => {
-                    container.innerHTML += `
-                        <div class="video-table-row" onclick="window.playYtVideo('${v.videoId}')">
-                            <div class="video-row-info">
-                                <div class="video-row-thumb">
-                                    <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" alt="${v.title}">
-                                    <div class="video-row-thumb-overlay"><i class="fas fa-play"></i></div>
-                                </div>
-                                <div class="video-row-title">${v.title}</div>
-                            </div>
-                            <div class="video-row-pts">🪙 500/hr</div>
-                        </div>`;
-                });
-            } catch(e) { container.innerHTML = '<p style="text-align:center; padding:16px; color:var(--red); font-size:0.83rem;">Failed to load.</p>'; }
-        }
-
-        async function loadHomeRecentVideos() {
-            const strip = document.getElementById('home-recent-videos');
-            strip.innerHTML = '';
-            try {
-                const videos = await getVideosFromCache();
-                if (!videos.length) { strip.innerHTML = '<p style="font-size:0.78rem; color:var(--text2);">No videos yet.</p>'; return; }
-                videos.slice(0, 8).forEach(v => {
-                    strip.innerHTML += `
-                        <div class="recent-vid-item" onclick="window.playYtVideo('${v.videoId}')">
-                            <div class="recent-vid-thumb">
-                                <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" alt="${v.title}">
-                            </div>
-                            <div class="recent-vid-title">${v.title}</div>
-                        </div>`;
-                });
-            } catch(e) { strip.innerHTML = ''; }
-        }
-
-        // ── WITHDRAW METHOD SELECTOR ──
-        window.selectMethod = function(method, el) {
-            selectedWithdrawMethod = method;
-            document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            const m = WITHDRAW_METHODS[method];
-            document.getElementById('method-label').textContent = m.label;
-            document.getElementById('method-min').textContent = `${m.min} 💎`;
-            const rateEl = document.getElementById('method-rate');
-            if (rateEl) rateEl.textContent = m.rate;
-            document.getElementById('account-label').textContent = m.label;
-            document.getElementById('accountDetails').placeholder = m.placeholder;
-            document.getElementById('withdrawalAmount').placeholder = `Min: ${m.min.toLocaleString()} Diamonds`;
-            document.getElementById('realtime-diamond-display').style.display = 'none';
-            document.getElementById('withdrawalAmount').value = '';
-        };
-
-
-        // ── WITHDRAW ELIGIBILITY CHECKER ──
-        function updateWithdrawEligibility() {
-            const adsToday   = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-            const tasksTotal = currentUser.completedTasks?.length || 0;
-            const isFirstWith = (currentUser.withdrawalCount || 0) === 0;
-
-            // Tasks row — only relevant for first withdraw
-            const tasksRow = document.getElementById('elig-tasks-row');
-            if (tasksRow) tasksRow.style.display = isFirstWith ? 'block' : 'none';
-
-            // Tasks bar
-            const tasksDone = Math.min(tasksTotal, 5);
-            const tasksVal  = document.getElementById('elig-tasks-val');
-            const tasksBar  = document.getElementById('elig-tasks-bar');
-            if (tasksVal) tasksVal.textContent = `${tasksDone} / 5`;
-            if (tasksBar) {
-                tasksBar.style.width = `${(tasksDone / 5) * 100}%`;
-                tasksBar.style.background = tasksDone >= 5
-                    ? 'linear-gradient(90deg,#10B981,#34D399)'
-                    : 'linear-gradient(90deg,#F59E0B,#FCD34D)';
-            }
-
-            // Ads bar
-            const adsDone = Math.min(adsToday, 5);
-            const adsVal  = document.getElementById('elig-ads-val');
-            const adsBar  = document.getElementById('elig-ads-bar');
-            if (adsVal) adsVal.textContent = `${adsDone} / 5`;
-            if (adsBar) {
-                adsBar.style.width = `${(adsDone / 5) * 100}%`;
-                adsBar.style.background = adsDone >= 20
-                    ? 'linear-gradient(90deg,#10B981,#34D399)'
-                    : 'linear-gradient(90deg,#00E5FF,#8B5CF6)';
-            }
-
-            // Status badge
-            const statusEl = document.getElementById('elig-status');
-            if (!statusEl) return;
-            const tasksOk = !isFirstWith || tasksTotal >= 5;
-            const adsOk   = adsToday >= 5;
-
-            if (tasksOk && adsOk) {
-                statusEl.textContent  = '✅ Eligible to Withdraw!';
-                statusEl.style.color  = '#10B981';
-                statusEl.style.background = 'rgba(16,185,129,0.1)';
-            } else {
-                const missing = [];
-                if (isFirstWith && tasksTotal < 5) missing.push(`${5 - tasksTotal} more task(s)`);
-                if (adsToday < 5) missing.push(`${5 - adsToday} more ad(s) today`);
-                statusEl.textContent  = '⏳ Need: ' + missing.join(' + ');
-                statusEl.style.color  = '#F59E0B';
-                statusEl.style.background = 'rgba(245,158,11,0.1)';
-            }
-        }
-
-        document.getElementById('action-milestone').addEventListener('click', () => {
-            document.getElementById('milestoneModalOverlay').classList.add('show');
-            renderEventList();
-        });
-
-        document.getElementById('withdraw-modal-btn').addEventListener('click', () => {
-            updateBalanceUI();
-            document.getElementById('withdrawalAmount').value = '';
-            document.getElementById('accountDetails').value = '';
-            document.getElementById('realtime-diamond-display').style.display = 'none';
-            document.getElementById('withdrawModalOverlay').classList.add('show');
-            updateWithdrawEligibility();
-        });
-
-        document.getElementById('withdrawalAmount').addEventListener('input', (e) => {
-            const amt = parseFloat(e.target.value);
-            const preview = document.getElementById('realtime-diamond-display');
-            const m = WITHDRAW_METHODS[selectedWithdrawMethod];
-            if (amt >= m.min) {
-                let converted = '';
-                if (selectedWithdrawMethod === 'binance')   converted = (amt / 1000).toFixed(4) + ' USDT';
-                if (selectedWithdrawMethod === 'tonkeeper') converted = (amt / 1000 * 0.45).toFixed(4) + ' TON';
-                if (selectedWithdrawMethod === 'bkash')     converted = (amt / 1000 * 120).toFixed(2) + ' BDT';
-                document.getElementById('calc-currency-val').textContent = converted;
-                preview.style.display = 'block';
-            } else { preview.style.display = 'none'; }
-        });
-
-        document.getElementById('submitWithdrawalBtn').addEventListener('click', async (e) => {
-            e.preventDefault(); if (isSubmittingWithdrawal) return;
-            const amount  = parseFloat(document.getElementById('withdrawalAmount').value);
-            const details = document.getElementById('accountDetails').value.trim();
-            const today   = getTodayDateString();
-            const method  = selectedWithdrawMethod;
-            const minReq  = WITHDRAW_METHODS[method].min;
-
-            // ── Client-side guards ──
-            if (!details || isNaN(amount) || amount < minReq)
-                return alert(`Min ${minReq} Diamond and address required.`);
-            if ((currentUser.diamondBalance || 0) < amount)
-                return alert('Insufficient Diamonds.');
-            if (currentUser.lastWithdrawDate === today)
-                return alert('1 withdrawal per day only.');
-            const adsToday    = (currentUser.adsWatchedToday || 0) + (localAdData.adsWatched || 0);
-            const tasksTotal  = currentUser.completedTasks?.length || 0;
-            const isFirstWith = (currentUser.withdrawalCount || 0) === 0;
-            if (isFirstWith && tasksTotal < 5)  return alert(`❌ Minimum 5 tasks required.\nCompleted: ${tasksTotal}/5`);
-            if (adsToday < 5) return alert(`❌ You need to watch 5 ads today.\nDone: ${adsToday}/5`);
-            if (!confirm(`Withdraw ${amount.toLocaleString()} 💎 via ${WITHDRAW_METHODS[method].label}?`)) return;
-
-            // ── API call (handles Firestore + Telegram notifications) ──
-            isSubmittingWithdrawal = true;
-            const btn = document.getElementById('submitWithdrawalBtn');
-            btn.disabled = true; btn.textContent = 'Processing...';
-            try {
-                const res  = await fetch(`${API_BASE}/withdraw`, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ userId: String(currentUser.id), method, details, amount })
-                });
-                const data = await res.json();
-                if (!data.ok) {
-                    const msgs = {
-                        already_withdrawn_today:  '1 withdrawal per day only.',
-                        insufficient_diamonds:    'Insufficient Diamonds.',
-                        address_used_by_other:    '❌ This address is already used by another account.',
-                        need_5_tasks:             '❌ Minimum 5 tasks required.',
-                        need_20_ads_today:        '❌ You need to watch 5 ads today.',
-                        below_minimum:            `❌ Minimum ${WITHDRAW_METHODS[method]?.min || 500} Diamonds required for ${method}.`,
-                    };
-                    alert(msgs[data.error] || `Error: ${data.error || 'Unknown'}`);
-                    return;
-                }
-                // Success
-                document.getElementById('withdrawalAmount').value = '';
-                document.getElementById('accountDetails').value  = '';
-                document.getElementById('withdrawModalOverlay').classList.remove('show');
-                showSuccessModal('Request Sent! ✅',
-                    `${amount.toLocaleString()} 💎 withdrawal submitted.<br><small style="color:rgba(255,255,255,0.6);">Telegram notification sent. Processing 12–48h.</small>`);
-                currentUser.diamondBalance    = (currentUser.diamondBalance || 0) - amount;
-                currentUser.lastWithdrawDate  = today;
-                currentUser.withdrawalCount   = (currentUser.withdrawalCount || 0) + 1;
-                updateBalanceUI();
-                _historyCache = null; // clear cache so new entry loads next time
-            } catch (err) {
-                alert('Network error: ' + err.message);
-            } finally {
-                isSubmittingWithdrawal = false;
-                btn.disabled = false; btn.textContent = 'Submit';
-            }
-        });
-
-        // ── EXCHANGE: Gold → Diamond ──
-        document.getElementById('action-exchange').addEventListener('click', () => {
-            updateBalanceUI();
-            document.getElementById('exchangeGoldInput').value = '';
-            document.getElementById('exchange-preview').style.display = 'none';
-            document.getElementById('exchangeModalOverlay').classList.add('show');
-        });
-
-        document.getElementById('exchangeGoldInput').addEventListener('input', (e) => {
-            const g = parseFloat(e.target.value);
-            const preview = document.getElementById('exchange-preview');
-            if (g >= 5000 && g <= 100000) {
-                document.getElementById('exchange-diamond-out').textContent = Math.floor(g / GOLD_PER_DIAMOND);
-                preview.style.display = 'block';
-            } else { preview.style.display = 'none'; }
-        });
-
-        document.getElementById('confirmExchangeBtn').addEventListener('click', async () => {
-            const goldAmt = parseFloat(document.getElementById('exchangeGoldInput').value);
-            if (isNaN(goldAmt) || goldAmt < 5000) return alert('Minimum 5,000 Gold to convert.');
-            if (goldAmt > 100000) return alert('Maximum 100,000 Gold per exchange.');
-            if ((currentUser.goldBalance || 0) < goldAmt) return alert('Insufficient Gold balance.');
-            const diamondOut = Math.floor(goldAmt / GOLD_PER_DIAMOND);
-            if (diamondOut < 1) return alert('Not enough gold for even 1 Diamond. Min 1,000 Gold = 1 Diamond.');
-            if (!confirm(`Convert ${goldAmt.toLocaleString()} 🪙 Gold → ${diamondOut} 💎 Diamond?`)) return;
-            const btn = document.getElementById('confirmExchangeBtn');
-            btn.disabled = true; btn.textContent = 'Converting...';
-            try {
-                const res  = await fetch(`${TASK_API_BASE}/withdraw`, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ action: 'exchange', userId: String(currentUser.id), goldAmount: goldAmt })
-                });
-                const data = await res.json();
-                if (!data.ok) { alert(data.message || data.error || 'Exchange failed. Try again.'); return; }
-                currentUser.goldBalance    = (currentUser.goldBalance    || 0) - goldAmt;
-                currentUser.diamondBalance = (currentUser.diamondBalance || 0) + diamondOut;
-                document.getElementById('exchangeModalOverlay').classList.remove('show');
-                updateBalanceUI();
-                showSuccessModal("Exchange Done! 💎", `+${diamondOut} 💎 Diamond received!`);
-            } catch(e) {
-                alert('Exchange failed. Try again.');
-            } finally {
-                btn.disabled = false; btn.textContent = 'Convert';
-            }
-        });
-
-        // ── HISTORY ──
-        let _historyCache = null;
-        document.getElementById('history-btn').addEventListener('click', async () => {
-            document.getElementById('historyModalOverlay').classList.add('show');
-            const container = document.getElementById('combined-history-list');
-            if (_historyCache) { renderHistoryList(_historyCache, container); return; }
-            container.innerHTML = '<div class="loader"></div>';
-            try {
-                const wSnap = await getDocs(query(collection(db, "withdrawals"), where("userId", "==", currentUser.id), limit(20)));
-                let list = [];
-                wSnap.forEach(d => list.push({ ...d.data(), isW: true, time: d.data().createdAt }));
-                list.sort((a, b) => (b.time?.toMillis() || 0) - (a.time?.toMillis() || 0));
-                _historyCache = list;
-                renderHistoryList(list, container);
-            } catch (e) { container.innerHTML = '<p style="text-align:center;color:var(--red);">Failed to load.</p>'; }
-        });
-
-        function renderHistoryList(list, container) {
-            if (!list.length) { container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text2);">No history yet.</p>'; return; }
-            container.innerHTML = list.map(d => {
-                const date = d.time ? d.time.toDate().toLocaleDateString() : '';
-                let title, amt, color, icon;
-                if (d.isW || d.type === 'Withdrawal') {
-                    title = `Withdraw (${d.status || 'pending'})`; amt = `-${d.diamondAmount || 0} 💎`; color = 'var(--red)'; icon = '💸';
-                } else {
-                    title = d.type || 'Reward'; amt = `+${d.goldAmount || d.pointAmount || 0} 🪙`; color = 'var(--gold)'; icon = '✨';
-                }
-                return `<div style="display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(245,166,35,0.1);">
-                    <span style="font-size:1.3rem;">${icon}</span>
-                    <div style="flex:1;"><strong style="display:block;color:var(--text);font-size:0.88rem;">${title}</strong>
-                    <small style="color:var(--text2);font-size:0.72rem;">${date}</small></div>
-                    <strong style="color:${color};font-size:0.92rem;">${amt}</strong></div>`;
-            }).join('');
-        }
-
-        // ── PROMO CODE ──
-        document.getElementById('claimPromoBtn').addEventListener('click', async () => {
-            const code = document.getElementById('promoCodeInput').value.trim();
-            if (!code) return;
-            const btn = document.getElementById('claimPromoBtn');
-            btn.disabled = true; btn.textContent = "Checking...";
-            try {
-                const res  = await fetch(`${TASK_API_BASE}/claimPromo`, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ userId: String(currentUser.id), code })
-                });
-                const data = await res.json();
-                if (!data.ok) {
-                    alert(data.message || data.error || 'Invalid or already used code.');
-                    return;
-                }
-                // Show a random ad (Monetag or Adsgram) before granting the reward
-                btn.textContent = "Loading Ad...";
-                const promoAdFunctions = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
-                const randomPromoAd = promoAdFunctions[Math.floor(Math.random() * promoAdFunctions.length)];
-                try {
-                    await runAdAndVerifyTime('claimPromoBtn', randomPromoAd);
-                } catch(adErr) {
-                    // Ad failed or was skipped — still grant the reward
-                    console.log('[PromoAd] ad skipped or failed:', adErr);
-                }
-                document.getElementById('promoModalOverlay').classList.remove('show');
-                document.getElementById('promoCodeInput').value = '';
-                currentUser.goldBalance        = (currentUser.goldBalance || 0) + data.rewardAmount;
-                currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + data.rewardAmount;
-                updateBalanceUI();
-                showSuccessModal("Code Claimed! 🎁", `+${data.rewardAmount.toLocaleString()} 🪙 Gold added!`);
-            } catch(e) {
-                alert('Error: ' + e.message);
-            } finally {
-                btn.disabled = false; btn.textContent = "Claim Reward";
-            }
-        });
-
-        // ── UI EVENTS ──
-        document.getElementById('profile-id-display').addEventListener('click', () => {
-            navigator.clipboard.writeText(currentUser.id);
-            showSuccessModal("Copied!", "User ID copied.");
-        });
-
-        // ── INVITE / REFERRAL ──
-        function getMyReferralLink() { return `http://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`; }
-        function openInviteModal() {
-            const link = getMyReferralLink();
-            document.getElementById('modalReferralLinkInput').value = link;
-            const disp = document.getElementById('referralLinkDisplay');
-            if (disp) disp.textContent = link;
-            const ti = document.getElementById('modal-total-invites');
-            const rg = document.getElementById('modal-ref-gold');
-            if (ti) ti.textContent = currentUser.totalInvites || 0;
-            if (rg) rg.textContent = ((currentUser.totalInvites || 0) * 2000).toLocaleString() + ' 🪙';
-            document.getElementById('inviteModalOverlay').classList.add('show');
-        }
-        document.getElementById('action-invite').addEventListener('click', openInviteModal);
-        const bannerBtn = document.getElementById('action-invite-banner');
-        if (bannerBtn) bannerBtn.addEventListener('click', openInviteModal);
-
-        document.getElementById('modalCopyReferralLinkBtn').addEventListener('click', () => {
-            const link = getMyReferralLink();
-            navigator.clipboard.writeText(link).then(() => {
-                showSuccessModal("Copied! 📋", "Referral link copied to clipboard.");
-            }).catch(() => {
-                const inp = document.getElementById('modalReferralLinkInput');
-                inp.style.position = 'static'; inp.style.opacity = '1';
-                inp.select(); document.execCommand('copy');
-                inp.style.position = 'absolute'; inp.style.opacity = '0';
-                showSuccessModal("Copied! 📋", "Referral link copied.");
-            });
-        });
-
-        document.getElementById('telegramShareBtn').addEventListener('click', () => {
-            const link = getMyReferralLink();
-            const text = encodeURIComponent(`🎁 Join NEWTUBE and earn Gold & Diamonds!\n\nWatch videos, complete tasks, and withdraw real rewards.\n\n👉 Join here:`);
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
-            tg.openTelegramLink(shareUrl);
-        });
-
-        document.getElementById('action-promo-code').addEventListener('click', () => document.getElementById('promoModalOverlay').classList.add('show'));
-        document.querySelectorAll('.close-modal-btn').forEach(b => b.addEventListener('click', e => e.target.closest('.modal-overlay').classList.remove('show')));
-
-        // ── NAV TABS ──
-        document.querySelectorAll('.nav-item').forEach(link => {
-            link.addEventListener('click', e => {
-                e.preventDefault();
-                const isGoingToVideo = link.dataset.tabTarget === '#video-content';
-                const isLeavingVideo = !isGoingToVideo && document.body.classList.contains('video-active');
-                if (isLeavingVideo) { if (ytPlayer) ytPlayer.pauseVideo(); isVideoPlaying = false; }
-                document.querySelectorAll('.nav-item, .content-section').forEach(el => el.classList.remove('active'));
-                link.classList.add('active');
-                document.querySelector(link.dataset.tabTarget).classList.add('active');
-                if (link.dataset.tabTarget === '#task-content') {
-                    if (!tasksRenderedChannel && activeTaskTab === 'channel') fetchAndRenderTasks('channel');
-                    else if (!tasksRenderedPartner && activeTaskTab === 'partner') fetchAndRenderTasks('partner');
-                }
-                if (link.dataset.tabTarget === '#ads-content') updateAdButtonStats();
-                document.body.classList.toggle('video-active', isGoingToVideo);
-            });
-        });
-
-        function showSuccessModal(title, msg) {
-            document.getElementById('successModalTitle').textContent = title;
-            document.getElementById('successModalMessage').innerHTML = msg;
-            document.getElementById('successModalOverlay').classList.add('show');
-            setTimeout(() => document.getElementById('successModalOverlay').classList.remove('show'), 3000);
-        }
-
-        // ── TASK SYSTEM ──
-
-        // ══════════════════════════════════════════
-        // ── DAILY / WEEKLY EVENT SYSTEM ──
-        // Progress tracked locally (0 Firebase reads)
-        // Claim = 1 API write only
-        // ══════════════════════════════════════════
-
-        const DAILY_EVENTS = [
-            { id: 'daily_ads20',   icon: '📺', title: 'Watch 20 Ads',      desc: 'Watch any 20 ads today',           reward: 500,  target: 20,  field: 'adsWatchedToday'      },
-            { id: 'daily_video1h', icon: '🎬', title: 'Watch 1hr Video',   desc: 'Watch at least 60 min of videos',  reward: 500,  target: 60,  field: 'videoMinutesToday'     },
-            { id: 'daily_task3',   icon: '✅', title: 'Complete 3 Tasks',  desc: 'Complete any 3 tasks today',       reward: 300,  target: 3,   field: 'tasksCompletedToday'   },
-            { id: 'daily_invite1', icon: '👥', title: 'Invite 1 Friend',   desc: 'Refer 1 new user today',           reward: 500,  target: 1,   field: 'dailyInvites'          },
-        ];
-
-        const WEEKLY_EVENTS = [
-            { id: 'weekly_invite5',  icon: '🚀', title: 'Invite 5 Friends',  desc: 'Refer 5 new users this week',  reward: 3000, target: 5,  field: 'weeklyInvites' },
-            { id: 'weekly_invite10', icon: '🔥', title: 'Invite 10 Friends', desc: 'Refer 10 new users this week', reward: 7000, target: 10, field: 'weeklyInvites' },
-        ];
-
-        let _activeEventTab = 'daily';
-
-        function getTodayKey()  { return new Date().toISOString().slice(0,10); }
-        function getWeekKey()   {
-            const d = new Date(); const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(d.setDate(diff)).toISOString().slice(0,10);
-        }
-
-        function getEventStorage(type) {
-            const key = type === 'daily' ? `nt_events_daily_${getTodayKey()}` : `nt_events_weekly_${getWeekKey()}`;
-            try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
-        }
-        function setEventStorage(type, data) {
-            const key = type === 'daily' ? `nt_events_daily_${getTodayKey()}` : `nt_events_weekly_${getWeekKey()}`;
-            localStorage.setItem(key, JSON.stringify(data));
-        }
-
-        function getEventProgress(event, type) {
-            if (!currentUser) return 0;
-            if (event.field === 'dailyInvites')  return currentUser._dailyInvites  || 0;
-            if (event.field === 'weeklyInvites') return currentUser._weeklyInvites || 0;
-            if (event.field === 'videoMinutesToday') return Math.floor((currentUser.dailyVideoMined || 0) / 500 * 60);
-            return currentUser[event.field] || 0;
-        }
-
-        window.switchEventTab = (tab) => {
-            _activeEventTab = tab;
-            document.getElementById('event-tab-daily').style.background  = tab === 'daily'  ? 'var(--gold)' : 'rgba(255,255,255,0.08)';
-            document.getElementById('event-tab-daily').style.color        = tab === 'daily'  ? '#000' : 'var(--text2)';
-            document.getElementById('event-tab-weekly').style.background  = tab === 'weekly' ? 'var(--gold)' : 'rgba(255,255,255,0.08)';
-            document.getElementById('event-tab-weekly').style.color       = tab === 'weekly' ? '#000' : 'var(--text2)';
-            renderEventList();
-        };
-
-        function renderEventList() {
-            const container = document.getElementById('event-list');
-            if (!container) return;
-            container.innerHTML = '';
-            const events   = _activeEventTab === 'daily' ? DAILY_EVENTS : WEEKLY_EVENTS;
-            const storage  = getEventStorage(_activeEventTab);
-            const typeLabel = _activeEventTab === 'daily' ? 'Resets at midnight' : 'Resets every Monday';
-
-            // Info bar
-            const info = document.createElement('div');
-            info.style.cssText = 'font-size:0.7rem; color:var(--text2); text-align:center; padding:4px 0 8px;';
-            info.textContent = '🕐 ' + typeLabel;
-            container.appendChild(info);
-
-            events.forEach(ev => {
-                const claimed  = storage[ev.id + '_claimed'] === true;
-                const progress = getEventProgress(ev, _activeEventTab);
-                const done     = progress >= ev.target;
-                const pct      = Math.min(100, Math.floor((progress / ev.target) * 100));
-
-                const div = document.createElement('div');
-                const borderColor = claimed ? 'rgba(16,185,129,0.3)' : done ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.07)';
-                const bgColor     = claimed ? 'rgba(16,185,129,0.05)' : done ? 'rgba(245,158,11,0.07)' : 'rgba(255,255,255,0.03)';
-                div.style.cssText = `background:${bgColor}; border-radius:12px; padding:13px 14px; border:1px solid ${borderColor};`;
-
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:9px;">
-                        <div style="display:flex; align-items:center; gap:9px;">
-                            <span style="font-size:1.3rem; line-height:1;">${ev.icon}</span>
-                            <div>
-                                <div style="font-size:0.82rem; font-weight:700; color:${claimed ? '#10B981' : done ? '#f59e0b' : 'var(--text)'};">
-                                    ${ev.title}
-                                </div>
-                                <div style="font-size:0.68rem; color:var(--text2); margin-top:1px;">${ev.desc}</div>
-                                <div style="font-size:0.72rem; color:var(--gold); font-weight:600; margin-top:2px;">+${ev.reward.toLocaleString()} 🪙 Gold</div>
-                            </div>
-                        </div>
-                        <div style="flex-shrink:0; margin-left:8px;">
-                        ${claimed
-                            ? `<span style="font-size:0.7rem; color:#10B981; background:rgba(16,185,129,0.15); padding:5px 10px; border-radius:20px; font-weight:700;">✅ Done</span>`
-                            : done
-                                ? `<button onclick="claimEventReward('${ev.id}','${_activeEventTab}',${ev.reward})"
-                                    style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#000; border:none; border-radius:20px;
-                                    padding:6px 13px; font-size:0.72rem; font-weight:800; cursor:pointer;
-                                    animation:milestoneGlow 1.5s ease-in-out infinite;">CLAIM</button>`
-                                : `<span style="font-size:0.7rem; color:var(--text2); background:rgba(255,255,255,0.06); padding:5px 10px; border-radius:20px;">${progress}/${ev.target}</span>`
-                        }
-                        </div>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.08); border-radius:99px; height:5px; overflow:hidden;">
-                        <div style="height:100%; width:${pct}%;
-                            background:${claimed ? '#10B981' : done ? 'linear-gradient(90deg,#f59e0b,#fcd34d)' : 'linear-gradient(90deg,var(--primary),var(--gold))'};
-                            border-radius:99px; transition:width 0.5s ease;"></div>
-                    </div>`;
-                container.appendChild(div);
-            });
-        }
-
-        window.claimEventReward = async (eventId, type, reward) => {
-            const storage = getEventStorage(type);
-            if (storage[eventId + '_claimed']) return;
-
-            // ── Verify progress before claiming ──
-            const evList = type === 'daily' ? DAILY_EVENTS : WEEKLY_EVENTS;
-            const evDef  = evList.find(e => e.id === eventId);
-            if (!evDef) return;
-            const progress = getEventProgress(evDef, type);
-            if (progress < evDef.target) {
-                alert(`⚠️ Not yet complete! Progress: ${progress}/${evDef.target}`);
-                return;
-            }
-
-            const btn = event?.target;
-            if (btn) { btn.disabled = true; btn.textContent = '...'; }
-
-            try {
-                const res  = await fetch(`${TASK_API_BASE}/withdraw`, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({
-                        action:   'eventClaim',
-                        userId:   String(currentUser.id),
-                        eventId,
-                        reward,
-                        // Send progress proof for server to validate
-                        progress: progress,
-                        target:   evDef.target,
-                    })
-                });
-                const data = await res.json();
-                if (!data.ok) { alert(data.message || 'Error'); if (btn) { btn.disabled = false; btn.textContent = 'CLAIM'; } return; }
-
-                // Mark claimed in localStorage (no extra Firestore read)
-                storage[eventId + '_claimed'] = true;
-                setEventStorage(type, storage);
-
-                currentUser.goldBalance        = (currentUser.goldBalance || 0) + reward;
-                currentUser.lifetimeGoldEarned = (currentUser.lifetimeGoldEarned || 0) + reward;
-                updateBalanceUI();
-                renderEventList();
-                showSuccessModal('Event Complete! 🎯', `+${reward.toLocaleString()} 🪙 Gold earned!`);
-            } catch(e) {
-                alert('Error: ' + e.message);
-                if (btn) { btn.disabled = false; btn.textContent = 'CLAIM'; }
-            }
-        };
-
-        // ── Open event modal ──
-        let activeTaskTab = 'channel';
-        let tasksCacheChannel = null;
-        let tasksCachePartner = null;
-        let tasksRenderedChannel = false;
-        let tasksRenderedPartner = false;
-
-        document.getElementById('task-content').addEventListener('click', async (e) => {
-            const tabBtn = e.target.closest('[data-task-tab]');
-            if (tabBtn) {
-                activeTaskTab = tabBtn.dataset.taskTab;
-                ['channel','partner'].forEach(t => {
-                    document.getElementById(`tab-${t}`).classList.toggle('active', t === activeTaskTab);
-                    document.getElementById(`task-list-${t}`).style.display = t === activeTaskTab ? 'grid' : 'none';
-                    if (t === activeTaskTab && !(t === 'channel' ? tasksCacheChannel : tasksCachePartner)) fetchAndRenderTasks(t);
-                }); return;
-            }
-
-            const button = e.target.closest('.task-button');
-            if (!button || button.disabled) return;
-            const { taskId, taskUrl, channelId, category, state } = button.dataset;
-
-            if (state === 'start') {
-                if (taskUrl) tg.openLink(taskUrl);
-                button.disabled = true; let c = 5; button.textContent = `Wait ${c}s`;
-                const iv = setInterval(() => {
-                    c--; if (c > 0) { button.textContent = `Wait ${c}s`; }
-                    else {
-                        clearInterval(iv); button.disabled = false;
-                        button.textContent = category === 'partner' ? '✅ Claim' : 'Verify';
-                        if (category === 'partner') { button.style.background = 'var(--green)'; button.style.color = '#000'; }
-                        button.dataset.state = 'claim';
-                    }
-                }, 1000);
-            } else if (state === 'claim') {
-                button.disabled = true; button.textContent = 'Checking...';
-                const reward = parseInt(button.dataset.reward || '250');
-
-                // ── CHANNEL TASK → API (membership check inside API) ──
-                if (category === 'channel') {
-                    try {
-                        const res  = await fetch(`${TASK_API_BASE}/taskComplete`, {
-                            method:  'POST',
+                    const refRef  = doc(db, 'users', referrerId);
+                    const refSnap = await getDoc(refRef);
+                    if (refSnap.exists()) {
+                        await updateDoc(refRef, {
+                            totalInvites:  increment(1),
+                            referralCount: increment(1),
+                        });
+                        await updateDoc(userRef, { referredBy: referrerId });
+                        // Call init API for notification
+                        fetch(`${API}/api/init`, {
+                            method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body:    JSON.stringify({ userId: String(currentUser.id), taskId })
-                        });
-                        const data = await res.json();
-                        if (!data.ok) {
-                            if (data.error === 'not_member') {
-                                alert('⚠️ Please join the Channel/Group first, then Verify!');
-                            } else if (data.alreadyDone) {
-                                button.closest('[data-task-card]')?.remove(); return;
-                            } else {
-                                alert('Error: ' + (data.error || 'Unknown'));
-                            }
-                            button.disabled = false; button.textContent = 'Verify'; return;
-                        }
-                        const actualReward = data.rewardGold || reward;
-                        currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
-                        currentUser.goldBalance = (currentUser.goldBalance || 0) + actualReward;
-                        currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
-                        updateBalanceUI();
-                        showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
-                        button.closest('[data-task-card]')?.remove();
-                    } catch(err) {
-                        alert('Network error: ' + err.message);
-                        button.disabled = false; button.textContent = 'Verify';
+                            body: JSON.stringify({
+                                userId, firstName: tgUser.first_name,
+                                username: tgUser.username, referrerCode: referrerId
+                            })
+                        }).catch(() => {});
                     }
-
-                // ── PARTNER TASK → Direct Firestore (YouTube, FB, Bot etc. — no membership check) ──
-                } else {
-                    try {
-                        if ((currentUser.completedTasks || []).includes(taskId)) {
-                            button.closest('[data-task-card]')?.remove(); return;
-                        }
-                        const taskSnap = await getDoc(doc(db, 'tasks', taskId));
-                        if (!taskSnap.exists()) throw new Error('Task not found');
-                        const tData = taskSnap.data();
-                        const actualReward = tData.rewardGold || tData.rewardPoints || reward;
-                        const batch = writeBatch(db);
-                        batch.update(doc(db, 'users', currentUser.id), {
-                            completedTasks:      arrayUnion(taskId),
-                            goldBalance:         increment(actualReward),
-                            lifetimeGoldEarned:  increment(actualReward),
-                            tasksCompletedToday: increment(1),
-                        });
-                        batch.update(doc(db, 'tasks', taskId), {
-                            completionCount: increment(1),
-                        });
-                        await batch.commit();
-                        currentUser.completedTasks = [...(currentUser.completedTasks || []), taskId];
-                        currentUser.goldBalance    = (currentUser.goldBalance || 0) + actualReward;
-                        currentUser.tasksCompletedToday = (currentUser.tasksCompletedToday || 0) + 1;
-                        updateBalanceUI();
-                        showSuccessModal('Task Done! ✅', `+${actualReward.toLocaleString()} 🪙 Gold earned!`);
-                        button.closest('[data-task-card]')?.remove();
-                    } catch(err) {
-                        alert('Error: ' + err.message);
-                        button.disabled = false; button.textContent = '✅ Claim';
-                    }
-                }
+                } catch(e) {}
             }
-        });
-
-        async function fetchAndRenderTasks(category = 'channel') {
-            const container = document.getElementById(`task-list-${category}`);
-            const cachedSnap = category === 'channel' ? tasksCacheChannel : tasksCachePartner;
-            if (cachedSnap && (category === 'channel' ? tasksRenderedChannel : tasksRenderedPartner)) return;
-            container.innerHTML = '<div class="loader"></div>';
-            try {
-                const q = query(collection(db,'tasks'), where('isApproved','==',true), where('category','==',category), orderBy('createdAt','desc'), limit(30));
-                const snap = await getDocs(q);
-                if (category === 'channel') { tasksCacheChannel = snap; tasksRenderedChannel = true; }
-                else { tasksCachePartner = snap; tasksRenderedPartner = true; }
-                container.innerHTML = ''; let count = 0;
-                snap.forEach(docSnap => {
-                    const task = docSnap.data();
-                    if (currentUser.completedTasks?.includes(docSnap.id) || ((task.limit||0)>0 && (task.completionCount||0)>=task.limit)) return;
-                    const taskReward = task.rewardGold || task.rewardPoints || 250;
-                    const card = document.createElement('div'); card.setAttribute('data-task-card', docSnap.id);
-                    card.setAttribute('data-task-reward', taskReward);
-                    card.className = 'card'; card.style.padding = '16px';
-                    if (category === 'channel') {
-                        card.innerHTML = `
-                            <div style="display:flex;justify-content:space-between;align-items:center;gap:9px;">
-                                <div style="flex:1;"><div style="font-weight:700;font-size:0.92rem;color:#fff;"><i class="fab fa-telegram-plane" style="color:var(--gold);"></i> ${task.title}</div><div style="color:var(--gold);font-size:0.82rem;margin-top:3px;">+${taskReward.toLocaleString()} 🪙 Gold</div></div>
-                                <button class="btn outline task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-channel-id="${task.channelId||''}" data-category="${category}" data-state="start" data-reward="${taskReward}" style="padding:9px 13px;width:auto;font-size:0.78rem;">Join</button>
-                            </div>`;
-                    } else {
-                        card.innerHTML = `
-                            <div style="display:flex;align-items:center;gap:11px;margin-bottom:11px;">
-                                <div style="width:38px;height:38px;background:var(--gold-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-robot" style="color:var(--gold);font-size:1rem;"></i></div>
-                                <div><div style="font-weight:800;color:#fff;font-size:0.95rem;">${task.title}</div><div style="color:var(--gold);font-size:0.82rem;margin-top:2px;">+${taskReward.toLocaleString()} 🪙 Gold</div></div>
-                            </div>
-                            <button class="btn task-button" data-task-id="${docSnap.id}" data-task-url="${task.url||''}" data-category="${category}" data-state="start" data-reward="${taskReward}">🚀 Complete Task</button>`;
-                    }
-                    container.appendChild(card); count++;
-                });
-                if (!count) container.innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px;">No tasks available.</p>';
-            } catch (err) { container.innerHTML = `<p style="text-align:center;color:var(--red);">Failed to load.</p>`; }
-        }
-
-        // ── JOIN CHECK & ENFORCEMENT (API-based) ──
-        const API_BASE = 'https://newtube-ton.vercel.app/api';
-        let _joinCheckInterval = null;
-
-        // Called on startup + periodically to re-check if user left
-        async function checkMembershipAndEnforce() {
-            try {
-                const res  = await fetch(`${API_BASE}/checkJoin?userId=${currentUser.id}`);
-                if (!res.ok) return; // API error → don't block user
-                const data = await res.json();
-
-                if (!data.joined) {
-                    // Show join popup
-                    document.getElementById('activationModalOverlay').classList.add('show');
-                    // Start periodic re-check every 60s so if user leaves later we catch it
-                    if (!_joinCheckInterval) {
-                        _joinCheckInterval = setInterval(() => checkMembershipAndEnforce(), 60000);
-                    }
-                } else {
-                    // User is in both — clear interval, hide popup
-                    clearInterval(_joinCheckInterval); _joinCheckInterval = null;
-                    document.getElementById('activationModalOverlay').classList.remove('show');
-                }
-            } catch (e) { console.log('[checkJoin] skipped:', e.message); }
-        }
-
-        document.getElementById('activateAccountBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('activateAccountBtn');
-            btn.textContent = "Verifying..."; btn.disabled = true;
-            try {
-                const res  = await fetch(`${API_BASE}/checkJoin?userId=${currentUser.id}`);
-                const data = await res.json();
-                if (data.joined) {
-                    // Mark verified in Firestore (non-blocking)
-                    updateDoc(doc(db, 'users', currentUser.id), { channelVerified: true }).catch(()=>{});
-                    clearInterval(_joinCheckInterval); _joinCheckInterval = null;
-                    document.getElementById('activationModalOverlay').classList.remove('show');
-                    showSuccessModal('✅ Activated!', 'Account verified! Start earning Gold. 🎉');
-                } else {
-                    // Show which one is missing
-                    const missing = [];
-                    if (!data.channel) missing.push('📢 Official Channel');
-                    if (!data.group)   missing.push('👥 Community Group');
-                    alert(`❌ Not joined yet:\n\n${missing.join('\n')}\n\nPlease join both and then Verify.`);
-                }
-            } catch (e) {
-                // API failure → don't block user
-                document.getElementById('activationModalOverlay').classList.remove('show');
-            }
-            btn.textContent = "✅ Verify & Continue"; btn.disabled = false;
-        });
-
-        // ── MAIN INIT ──
-        async function main() {
-            try { tg.ready(); } catch(e) {}
-            try { tg.expand(); } catch(e) {}
-            try { tg.setHeaderColor('#030509'); } catch(e) {}
-            await new Promise(r => setTimeout(r, 800));
-            if (!tg.initDataUnsafe?.user) {
-                await new Promise(r => setTimeout(r, 1500));
-            }
-            if (!tg.initDataUnsafe?.user) {
-                document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:#030509;"><div style="font-size:3rem;">📱</div><h3 style="color:#888;font-size:1rem;text-align:center;padding:0 20px;">Please open this app<br>inside Telegram.</h3></div>`;
+        } else {
+            currentUser = { id: userId, ...snap.data() };
+            if (currentUser.isBanned) {
+                document.body.innerHTML = '<p style="text-align:center;margin-top:80px;color:#F43F5E;font-weight:700;">Account Banned.</p>';
                 return;
             }
-            try {
-                await initializeUser(tg.initDataUnsafe.user, tg.initDataUnsafe.start_param);
-            } catch(e) { console.error('Init error:', e.message); }
-            if (currentUser && !currentUser.isBanned) {
-                // Always check — user may have left channel/group after last session
-                setTimeout(() => checkMembershipAndEnforce().catch(()=>{}), 2000);
-            }
         }
-        main();
+    } catch(e) {
+        currentUser = { id: userId, firstName: tgUser.first_name || 'Viewer', totalInvites: 0, referralCount: 0 };
+    }
 
-        // Particles Background
-        (function spawnParticles() {
-            const container = document.getElementById('particles');
-            const colors = ['rgba(0,229,255,0.4)', 'rgba(245,166,35,0.3)', 'rgba(168,237,255,0.3)'];
-            for (let i = 0; i < 20; i++) {
-                const p = document.createElement('div'); p.className = 'particle';
-                const size = Math.random() * 3 + 1;
-                p.style.cssText = `width:${size}px; height:${size}px; left:${Math.random()*100}%; background:${colors[Math.floor(Math.random()*colors.length)]}; animation-duration:${Math.random()*15+10}s; animation-delay:${Math.random()*-20}s; box-shadow: 0 0 ${size*4}px ${colors[Math.floor(Math.random()*colors.length)]};`;
-                container.appendChild(p);
-            }
-        })();
-    </script>
+    updateHeaderUI();
+    updateReferUI();
+    await loadVideos();
+    hideLoader();
+}
+
+function updateHeaderUI() {
+    document.getElementById('hdr-invites').textContent = currentUser.totalInvites || 0;
+}
+
+function updateReferUI() {
+    if (!currentUser) return;
+    const link = `https://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`;
+    document.getElementById('refer-link-display').textContent = link;
+    document.getElementById('ref-link-input').value = link;
+    document.getElementById('ref-invited-count').textContent = currentUser.totalInvites || 0;
+}
+
+function hideLoader() {
+    setTimeout(() => {
+        document.getElementById('app-loader').classList.add('hidden');
+    }, 1800);
+}
+
+// ── LOAD VIDEOS ──
+async function loadVideos() {
+    try {
+        const snap = await getDocs(query(collection(db, 'videos'), orderBy('createdAt', 'desc'), limit(60)));
+        allVideos = [];
+        snap.forEach(d => allVideos.push({ id: d.id, ...d.data() }));
+    } catch(e) {
+        allVideos = [];
+    }
+    renderHome();
+    renderBrowse();
+}
+
+// ── RENDER HOME ──
+function renderHome() {
+    const filtered = currentCat === 'all' ? allVideos : allVideos.filter(v => v.category === currentCat);
+
+    // Hero — use first video
+    if (filtered.length > 0) {
+        const hero = filtered[0];
+        const thumbEl = document.getElementById('hero-thumb');
+        thumbEl.src = `https://img.youtube.com/vi/${hero.videoId}/maxresdefault.jpg`;
+        thumbEl.onerror = () => { thumbEl.src = `https://img.youtube.com/vi/${hero.videoId}/hqdefault.jpg`; };
+        document.getElementById('hero-title').textContent = hero.title;
+        document.getElementById('hero-play-btn').onclick = () => openPlayer(hero);
+        document.getElementById('hero-info-btn').onclick = () => openPlayer(hero);
+    }
+
+    // Featured row (first 10)
+    renderScrollRow('featured-row', filtered.slice(0, 10), true);
+
+    // New row (next 10)
+    renderScrollRow('new-row', filtered.slice(0, 15), false);
+
+    // Continue watching row — same as featured for now (no watch history tracking)
+    const continueWrap = document.getElementById('continue-row-wrap');
+    if (filtered.length > 0) {
+        renderScrollRow('continue-row', filtered.slice(0, 6), false);
+    } else {
+        continueWrap.style.display = 'none';
+    }
+}
+
+function renderScrollRow(containerId, videos, wide) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!videos.length) { el.innerHTML = '<p style="color:#444;font-size:0.8rem;padding:10px 0;">Nothing here yet.</p>'; return; }
+    el.innerHTML = videos.map(v => {
+        const cls = wide ? 'vid-card vid-card-wide' : 'vid-card';
+        const w   = wide ? 200 : 140;
+        const h   = wide ? 113 : 79;
+        return `
+        <div class="${cls}" onclick="window.openPlayerById('${v.videoId}','${escHtml(v.title)}','${v.category||''}')">
+            <div class="vid-thumb-wrap">
+                <img class="vid-thumb" src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg"
+                    width="${w}" height="${h}" loading="lazy"
+                    onerror="this.src='https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg'">
+                <div class="vid-play-icon"><i class="fas fa-play"></i></div>
+            </div>
+            <div class="vid-title">${escHtml(v.title)}</div>
+            ${v.category ? `<div class="vid-cat">${catLabel(v.category)}</div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+// ── RENDER BROWSE ──
+function renderBrowse() {
+    const grid = document.getElementById('browse-grid');
+    const filtered = currentCat === 'all' ? allVideos : allVideos.filter(v => v.category === currentCat);
+    if (!filtered.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-film"></i><p>No videos yet.</p></div>';
+        return;
+    }
+    grid.innerHTML = filtered.map(v => `
+        <div class="vid-grid-card" onclick="window.openPlayerById('${v.videoId}','${escHtml(v.title)}','${v.category||''}')">
+            <img class="vid-grid-thumb" src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" loading="lazy"
+                onerror="this.src='https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg'">
+            <div class="vid-grid-title">${escHtml(v.title)}</div>
+            ${v.category ? `<div class="vid-grid-cat">${catLabel(v.category)}</div>` : ''}
+        </div>`).join('');
+}
+
+// ── PLAYER ──
+function openPlayer(video) {
+    openPlayerById(video.videoId, video.title, video.category || '');
+}
+
+window.openPlayerById = (videoId, title, category) => {
+    currentPlayingId = videoId;
+    document.getElementById('player-title').textContent = title;
+    document.getElementById('player-cat').textContent   = catLabel(category);
+    document.getElementById('player-cat').style.display = category ? 'inline-block' : 'none';
+    document.getElementById('player-section').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // Render up next
+    renderUpNext(videoId);
+
+    // Share button
+    document.getElementById('player-share-btn').onclick = () => {
+        if (tg) {
+            const txt = encodeURIComponent(`🎬 Watch "${title}" on NEWTUBE Felix!`);
+            const url = encodeURIComponent(`https://t.me/NewTube12_bot/WatchTo_Earn`);
+            tg.openTelegramLink(`https://t.me/share/url?url=${url}&text=${txt}`);
+        }
+    };
+
+    // Load YouTube player
+    if (ytAPIReady) {
+        loadYT(videoId);
+    } else {
+        window.onYouTubeIframeAPIReady = () => { ytAPIReady = true; loadYT(videoId); };
+    }
+};
+
+function loadYT(videoId) {
+    if (ytPlayer) {
+        ytPlayer.loadVideoById(videoId);
+        return;
+    }
+    ytPlayer = new YT.Player('ytplayer', {
+        videoId,
+        playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
+        events: { onReady: e => e.target.playVideo() }
+    });
+}
+
+function renderUpNext(currentId) {
+    const list = document.getElementById('up-next-list');
+    const others = allVideos.filter(v => v.videoId !== currentId).slice(0, 8);
+    if (!others.length) { list.innerHTML = ''; return; }
+    list.innerHTML = others.map(v => `
+        <div class="up-next-row" onclick="window.openPlayerById('${v.videoId}','${escHtml(v.title)}','${v.category||''}')">
+            <img class="up-next-thumb" src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" loading="lazy">
+            <div class="up-next-info">
+                <div class="up-next-name">${escHtml(v.title)}</div>
+                ${v.category ? `<div class="up-next-cat">${catLabel(v.category)}</div>` : ''}
+            </div>
+        </div>`).join('');
+}
+
+// Back from player
+document.getElementById('player-back-btn').addEventListener('click', () => {
+    document.getElementById('player-section').classList.remove('open');
+    document.body.style.overflow = '';
+    if (ytPlayer) { try { ytPlayer.stopVideo(); } catch(e) {} }
+});
+
+// ── CATEGORY CHIPS ──
+document.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentCat = chip.dataset.cat;
+        renderHome();
+        renderBrowse();
+    });
+});
+
+// ── TABS ──
+window.switchTab = (tab) => {
+    ['home','browse','refer'].forEach(t => {
+        document.getElementById(`${t}-section`).classList.remove('active');
+        document.getElementById(`nav-${t}`).classList.remove('active');
+    });
+    document.getElementById(`${tab}-section`).classList.add('active');
+    document.getElementById(`nav-${tab}`).classList.add('active');
+};
+
+function setNav(tab) {
+    ['home','browse','refer'].forEach(t => document.getElementById(`nav-${t}`).classList.remove('active'));
+    document.getElementById(`nav-${tab}`).classList.add('active');
+}
+
+// ── REFER BUTTONS ──
+document.getElementById('refer-tg-btn').addEventListener('click', () => {
+    if (!currentUser) return;
+    const link = `https://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`;
+    const txt  = encodeURIComponent(`🎬 Watch movies & videos on NEWTUBE Felix!\n\nJoin using my link:`);
+    if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${txt}`);
+    else window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${txt}`, '_blank');
+});
+
+document.getElementById('refer-copy-btn').addEventListener('click', () => {
+    if (!currentUser) return;
+    const link = `https://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`;
+    navigator.clipboard.writeText(link).then(() => showToast('✅ Link copied!')).catch(() => {
+        const inp = document.getElementById('ref-link-input');
+        inp.style.position = 'static'; inp.style.opacity = '1';
+        inp.select(); document.execCommand('copy');
+        inp.style.position = 'absolute'; inp.style.opacity = '0';
+        showToast('✅ Link copied!');
+    });
+});
+
+// ── HELPERS ──
+function catLabel(cat) {
+    const map = { movie:'🎬 Movie', series:'📺 Series', music:'🎵 Music', news:'📰 News', education:'📚 Education', sports:'⚽ Sports', other:'📌 Other' };
+    return map[cat] || cat || '';
+}
+
+function escHtml(str) {
+    return String(str).replace(/'/g,"&#39;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+window.showToast = (msg, duration = 2500) => {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.opacity = '1';
+    clearTimeout(t._to);
+    t._to = setTimeout(() => { t.style.opacity = '0'; }, duration);
+};
+
+// ── START ──
+init();
+</script>
 </body>
 </html>
