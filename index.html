@@ -1,835 +1,948 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NEWTUBE Felix</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NEWTUBE — Watch & Earn</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg: #16151B;
+        --surface: #1F1E26;
+        --surface-raised: #28262F;
+        --surface-pop: #2F2D38;
+        --coin: #F2A93B;
+        --coin-deep: #C97F1B;
+        --coin-soft: rgba(242,169,59,0.14);
+        --signal: #3FD2C7;
+        --signal-soft: rgba(63,210,199,0.12);
+        --ink: #F5F1E8;
+        --ink-muted: #9B968C;
+        --ink-faint: #6B675F;
+        --border: rgba(245,241,232,0.07);
+        --border-strong: rgba(245,241,232,0.14);
+        --danger: #E0594F;
+        --danger-soft: rgba(224,89,79,0.14);
+        --success: #5DCAA5;
+        --font-display: 'Space Grotesk', sans-serif;
+        --font-body: 'Plus Jakarta Sans', 'Noto Sans Bengali', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); }
+    body {
+        color: var(--ink);
+        font-family: var(--font-body);
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        padding-bottom: 96px;
+        overflow-x: hidden;
+    }
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea { font-family: inherit; }
+    .hidden { display: none !important; }
+    img { max-width: 100%; display: block; }
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    /* ── top bar ── */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 8px; }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .brand-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--coin); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #1A1206; }
+    .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.2px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: none; display: flex; align-items: center; justify-content: center; color: var(--ink); position: relative; }
+    .icon-btn.has-dot::after { content: ''; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); }
 
-    <!-- Adexium only -->
-    <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof AdexiumWidget !== 'undefined') {
-                const w = new AdexiumWidget({ wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial' });
-                w.autoMode();
-            }
-        });
-    </script>
+    /* ── shared cards/buttons ── */
+    .card { background: var(--surface); border-radius: 16px; padding: 16px 18px; border: 0.5px solid var(--border); }
+    .btn { height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; font-size: 14px; border: none; width: 100%; }
+    .btn-primary { background: var(--coin); color: #1A1206; }
+    .btn-outline { background: transparent; border: 0.5px solid var(--border-strong); color: var(--ink); }
+    .btn-signal { background: var(--signal); color: #062420; }
+    .btn:disabled { opacity: 0.45; }
+    .section-pad { padding: 0 20px; }
+    .section-title { font-size: 15px; font-weight: 600; }
+    .muted { color: var(--ink-muted); }
+    .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .pill-signal { background: var(--signal-soft); color: var(--signal); }
+    .pill-coin { background: var(--coin-soft); color: var(--coin); }
 
-    <style>
-        :root {
-            --bg: #0a0a0f;
-            --bg2: #111118;
-            --card: #16161e;
-            --card2: #1c1c26;
-            --primary: #e50914;
-            --primary2: #ff1f2e;
-            --accent: #f5a623;
-            --text: #ffffff;
-            --text2: #aaaacc;
-            --border: rgba(255,255,255,0.08);
-            --radius: 12px;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body {
-            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
-            min-height: 100vh; overflow-x: hidden; padding-bottom: 72px;
-        }
+    /* ── bottom nav ── */
+    .bottomnav { position: fixed; bottom: 14px; left: 0; right: 0; max-width: 440px; margin: 0 auto; background: var(--surface-raised); border-radius: 22px; display: flex; align-items: center; justify-content: space-around; padding: 10px 6px; box-shadow: 0 8px 30px rgba(0,0,0,0.45); z-index: 40; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink-faint); width: 56px; background: none; border: none; padding: 4px 0; }
+    .nav-item.active { color: var(--coin); }
+    .nav-label { font-size: 10px; font-weight: 500; }
+    .nav-earn { width: 56px; height: 56px; border-radius: 50%; background: var(--coin); display: flex; align-items: center; justify-content: center; margin-top: -28px; box-shadow: 0 6px 16px rgba(242,169,59,0.4); color: #1A1206; }
 
-        /* ── LOADER ── */
-        #app-loader {
-            position: fixed; inset: 0; background: #000; z-index: 99999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s, visibility 0.5s;
-        }
-        #app-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .loader-logo {
-            font-size: 2.6rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 4px;
-        }
-        .loader-logo span:first-child { color: #fff; }
-        .loader-logo span:last-child { color: var(--primary); }
-        .loader-sub { font-size: 0.7rem; color: #555; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 40px; }
-        .loader-bar-wrap { width: 160px; height: 2px; background: #222; border-radius: 99px; overflow: hidden; }
-        .loader-bar { height: 100%; width: 0%; background: var(--primary); border-radius: 99px; animation: loadBar 2s ease forwards; }
-        @keyframes loadBar { 0%{width:0%} 70%{width:80%} 100%{width:100%} }
+    /* ── toast ── */
+    #toast-host { position: fixed; top: 14px; left: 0; right: 0; max-width: 430px; margin: 0 auto; z-index: 200; pointer-events: none; padding: 0 16px; }
+    .toast { background: var(--surface-pop); border: 0.5px solid var(--border-strong); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: toast-in 0.25s ease; }
+    .toast.success { border-color: rgba(93,202,165,0.4); }
+    .toast.error { border-color: rgba(224,89,79,0.4); }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ── HEADER ── */
-        .header {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 56px;
-            background: linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(10,10,15,0.9) 100%);
-            backdrop-filter: blur(12px);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-        .logo { display: flex; align-items: center; gap: 8px; }
-        .logo-icon {
-            width: 32px; height: 32px; background: var(--primary);
-            border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            font-size: 1rem;
-        }
-        .logo-text { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.5px; }
-        .logo-text span { color: var(--primary); }
-        .logo-sub { font-size: 0.58rem; color: #555; letter-spacing: 2px; display: block; line-height: 1; }
-        .header-right { display: flex; gap: 8px; align-items: center; }
-        .hbtn {
-            width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
-            background: rgba(255,255,255,0.05); color: var(--text2); display: flex;
-            align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-        .hbtn:hover { border-color: var(--primary); color: var(--primary); }
-
-        /* ── MAIN ── */
-        .main { padding-top: 56px; }
-
-        /* ── SECTIONS ── */
-        .section { display: none; }
-        .section.active { display: block; }
-
-        /* ══ HOME ══ */
-        /* Hero / Now Playing */
-        .hero {
-            position: relative; width: 100%; background: #000;
-            aspect-ratio: 16/9; overflow: hidden; max-height: 230px;
-        }
-        .hero-thumb {
-            width: 100%; height: 100%; object-fit: cover;
-            transition: opacity 0.4s;
-        }
-        .hero-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(0deg, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.3) 50%, transparent 100%);
-        }
-        .hero-info {
-            position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 14px;
-        }
-        .hero-badge {
-            display: inline-block; background: var(--primary); color: #fff;
-            font-size: 0.6rem; font-weight: 800; padding: 2px 7px; border-radius: 4px;
-            letter-spacing: 1px; margin-bottom: 5px;
-        }
-        .hero-title { font-size: 1rem; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3; }
-        .hero-actions { display: flex; gap: 8px; }
-        .hero-play-btn {
-            display: flex; align-items: center; gap: 6px; background: #fff; color: #000;
-            border: none; border-radius: 6px; padding: 7px 16px;
-            font-size: 0.82rem; font-weight: 800; cursor: pointer;
-        }
-        .hero-info-btn {
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
-            color: #fff; border-radius: 6px; padding: 7px 14px;
-            font-size: 0.82rem; font-weight: 700; cursor: pointer;
-        }
-
-        /* Section headers */
-        .section-head {
-            padding: 16px 14px 10px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .section-head h2 { font-size: 0.95rem; font-weight: 800; color: var(--text); }
-        .see-all { font-size: 0.75rem; color: var(--primary); font-weight: 700; cursor: pointer; }
-
-        /* ── HORIZONTAL SCROLL ROW ── */
-        .scroll-row {
-            display: flex; gap: 10px; overflow-x: auto; padding: 0 14px 14px;
-            scrollbar-width: none;
-        }
-        .scroll-row::-webkit-scrollbar { display: none; }
-
-        /* ── VIDEO CARDS ── */
-        .vid-card {
-            flex-shrink: 0; width: 140px; cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .vid-card:hover { transform: scale(1.03); }
-        .vid-thumb {
-            width: 140px; height: 79px; border-radius: 8px; object-fit: cover;
-            background: #1a1a22; display: block; position: relative;
-        }
-        .vid-thumb-wrap { position: relative; margin-bottom: 7px; }
-        .vid-play-icon {
-            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.3); border-radius: 8px; opacity: 0; transition: opacity 0.2s;
-        }
-        .vid-card:hover .vid-play-icon { opacity: 1; }
-        .vid-play-icon i { font-size: 1.4rem; color: #fff; }
-        .vid-title { font-size: 0.72rem; font-weight: 600; color: var(--text); line-height: 1.4; }
-        .vid-cat { font-size: 0.62rem; color: var(--text2); margin-top: 2px; }
-
-        /* Wide card (featured) */
-        .vid-card-wide { width: 200px; }
-        .vid-card-wide .vid-thumb { width: 200px; height: 113px; }
-
-        /* ── CATEGORY CHIPS ── */
-        .cat-chips {
-            display: flex; gap: 8px; overflow-x: auto; padding: 12px 14px 4px;
-            scrollbar-width: none;
-        }
-        .cat-chips::-webkit-scrollbar { display: none; }
-        .cat-chip {
-            flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem;
-            font-weight: 700; cursor: pointer; border: 1px solid var(--border);
-            background: var(--card); color: var(--text2); transition: all 0.2s;
-        }
-        .cat-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-        /* ── VIDEO GRID ── */
-        .vid-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px 14px;
-        }
-        .vid-grid-card { cursor: pointer; }
-        .vid-grid-thumb {
-            width: 100%; aspect-ratio: 16/9; border-radius: 8px; object-fit: cover;
-            background: var(--card2); display: block; margin-bottom: 6px;
-        }
-        .vid-grid-title { font-size: 0.75rem; font-weight: 600; color: var(--text); line-height: 1.35; }
-        .vid-grid-cat { font-size: 0.62rem; color: var(--text2); margin-top: 2px; }
-
-        /* ══ PLAYER SECTION ══ */
-        #player-section {
-            display: none; position: fixed; inset: 0; z-index: 500;
-            background: var(--bg); overflow-y: auto;
-            padding-bottom: 20px;
-        }
-        #player-section.open { display: block; }
-        .player-back {
-            position: absolute; top: 12px; left: 12px; z-index: 10;
-            width: 36px; height: 36px; background: rgba(0,0,0,0.7);
-            border-radius: 50%; border: none; color: #fff; font-size: 1rem; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .player-wrapper {
-            position: relative; width: 100%; background: #000;
-            aspect-ratio: 16/9;
-        }
-        #ytplayer { width: 100%; height: 100%; }
-        .player-meta { padding: 14px; }
-        .player-title { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
-        .player-cat {
-            display: inline-block; background: rgba(229,9,20,0.15); color: var(--primary);
-            border: 1px solid rgba(229,9,20,0.3); font-size: 0.68rem; font-weight: 700;
-            padding: 3px 9px; border-radius: 4px; margin-bottom: 12px;
-        }
-        .player-actions { display: flex; gap: 8px; margin-bottom: 16px; }
-        .player-share-btn {
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.08); border: 1px solid var(--border);
-            color: var(--text); border-radius: 8px; padding: 8px 14px;
-            font-size: 0.8rem; font-weight: 600; cursor: pointer;
-        }
-
-        /* ── UP NEXT ── */
-        .up-next-title { font-size: 0.88rem; font-weight: 800; padding: 0 14px 10px; color: var(--text); }
-        .up-next-row {
-            display: flex; gap: 10px; align-items: flex-start; padding: 0 14px 12px;
-            cursor: pointer;
-        }
-        .up-next-thumb { width: 110px; height: 62px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--card2); }
-        .up-next-info { flex: 1; }
-        .up-next-name { font-size: 0.78rem; font-weight: 600; color: var(--text); line-height: 1.4; }
-        .up-next-cat { font-size: 0.65rem; color: var(--text2); margin-top: 3px; }
-
-        /* ══ REFER SECTION ══ */
-        .refer-hero {
-            margin: 16px 14px; background: linear-gradient(135deg, rgba(229,9,20,0.15), rgba(245,166,35,0.1));
-            border: 1px solid rgba(229,9,20,0.25); border-radius: 16px; padding: 20px;
-            text-align: center;
-        }
-        .refer-icon { font-size: 2.5rem; margin-bottom: 8px; }
-        .refer-title { font-size: 1.1rem; font-weight: 900; color: var(--text); margin-bottom: 4px; }
-        .refer-sub { font-size: 0.8rem; color: var(--text2); margin-bottom: 16px; line-height: 1.5; }
-        .refer-link-box {
-            background: rgba(0,0,0,0.5); border: 1px solid rgba(245,166,35,0.3);
-            border-radius: 10px; padding: 11px 13px; margin-bottom: 14px;
-            font-size: 0.72rem; color: var(--accent); font-family: monospace;
-            word-break: break-all; text-align: left; line-height: 1.5;
-        }
-        .refer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .refer-btn-tg {
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            background: linear-gradient(135deg, #229ED9, #1680b8); color: #fff;
-            border: none; border-radius: 9px; padding: 11px; font-size: 0.82rem;
-            font-weight: 700; cursor: pointer;
-        }
-        .refer-btn-copy {
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            background: rgba(255,255,255,0.08); border: 1px solid var(--border);
-            color: var(--text); border-radius: 9px; padding: 11px; font-size: 0.82rem;
-            font-weight: 700; cursor: pointer;
-        }
-        .refer-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 14px 14px; }
-        .refer-stat-card {
-            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-            padding: 14px; text-align: center;
-        }
-        .refer-stat-num { font-size: 1.6rem; font-weight: 900; color: var(--accent); }
-        .refer-stat-label { font-size: 0.68rem; color: var(--text2); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .refer-steps { margin: 0 14px 20px; }
-        .refer-step {
-            display: flex; align-items: flex-start; gap: 12px;
-            padding: 12px 14px; background: var(--card); border: 1px solid var(--border);
-            border-radius: 10px; margin-bottom: 8px;
-        }
-        .refer-step-num {
-            width: 28px; height: 28px; border-radius: 50%; background: var(--primary);
-            color: #fff; font-size: 0.78rem; font-weight: 800; display: flex;
-            align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .refer-step-text { font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
-        .refer-step-text strong { color: var(--text); }
-
-        /* ══ BOTTOM NAV ══ */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-            background: rgba(10,10,15,0.98); border-top: 1px solid var(--border);
-            display: flex; backdrop-filter: blur(16px); height: 60px;
-        }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; gap: 3px; cursor: pointer; border: none;
-            background: transparent; color: #555; font-size: 0.6rem; font-weight: 700;
-            letter-spacing: 0.3px; text-transform: uppercase; transition: color 0.2s;
-            text-decoration: none;
-        }
-        .nav-item i { font-size: 1.15rem; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item:hover { color: var(--text2); }
-
-        /* ── TOAST ── */
-        #toast {
-            position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
-            background: #1a1a2a; border: 1px solid rgba(229,9,20,0.4); color: #fff;
-            padding: 10px 20px; border-radius: 10px; font-size: 0.82rem; z-index: 9999;
-            opacity: 0; transition: opacity 0.3s; white-space: nowrap;
-        }
-
-        /* ── LOADER SPINNER ── */
-        .spin {
-            width: 28px; height: 28px; border: 3px solid #222; border-top-color: var(--primary);
-            border-radius: 50%; animation: spin 0.7s linear infinite; margin: 24px auto;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── EMPTY STATE ── */
-        .empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
-        .empty-state i { font-size: 2.5rem; margin-bottom: 10px; color: #333; }
-        .empty-state p { font-size: 0.85rem; }
-    </style>
+    /* ── modal overlay (in-flow style, never position:fixed for inner content) ── */
+    .overlay { position: fixed; inset: 0; background: rgba(10,9,12,0.78); z-index: 100; display: flex; align-items: flex-end; justify-content: center; }
+    .sheet { width: 100%; max-width: 480px; background: var(--surface); border-radius: 22px 22px 0 0; padding: 22px 20px 28px; max-height: 86vh; overflow-y: auto; }
+    .sheet-fullscreen { width: 100%; max-width: 480px; background: var(--bg); border-radius: 0; padding: 0; max-height: 100vh; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+    .sheet-handle { width: 36px; height: 4px; background: var(--border-strong); border-radius: 4px; margin: 0 auto 16px; }
+    .field-label { font-size: 13px; color: var(--ink-muted); margin: 14px 0 6px; }
+    .field-input { width: 100%; height: 46px; border-radius: 12px; background: var(--surface-raised); border: 0.5px solid var(--border); color: var(--ink); padding: 0 14px; font-size: 14px; }
+    .field-select { width: 100%; height: 46px; border-radius: 12px; background: var(--surface-raised); border: 0.5px solid var(--border); color: var(--ink); padding: 0 14px; font-size: 14px; }
+</style>
 </head>
 <body>
 
-<!-- LOADER -->
-<div id="app-loader">
-    <div class="loader-logo"><span>NEW</span><span>TUBE</span></div>
-    <div class="loader-sub">Felix</div>
-    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
-</div>
+<div id="toast-host"></div>
 
-<!-- HEADER -->
-<header class="header">
-    <div class="logo">
-        <div class="logo-icon"><i class="fas fa-play" style="font-size:0.85rem; color:#fff;"></i></div>
-        <div>
-            <div class="logo-text">NEW<span>TUBE</span></div>
-            <span class="logo-sub">FELIX</span>
-        </div>
-    </div>
-    <div class="header-right">
-        <div style="display:flex; flex-direction:column; align-items:flex-end;">
-            <span style="font-size:0.62rem; color:#666; text-transform:uppercase; letter-spacing:0.5px;">Friends</span>
-            <span id="hdr-invites" style="font-size:0.85rem; font-weight:800; color:var(--accent);">0</span>
-        </div>
-    </div>
-</header>
+<div id="app-root"></div>
 
-<main class="main">
+<div id="modal-root"></div>
 
-    <!-- ══ HOME ══ -->
-    <div id="home-section" class="section active">
-        <!-- Hero -->
-        <div class="hero" id="hero-wrap">
-            <img class="hero-thumb" id="hero-thumb" src="" alt="Featured">
-            <div class="hero-overlay"></div>
-            <div class="hero-info">
-                <div class="hero-badge">🔴 NOW STREAMING</div>
-                <div class="hero-title" id="hero-title">Loading...</div>
-                <div class="hero-actions">
-                    <button class="hero-play-btn" id="hero-play-btn"><i class="fas fa-play"></i> Play</button>
-                    <button class="hero-info-btn" id="hero-info-btn"><i class="fas fa-info-circle"></i> More</button>
-                </div>
-            </div>
-        </div>
+<script>
+'use strict';
 
-        <!-- Category chips -->
-        <div class="cat-chips" id="cat-chips">
-            <div class="cat-chip active" data-cat="all">All</div>
-            <div class="cat-chip" data-cat="movie">🎬 Movies</div>
-            <div class="cat-chip" data-cat="series">📺 Series</div>
-            <div class="cat-chip" data-cat="music">🎵 Music</div>
-            <div class="cat-chip" data-cat="news">📰 News</div>
-            <div class="cat-chip" data-cat="education">📚 Education</div>
-            <div class="cat-chip" data-cat="sports">⚽ Sports</div>
-        </div>
+// ══════════════════════════════════════════════════════════════
+// CONFIG — এই অংশটা আপনার আসল তথ্য দিয়ে বদলে নিন
+// ══════════════════════════════════════════════════════════════
+const API_BASE = 'https://newtube-ton.vercel.app/api';
+const MINI_APP_BASE = 'https://t.me/NewTube12_bot/WatchTo_Earn';
+const OFFICIAL_CHANNEL = 'Newtube_Earn';
+const COMMUNITY_GROUP = 'newtube_commonity';
 
-        <!-- Continue Watching row -->
-        <div id="continue-row-wrap">
-            <div class="section-head">
-                <h2>▶ Continue Watching</h2>
-            </div>
-            <div class="scroll-row" id="continue-row">
-                <div class="spin"></div>
-            </div>
-        </div>
-
-        <!-- Featured row -->
-        <div class="section-head">
-            <h2>🔥 Featured</h2>
-            <span class="see-all" onclick="document.getElementById('browse-section').classList.add('active'); document.getElementById('home-section').classList.remove('active'); setNav('browse');">See all</span>
-        </div>
-        <div class="scroll-row" id="featured-row">
-            <div class="spin"></div>
-        </div>
-
-        <!-- New additions -->
-        <div class="section-head" style="padding-top:4px;">
-            <h2>✨ New Additions</h2>
-        </div>
-        <div class="scroll-row" id="new-row">
-            <div class="spin"></div>
-        </div>
-    </div>
-
-    <!-- ══ BROWSE ══ -->
-    <div id="browse-section" class="section" style="padding-top:12px;">
-        <div id="browse-grid" class="vid-grid">
-            <div style="grid-column:1/-1;" class="spin"></div>
-        </div>
-    </div>
-
-    <!-- ══ REFER ══ -->
-    <div id="refer-section" class="section" style="padding-top:12px;">
-        <div class="refer-hero">
-            <div class="refer-icon">🎬</div>
-            <div class="refer-title">Invite Friends</div>
-            <div class="refer-sub">Share NEWTUBE Felix with friends.<br>They join, you grow together!</div>
-            <div class="refer-link-box" id="refer-link-display">Loading...</div>
-            <div class="refer-btns">
-                <button class="refer-btn-tg" id="refer-tg-btn"><i class="fab fa-telegram-plane"></i> Share</button>
-                <button class="refer-btn-copy" id="refer-copy-btn"><i class="fas fa-copy"></i> Copy</button>
-            </div>
-        </div>
-
-        <div class="refer-stats">
-            <div class="refer-stat-card">
-                <div class="refer-stat-num" id="ref-invited-count">0</div>
-                <div class="refer-stat-label">Friends Invited</div>
-            </div>
-            <div class="refer-stat-card">
-                <div class="refer-stat-num" id="ref-total-count">0</div>
-                <div class="refer-stat-label">Total Members</div>
-            </div>
-        </div>
-
-        <div class="refer-steps">
-            <div style="font-size:0.88rem; font-weight:800; color:var(--text); margin-bottom:10px; padding:0 2px;">How It Works</div>
-            <div class="refer-step">
-                <div class="refer-step-num">1</div>
-                <div class="refer-step-text"><strong>Copy your link</strong> and share it with friends on Telegram, WhatsApp, or anywhere.</div>
-            </div>
-            <div class="refer-step">
-                <div class="refer-step-num">2</div>
-                <div class="refer-step-text"><strong>Friend opens the app</strong> using your link and starts watching.</div>
-            </div>
-            <div class="refer-step">
-                <div class="refer-step-num">3</div>
-                <div class="refer-step-text"><strong>Your invite count grows</strong> — track it right here anytime.</div>
-            </div>
-        </div>
-    </div>
-
-</main>
-
-<!-- ══ PLAYER ══ -->
-<div id="player-section">
-    <div class="player-wrapper">
-        <button class="player-back" id="player-back-btn"><i class="fas fa-arrow-left"></i></button>
-        <div id="ytplayer"></div>
-    </div>
-    <div class="player-meta">
-        <div class="player-title" id="player-title">—</div>
-        <div class="player-cat" id="player-cat"></div>
-        <div class="player-actions">
-            <button class="player-share-btn" id="player-share-btn"><i class="fas fa-share-alt"></i> Share</button>
-        </div>
-    </div>
-    <div class="up-next-title">Up Next</div>
-    <div id="up-next-list"></div>
-</div>
-
-<!-- ══ BOTTOM NAV ══ -->
-<nav class="bottom-nav">
-    <button class="nav-item active" id="nav-home" onclick="switchTab('home')">
-        <i class="fas fa-home"></i>Home
-    </button>
-    <button class="nav-item" id="nav-browse" onclick="switchTab('browse')">
-        <i class="fas fa-th-large"></i>Browse
-    </button>
-    <button class="nav-item" id="nav-refer" onclick="switchTab('refer')">
-        <i class="fas fa-user-plus"></i>Refer
-    </button>
-</nav>
-
-<div id="toast"></div>
-<input type="text" id="ref-link-input" readonly style="position:absolute;opacity:0;pointer-events:none;width:1px;">
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import {
-    getFirestore, collection, getDocs, getDoc,
-    doc, setDoc, updateDoc, increment, query, orderBy, limit, serverTimestamp, where
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-// ── FIREBASE ──
-const firebaseConfig = {
-    apiKey: "AIzaSyAUiFRn61DM4PD-4ssrTxcBG-X7BEldgOk",
-    authDomain: "newtube-ton.firebaseapp.com",
-    projectId: "newtube-ton",
-    storageBucket: "newtube-ton.firebasestorage.app",
-    messagingSenderId: "41011548816",
-    appId: "1:41011548816:web:9c27139d9487b144ecbe15"
-};
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-const API = 'https://newtube-ton.vercel.app';
-
-// ── TELEGRAM ──
+// ── Telegram WebApp init ──
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
-const tgUser = tg?.initDataUnsafe?.user || null;
 
-// ── STATE ──
-let currentUser = null;
-let allVideos   = [];
-let currentCat  = 'all';
-let currentPlayingId = null;
-let ytPlayer = null;
-let ytAPIReady = false;
+const tgUser = tg?.initDataUnsafe?.user || { id: 'demo_user', first_name: 'Demo', username: 'demo' };
+const startParam = tg?.initDataUnsafe?.start_param || null;
 
-// ── YOUTUBE API ──
-window.onYouTubeIframeAPIReady = () => { ytAPIReady = true; };
-const ytScript = document.createElement('script');
-ytScript.src = 'https://www.youtube.com/iframe_api';
-document.head.appendChild(ytScript);
+const USER_ID = String(tgUser.id);
+const FIRST_NAME = tgUser.first_name || 'User';
+const USERNAME = tgUser.username || 'N/A';
 
-// ── INIT ──
-async function init() {
-    if (!tgUser) {
-        // Dev mode — fake user
-        currentUser = { id: 'test123', firstName: 'Viewer', telegramUsername: 'test', totalInvites: 0, referralCount: 0 };
-        await loadVideos();
-        hideLoader();
-        return;
-    }
+// ── অ্যাপ-জুড়ে শেয়ার করা স্টেট ──
+const state = {
+    user: null,
+    videos: [],
+    tasks: [],
+    leaderboard: [],
+    activeTab: 'home',
+    videoSession: null,
+};
 
-    const userId   = String(tgUser.id);
-    const userRef  = doc(db, 'users', userId);
-    const startParam = tg?.initDataUnsafe?.start_param || '';
+// ══════════════════════════════════════════════════════════════
+// TOAST — error/success notification (raw error message কখনো দেখানো হয় না)
+// ══════════════════════════════════════════════════════════════
+function toast(message, type = 'info') {
+    const host = document.getElementById('toast-host');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = message;
+    host.appendChild(el);
+    setTimeout(() => el.remove(), 3200);
+}
 
+const ERROR_MESSAGES = {
+    below_minimum: 'এখনও মিনিমাম পরিমাণে পৌঁছায়নি।',
+    daily_limit_reached: 'আজকের জন্য সীমা শেষ — কাল আবার আসুন।',
+    daily_watch_limit_reached: 'আজ ১০ ঘণ্টা ভিডিও দেখার সীমা শেষ হয়ে গেছে।',
+    ad_required: 'আগে একটা বিজ্ঞাপন দেখতে হবে।',
+    insufficient_balance: 'ব্যালেন্স পর্যাপ্ত নেই।',
+    insufficient_ads: 'এই withdraw-এর জন্য আরও বিজ্ঞাপন দেখা লাগবে।',
+    need_5_tasks: 'প্রথম withdraw করার আগে অন্তত ৫টা টাস্ক সম্পন্ন করুন।',
+    already_withdrawn_today: 'আজ একবার withdraw করেছেন — কাল আবার চেষ্টা করুন।',
+    address_used_by_other: 'এই অ্যাড্রেস অন্য অ্যাকাউন্ট ব্যবহার করছে।',
+    banned: 'আপনার অ্যাকাউন্ট সাসপেন্ড করা হয়েছে।',
+    not_member: 'প্রথমে চ্যানেল/গ্রুপে join করুন।',
+    invalid_code: 'কোডটি ভুল বা মেয়াদ শেষ।',
+    already_used: 'এই কোড আগেই ব্যবহার করেছেন।',
+    fully_used: 'এই কোডের সব ব্যবহার শেষ হয়ে গেছে।',
+    expired: 'কোডের মেয়াদ শেষ।',
+    task_full: 'এই টাস্কের কোটা পূর্ণ হয়ে গেছে।',
+    conflict_retry: 'একটু আগে আবার চেষ্টা করুন।',
+    server_error: 'সার্ভারে সমস্যা হয়েছে, একটু পরে চেষ্টা করুন।',
+};
+function errorText(code) { return ERROR_MESSAGES[code] || 'কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন।'; }
+
+// ══════════════════════════════════════════════════════════════
+// API helpers
+// ══════════════════════════════════════════════════════════════
+async function apiPost(path, body) {
     try {
-        const snap = await getDoc(userRef);
-        if (!snap.exists()) {
-            // New user
-            const data = {
-                firstName: tgUser.first_name || 'Viewer',
-                telegramUsername: tgUser.username || '',
-                telegramId: userId,
-                totalInvites: 0,
-                referralCount: 0,
-                createdAt: serverTimestamp(),
-                isBanned: false,
-            };
-            await setDoc(userRef, data);
-            currentUser = { id: userId, ...data };
+        const res = await fetch(`${API_BASE}/${path}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        return await res.json();
+    } catch (e) {
+        return { ok: false, error: 'server_error' };
+    }
+}
+async function apiGet(path) {
+    try {
+        const res = await fetch(`${API_BASE}/${path}`);
+        return await res.json();
+    } catch (e) {
+        return { ok: false, error: 'server_error' };
+    }
+}
 
-            // Handle referral
-            if (startParam && startParam !== userId) {
-                const referrerId = startParam;
-                try {
-                    const refRef  = doc(db, 'users', referrerId);
-                    const refSnap = await getDoc(refRef);
-                    if (refSnap.exists()) {
-                        await updateDoc(refRef, {
-                            totalInvites:  increment(1),
-                            referralCount: increment(1),
-                        });
-                        await updateDoc(userRef, { referredBy: referrerId });
-                        // Call init API for notification
-                        fetch(`${API}/api/init`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                userId, firstName: tgUser.first_name,
-                                username: tgUser.username, referrerCode: referrerId
-                            })
-                        }).catch(() => {});
-                    }
-                } catch(e) {}
-            }
+function fmtWTC(n) { return Math.floor(n || 0).toLocaleString('en-US'); }
+function wtcToUsd(wtc) { return (wtc / 20000).toFixed(4); }
+
+// ══════════════════════════════════════════════════════════════
+// ONBOARDING — প্রথমবার app খোলার সময় ৩ স্টেপ
+// ══════════════════════════════════════════════════════════════
+const ONBOARD_KEY = 'newtube_onboarded_v1';
+
+function showOnboarding(onDone) {
+    if (localStorage.getItem(ONBOARD_KEY)) { onDone(); return; }
+
+    let step = 0;
+    const steps = [
+        {
+            icon: '🎬', // visual-only emoji inside the real deployed app is fine, this isn't a claude.ai widget
+            title: 'NEWTUBE-তে স্বাগতম',
+            body: 'ভিডিও দেখে রিয়েল ক্রিপ্টো আয় করুন — সম্পূর্ণ ফ্রি, কোনো বিনিয়োগ লাগবে না।',
+            cta: 'এগিয়ে যান',
+        },
+        {
+            icon: '▶',
+            title: 'Watch video to earn',
+            body: 'যত ভিডিও দেখবেন তত WTC জমা হবে। সম্পূর্ণ ফ্রি — just watch & monetize, no investment ever.',
+            cta: 'এগিয়ে যান',
+        },
+        {
+            icon: '📋',
+            title: 'নিয়মাবলী',
+            body: 'একটা ডিভাইসে একটাই অ্যাকাউন্ট চলবে — একাধিক অ্যাকাউন্ট খুললে ব্যান হয়ে যাবেন। কোনো বিনিয়োগ লাগবে না, শুধু ফ্রি ভিডিও দেখে আয়। Withdraw-এ সামান্য (৫%) ফি কাটা হয়। অস্বাভাবিক/বট কার্যকলাপ ধরা পড়লে ব্যালেন্স আটকে দেওয়া হতে পারে।',
+            cta: null, // confirm checkbox দেখাবে
+        },
+    ];
+
+    function render() {
+        const s = steps[step];
+        const root = document.getElementById('modal-root');
+        root.innerHTML = `
+            <div class="overlay" style="align-items:center;">
+                <div class="sheet" style="border-radius:22px; text-align:center; padding: 32px 24px;">
+                    <div style="font-size:48px; margin-bottom:18px;">${s.icon}</div>
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:20px; margin-bottom:10px;">${s.title}</div>
+                    <div class="muted" style="font-size:14px; line-height:1.6; margin-bottom:22px;">${s.body}</div>
+                    <div style="display:flex; justify-content:center; gap:6px; margin-bottom:20px;">
+                        ${steps.map((_, i) => `<div style="width:${i===step?20:6}px; height:6px; border-radius:4px; background:${i===step?'var(--coin)':'var(--border-strong)'};"></div>`).join('')}
+                    </div>
+                    ${s.cta ? `<button class="btn btn-primary" id="ob-next">${s.cta}</button>` : `
+                        <label style="display:flex; align-items:flex-start; gap:10px; text-align:left; margin-bottom:18px; font-size:13px; color:var(--ink-muted);">
+                            <input type="checkbox" id="ob-confirm-box" style="margin-top:3px;">
+                            আমি নিয়মাবলী পড়েছি এবং একমত
+                        </label>
+                        <button class="btn btn-primary" id="ob-done" disabled>শুরু করুন</button>
+                    `}
+                </div>
+            </div>`;
+
+        if (s.cta) {
+            document.getElementById('ob-next').onclick = () => { step++; render(); };
         } else {
-            currentUser = { id: userId, ...snap.data() };
-            if (currentUser.isBanned) {
-                document.body.innerHTML = '<p style="text-align:center;margin-top:80px;color:#F43F5E;font-weight:700;">Account Banned.</p>';
-                return;
-            }
+            const box = document.getElementById('ob-confirm-box');
+            const done = document.getElementById('ob-done');
+            box.onchange = () => { done.disabled = !box.checked; };
+            done.onclick = () => {
+                localStorage.setItem(ONBOARD_KEY, '1');
+                document.getElementById('modal-root').innerHTML = '';
+                onDone();
+            };
         }
-    } catch(e) {
-        currentUser = { id: userId, firstName: tgUser.first_name || 'Viewer', totalInvites: 0, referralCount: 0 };
     }
-
-    updateHeaderUI();
-    updateReferUI();
-    await loadVideos();
-    hideLoader();
+    render();
 }
 
-function updateHeaderUI() {
-    document.getElementById('hdr-invites').textContent = currentUser.totalInvites || 0;
-}
+// ══════════════════════════════════════════════════════════════
+// JOIN-GATE — channel + community join বাধ্যতামূলক, leave করলে আবার দেখাবে
+// ══════════════════════════════════════════════════════════════
+function showJoinGate(opts, onJoined) {
+    const root = document.getElementById('modal-root');
+    const heading = opts.leftAfterVerifying
+        ? 'আপনি চ্যানেল/কমিউনিটি ছেড়ে দিয়েছেন'
+        : 'চালিয়ে যাওয়ার আগে join করুন';
+    const sub = opts.leftAfterVerifying
+        ? 'NEWTUBE ব্যবহার চালিয়ে যাওয়ার জন্য আবার join করতে হবে।'
+        : 'NEWTUBE ব্যবহার করতে হলে আমাদের official channel ও community-তে join করা বাধ্যতামূলক।';
 
-function updateReferUI() {
-    if (!currentUser) return;
-    const link = `https://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`;
-    document.getElementById('refer-link-display').textContent = link;
-    document.getElementById('ref-link-input').value = link;
-    document.getElementById('ref-invited-count').textContent = currentUser.totalInvites || 0;
-}
-
-function hideLoader() {
-    setTimeout(() => {
-        document.getElementById('app-loader').classList.add('hidden');
-    }, 1800);
-}
-
-// ── LOAD VIDEOS ──
-async function loadVideos() {
-    try {
-        const snap = await getDocs(query(collection(db, 'videos'), orderBy('createdAt', 'desc'), limit(60)));
-        allVideos = [];
-        snap.forEach(d => allVideos.push({ id: d.id, ...d.data() }));
-    } catch(e) {
-        allVideos = [];
-    }
-    renderHome();
-    renderBrowse();
-}
-
-// ── RENDER HOME ──
-function renderHome() {
-    const filtered = currentCat === 'all' ? allVideos : allVideos.filter(v => v.category === currentCat);
-
-    // Hero — use first video
-    if (filtered.length > 0) {
-        const hero = filtered[0];
-        const thumbEl = document.getElementById('hero-thumb');
-        thumbEl.src = `https://img.youtube.com/vi/${hero.videoId}/maxresdefault.jpg`;
-        thumbEl.onerror = () => { thumbEl.src = `https://img.youtube.com/vi/${hero.videoId}/hqdefault.jpg`; };
-        document.getElementById('hero-title').textContent = hero.title;
-        document.getElementById('hero-play-btn').onclick = () => openPlayer(hero);
-        document.getElementById('hero-info-btn').onclick = () => openPlayer(hero);
-    }
-
-    // Featured row (first 10)
-    renderScrollRow('featured-row', filtered.slice(0, 10), true);
-
-    // New row (next 10)
-    renderScrollRow('new-row', filtered.slice(0, 15), false);
-
-    // Continue watching row — same as featured for now (no watch history tracking)
-    const continueWrap = document.getElementById('continue-row-wrap');
-    if (filtered.length > 0) {
-        renderScrollRow('continue-row', filtered.slice(0, 6), false);
-    } else {
-        continueWrap.style.display = 'none';
-    }
-}
-
-function renderScrollRow(containerId, videos, wide) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    if (!videos.length) { el.innerHTML = '<p style="color:#444;font-size:0.8rem;padding:10px 0;">Nothing here yet.</p>'; return; }
-    el.innerHTML = videos.map(v => {
-        const cls = wide ? 'vid-card vid-card-wide' : 'vid-card';
-        const w   = wide ? 200 : 140;
-        const h   = wide ? 113 : 79;
-        return `
-        <div class="${cls}" onclick="window.openPlayerById('${v.videoId}','${escHtml(v.title)}','${v.category||''}')">
-            <div class="vid-thumb-wrap">
-                <img class="vid-thumb" src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg"
-                    width="${w}" height="${h}" loading="lazy"
-                    onerror="this.src='https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg'">
-                <div class="vid-play-icon"><i class="fas fa-play"></i></div>
+    root.innerHTML = `
+        <div class="overlay" style="align-items:center;">
+            <div class="sheet" style="border-radius:22px; text-align:center; padding: 30px 22px;">
+                <div style="font-size:42px; margin-bottom:14px;">📢</div>
+                <div style="font-family:var(--font-display); font-weight:700; font-size:18px; margin-bottom:8px;">${heading}</div>
+                <div class="muted" style="font-size:13px; line-height:1.6; margin-bottom:20px;">${sub}</div>
+                <a href="https://t.me/${OFFICIAL_CHANNEL}" target="_blank" class="btn btn-outline" style="margin-bottom:10px;">চ্যানেলে join করুন</a>
+                <a href="https://t.me/${COMMUNITY_GROUP}" target="_blank" class="btn btn-outline" style="margin-bottom:16px;">কমিউনিটিতে join করুন</a>
+                <button class="btn btn-primary" id="jg-check">✅ Join করেছি, চেক করুন</button>
             </div>
-            <div class="vid-title">${escHtml(v.title)}</div>
-            ${v.category ? `<div class="vid-cat">${catLabel(v.category)}</div>` : ''}
         </div>`;
-    }).join('');
-}
 
-// ── RENDER BROWSE ──
-function renderBrowse() {
-    const grid = document.getElementById('browse-grid');
-    const filtered = currentCat === 'all' ? allVideos : allVideos.filter(v => v.category === currentCat);
-    if (!filtered.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-film"></i><p>No videos yet.</p></div>';
-        return;
-    }
-    grid.innerHTML = filtered.map(v => `
-        <div class="vid-grid-card" onclick="window.openPlayerById('${v.videoId}','${escHtml(v.title)}','${v.category||''}')">
-            <img class="vid-grid-thumb" src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" loading="lazy"
-                onerror="this.src='https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg'">
-            <div class="vid-grid-title">${escHtml(v.title)}</div>
-            ${v.category ? `<div class="vid-grid-cat">${catLabel(v.category)}</div>` : ''}
-        </div>`).join('');
-}
-
-// ── PLAYER ──
-function openPlayer(video) {
-    openPlayerById(video.videoId, video.title, video.category || '');
-}
-
-window.openPlayerById = (videoId, title, category) => {
-    currentPlayingId = videoId;
-    document.getElementById('player-title').textContent = title;
-    document.getElementById('player-cat').textContent   = catLabel(category);
-    document.getElementById('player-cat').style.display = category ? 'inline-block' : 'none';
-    document.getElementById('player-section').classList.add('open');
-    document.body.style.overflow = 'hidden';
-
-    // Render up next
-    renderUpNext(videoId);
-
-    // Share button
-    document.getElementById('player-share-btn').onclick = () => {
-        if (tg) {
-            const txt = encodeURIComponent(`🎬 Watch "${title}" on NEWTUBE Felix!`);
-            const url = encodeURIComponent(`https://t.me/NewTube12_bot/WatchTo_Earn`);
-            tg.openTelegramLink(`https://t.me/share/url?url=${url}&text=${txt}`);
+    document.getElementById('jg-check').onclick = async () => {
+        const btn = document.getElementById('jg-check');
+        btn.textContent = 'চেক করা হচ্ছে...'; btn.disabled = true;
+        const r = await apiGet(`user?action=checkJoin&userId=${USER_ID}`);
+        if (r.joined) {
+            root.innerHTML = '';
+            onJoined();
+        } else {
+            btn.textContent = '✅ Join করেছি, চেক করুন'; btn.disabled = false;
+            toast('এখনও দুটো জায়গায় join করা হয়নি।', 'error');
         }
     };
+}
 
-    // Load YouTube player
-    if (ytAPIReady) {
-        loadYT(videoId);
+// প্রতি ৬০ সেকেন্ডে membership চেক — leave করলে ধরা পড়বে
+function startJoinWatcher() {
+    setInterval(async () => {
+        if (document.getElementById('modal-root').innerHTML.includes('jg-check')) return; // already showing
+        const r = await apiGet(`user?action=checkJoin&userId=${USER_ID}`);
+        if (!r.joined) {
+            showJoinGate({ leftAfterVerifying: r.leftAfterVerifying }, () => {});
+        }
+    }, 60000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// APP SHELL
+// ══════════════════════════════════════════════════════════════
+const TABS = [
+    { id: 'home', label: 'Home', icon: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>' },
+    { id: 'video', label: 'Video', icon: '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M10 9l5 3-5 3V9z"/>' },
+    { id: 'earning', label: 'Earning', icon: null },
+    { id: 'task', label: 'Task', icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>' },
+    { id: 'refer', label: 'Refer', icon: '<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 014-4h6a4 4 0 014 4v2"/><circle cx="18" cy="8" r="2.5"/><path d="M22 21v-1.5a3 3 0 00-2-2.83"/>' },
+];
+
+function renderShell() {
+    const root = document.getElementById('app-root');
+    root.innerHTML = `
+        <div class="topbar">
+            <div class="brand">
+                <div class="brand-mark">N</div>
+                <div class="brand-name">NEWTUBE</div>
+            </div>
+            <button class="icon-btn" id="profile-btn" aria-label="প্রোফাইল">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+            </button>
+        </div>
+        <div id="tab-content"></div>
+        <div class="bottomnav">
+            ${TABS.map(t => t.id === 'earning'
+                ? `<button class="nav-item" data-tab="earning"><div class="nav-earn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5a3 3 0 013-1.5h0a3 3 0 010 6h0a3 3 0 000 6h0a3 3 0 003-1.5"/></svg></div><div class="nav-label">Earning</div></button>`
+                : `<button class="nav-item" data-tab="${t.id}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg><div class="nav-label">${t.label}</div></button>`
+            ).join('')}
+        </div>`;
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.onclick = () => switchTab(btn.dataset.tab);
+    });
+    document.getElementById('profile-btn').onclick = openProfileModal;
+}
+
+function switchTab(tabId) {
+    state.activeTab = tabId;
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+    const renderers = { home: renderHome, video: renderVideoTab, earning: renderEarningTab, task: renderTaskTab, refer: renderReferTab };
+    renderers[tabId]();
+}
+
+// ══════════════════════════════════════════════════════════════
+// HOME SECTION
+// ══════════════════════════════════════════════════════════════
+async function renderHome() {
+    const root = document.getElementById('tab-content');
+    const u = state.user || {};
+    root.innerHTML = `
+        <div class="card" style="margin:18px 20px 0; position:relative; overflow:hidden; background:radial-gradient(circle at 85% 0%, var(--coin-soft), transparent 60%), var(--surface);">
+            <div style="position:absolute; right:-18px; top:-18px; width:110px; height:110px; border-radius:50%; border:14px solid var(--coin-deep); opacity:0.18;"></div>
+            <div class="muted" style="font-size:13px; margin-bottom:6px;">আপনার ব্যালেন্স</div>
+            <div style="display:flex; align-items:flex-end; gap:10px;">
+                <span style="font-family:var(--font-display); font-weight:700; font-size:38px; line-height:1;">${fmtWTC(u.wtcBalance)}</span>
+                <span style="font-family:var(--font-display); font-weight:500; font-size:16px; color:var(--coin); padding-bottom:5px;">WTC</span>
+            </div>
+            <div style="margin-top:6px; font-size:13px; color:var(--signal); font-weight:500;">≈ $${wtcToUsd(u.wtcBalance)} USD</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
+            <button class="btn btn-primary" id="home-withdraw-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                Withdraw
+            </button>
+            <button class="btn btn-outline" id="home-promo-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                Promo code
+            </button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
+            <div class="card" style="padding:13px 15px;">
+                <div class="muted" style="font-size:12px; margin-bottom:4px;">মোট আয় (লাইফটাইম)</div>
+                <div style="font-family:var(--font-display); font-weight:500; font-size:18px;">${fmtWTC(u.lifetimeWtcEarned)} WTC</div>
+            </div>
+            <div class="card" style="padding:13px 15px;">
+                <div class="muted" style="font-size:12px; margin-bottom:4px;">রেফারেল</div>
+                <div style="font-family:var(--font-display); font-weight:500; font-size:18px;">${u.referralCount || 0} জন</div>
+            </div>
+        </div>
+
+        <div class="section-pad" style="margin-top:26px;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
+                <div class="section-title">টপ ২০ রেফারার</div>
+            </div>
+            <div class="card" id="home-leaderboard" style="padding: 4px 18px;">
+                <div class="muted" style="padding:14px 0; font-size:13px; text-align:center;">লোড হচ্ছে...</div>
+            </div>
+        </div>`;
+
+    document.getElementById('home-withdraw-btn').onclick = openWithdrawModal;
+    document.getElementById('home-promo-btn').onclick = openPromoModal;
+
+    const r = await apiGet('data?type=leaderboard');
+    const board = document.getElementById('home-leaderboard');
+    if (r.ok && r.leaderboard?.length) {
+        board.innerHTML = r.leaderboard.slice(0, 20).map((p, i) => `
+            <div style="display:flex; align-items:center; gap:12px; padding:10px 0; ${i < r.leaderboard.length - 1 ? 'border-bottom:0.5px solid var(--border);' : ''}">
+                <div style="width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:12px; ${i < 3 ? 'background:var(--coin-soft); color:var(--coin);' : 'background:var(--surface-raised); color:var(--ink-faint);'}">${i + 1}</div>
+                <div style="width:34px; height:34px; border-radius:50%; background:var(--signal-soft); color:var(--signal); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">${(p.firstName || '?')[0].toUpperCase()}</div>
+                <div style="flex:1; font-size:14px; font-weight:500;">${p.firstName || 'User'}</div>
+                <div style="font-size:13px; color:var(--ink-muted); font-family:var(--font-display);">${fmtWTC(p.lifetimeWtcEarned)}</div>
+            </div>`).join('');
     } else {
-        window.onYouTubeIframeAPIReady = () => { ytAPIReady = true; loadYT(videoId); };
+        board.innerHTML = `<div class="muted" style="padding:14px 0; font-size:13px; text-align:center;">এখনো কোনো ডেটা নেই।</div>`;
     }
+}
+
+function openProfileModal() {
+    const u = state.user || {};
+    document.getElementById('modal-root').innerHTML = `
+        <div class="overlay" onclick="if(event.target===this)this.remove()">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <div style="text-align:center; margin-bottom:18px;">
+                    <div style="width:60px; height:60px; border-radius:50%; background:var(--signal-soft); color:var(--signal); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:22px; margin:0 auto 10px;">${(u.firstName || '?')[0].toUpperCase()}</div>
+                    <div style="font-weight:600; font-size:16px;">${u.firstName || 'User'}</div>
+                    <div class="muted" style="font-size:13px;">@${u.telegramUsername || 'n/a'} · ID ${USER_ID}</div>
+                </div>
+                <div class="card">
+                    <table style="width:100%; font-size:13px;">
+                        <tr><td class="muted" style="padding:6px 0;">মোট ব্যালেন্স</td><td style="text-align:right;">${fmtWTC(u.wtcBalance)} WTC</td></tr>
+                        <tr><td class="muted" style="padding:6px 0;">লাইফটাইম আয়</td><td style="text-align:right;">${fmtWTC(u.lifetimeWtcEarned)} WTC</td></tr>
+                        <tr><td class="muted" style="padding:6px 0;">রেফারেল</td><td style="text-align:right;">${u.referralCount || 0}</td></tr>
+                        <tr><td class="muted" style="padding:6px 0;">টাস্ক সম্পন্ন</td><td style="text-align:right;">${(u.completedTasks || []).length}</td></tr>
+                    </table>
+                </div>
+                <button class="btn btn-outline" style="margin-top:14px;" onclick="document.getElementById('modal-root').innerHTML=''">বন্ধ করুন</button>
+            </div>
+        </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// WITHDRAW MODAL
+// ══════════════════════════════════════════════════════════════
+const WITHDRAW_METHODS_UI = {
+    binance:   { label: 'Binance UID', currency: 'USDT', minWtc: 2000, placeholder: 'Binance UID লিখুন' },
+    tonkeeper: { label: 'Tonkeeper Address', currency: 'TON', minWtc: 1200, placeholder: 'UQ... Wallet address' },
 };
 
-function loadYT(videoId) {
-    if (ytPlayer) {
-        ytPlayer.loadVideoById(videoId);
+function openWithdrawModal() {
+    let method = 'binance';
+    const u = state.user || {};
+
+    function render() {
+        const m = WITHDRAW_METHODS_UI[method];
+        document.getElementById('modal-root').innerHTML = `
+            <div class="overlay" onclick="if(event.target===this)this.remove()">
+                <div class="sheet">
+                    <div class="sheet-handle"></div>
+                    <div style="font-weight:600; font-size:16px; margin-bottom:4px;">Withdraw</div>
+                    <div class="muted" style="font-size:13px; margin-bottom:16px;">ব্যালেন্স: ${fmtWTC(u.wtcBalance)} WTC</div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="btn ${method==='binance'?'btn-primary':'btn-outline'}" id="m-binance">Binance</button>
+                        <button class="btn ${method==='tonkeeper'?'btn-primary':'btn-outline'}" id="m-tonkeeper">Tonkeeper</button>
+                    </div>
+
+                    <div class="field-label">${m.label}</div>
+                    <input class="field-input" id="wd-details" placeholder="${m.placeholder}">
+
+                    <div class="field-label">পরিমাণ (WTC) — মিনিমাম ${fmtWTC(m.minWtc)}</div>
+                    <input class="field-input" id="wd-amount" type="number" placeholder="${m.minWtc}">
+
+                    <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6;">
+                        ৫% withdraw fee প্রযোজ্য। প্রতি 0.01 ${m.currency}-র জন্য ১টা বিজ্ঞাপন দেখা থাকতে হবে আজকের মধ্যে। প্রথম withdraw-এর আগে অন্তত ৫টা টাস্ক সম্পন্ন করা লাগবে।
+                    </div>
+
+                    <button class="btn btn-primary" style="margin-top:16px;" id="wd-submit">Submit Withdraw</button>
+                </div>
+            </div>`;
+
+        document.getElementById('m-binance').onclick = () => { method = 'binance'; render(); };
+        document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; render(); };
+        document.getElementById('wd-submit').onclick = submitWithdraw;
+    }
+
+    async function submitWithdraw() {
+        const details = document.getElementById('wd-details').value.trim();
+        const amount = parseInt(document.getElementById('wd-amount').value);
+        if (!details) return toast('Address/UID লিখুন।', 'error');
+        if (!amount || isNaN(amount)) return toast('সঠিক পরিমাণ লিখুন।', 'error');
+
+        const btn = document.getElementById('wd-submit');
+        btn.textContent = 'পাঠানো হচ্ছে...'; btn.disabled = true;
+        const r = await apiPost('withdraw', { userId: USER_ID, method, details, amount });
+        if (r.ok) {
+            toast('Withdraw request পাঠানো হয়েছে — admin approve করলে পাবেন।', 'success');
+            document.getElementById('modal-root').innerHTML = '';
+            await refreshUser();
+            if (state.activeTab === 'home') renderHome();
+        } else {
+            toast(errorText(r.error), 'error');
+            btn.textContent = 'Submit Withdraw'; btn.disabled = false;
+        }
+    }
+
+    render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// PROMO MODAL
+// ══════════════════════════════════════════════════════════════
+function openPromoModal() {
+    document.getElementById('modal-root').innerHTML = `
+        <div class="overlay" onclick="if(event.target===this)this.remove()">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <div style="font-weight:600; font-size:16px; margin-bottom:4px;">Promo code</div>
+                <div class="muted" style="font-size:13px; margin-bottom:16px;">কোড দিয়ে এক্সট্রা WTC জিতুন।</div>
+                <input class="field-input" id="promo-code" placeholder="৬ ডিজিটের কোড লিখুন" style="text-align:center; font-family:var(--font-display); font-size:18px; letter-spacing:3px;">
+                <button class="btn btn-primary" style="margin-top:16px;" id="promo-submit">Redeem</button>
+            </div>
+        </div>`;
+
+    document.getElementById('promo-submit').onclick = async () => {
+        const code = document.getElementById('promo-code').value.trim();
+        if (!code) return toast('কোড লিখুন।', 'error');
+        const btn = document.getElementById('promo-submit');
+        btn.textContent = 'যাচাই করা হচ্ছে...'; btn.disabled = true;
+        const r = await apiPost('earn', { action: 'claimPromo', userId: USER_ID, code });
+        if (r.ok) {
+            toast(`+${r.reward} WTC যুক্ত হয়েছে!`, 'success');
+            document.getElementById('modal-root').innerHTML = '';
+            await refreshUser();
+            if (state.activeTab === 'home') renderHome();
+        } else {
+            toast(errorText(r.error), 'error');
+            btn.textContent = 'Redeem'; btn.disabled = false;
+        }
+    };
+}
+
+// ══════════════════════════════════════════════════════════════
+// VIDEO SECTION — YouTube-style grid + player + floating lootbox
+// ══════════════════════════════════════════════════════════════
+async function renderVideoTab() {
+    const root = document.getElementById('tab-content');
+    root.innerHTML = `
+        <div class="section-pad" style="margin-top:18px;">
+            <div class="section-title" style="margin-bottom:14px;">ভিডিও দেখুন, WTC আয় করুন</div>
+            <div id="video-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"></div>
+        </div>`;
+
+    const r = await apiGet('data?type=videos');
+    const grid = document.getElementById('video-grid');
+    state.videos = r.ok ? r.videos : [];
+
+    if (!state.videos.length) {
+        grid.style.display = 'block';
+        grid.innerHTML = `<div class="muted" style="text-align:center; padding:30px 0; grid-column:1/-1;">এখনো কোনো ভিডিও যুক্ত হয়নি।</div>`;
+    } else {
+        grid.innerHTML = state.videos.map((v, i) => `
+            <div class="video-thumb" data-idx="${i}" style="cursor:pointer;">
+                <div style="position:relative; border-radius:12px; overflow:hidden; background:var(--surface); aspect-ratio:16/9;">
+                    <img src="${v.thumbnail || ''}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                    <div style="position:absolute; right:6px; bottom:6px; background:rgba(0,0,0,0.65); border-radius:6px; padding:2px 6px; font-size:10px;">▶</div>
+                </div>
+                <div style="font-size:12px; font-weight:500; margin-top:6px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${v.title}</div>
+            </div>`).join('');
+        document.querySelectorAll('.video-thumb').forEach(el => {
+            el.onclick = () => openVideoPlayer(state.videos[el.dataset.idx]);
+        });
+    }
+
+    renderFloatingLootbox();
+}
+
+function renderFloatingLootbox() {
+    let el = document.getElementById('floating-lootbox');
+    if (!el) {
+        el = document.createElement('button');
+        el.id = 'floating-lootbox';
+        el.style.cssText = 'position:fixed; right:18px; bottom:120px; width:60px; height:60px; border-radius:50%; background:var(--surface-raised); border:2px solid var(--coin); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:50; box-shadow:0 8px 20px rgba(0,0,0,0.4);';
+        document.body.appendChild(el);
+        el.onclick = tryClaimLootbox;
+    }
+    const pending = state.user?.pendingVideoWTC || 0;
+    const claimable = pending >= 50;
+    el.innerHTML = `
+        <div style="font-size:14px;">🪙</div>
+        <div style="font-family:var(--font-display); font-weight:700; font-size:11px; color:${claimable ? 'var(--coin)' : 'var(--ink-muted)'};">${fmtWTC(pending)}</div>`;
+    el.style.borderColor = claimable ? 'var(--coin)' : 'var(--border-strong)';
+}
+
+function removeFloatingLootbox() {
+    document.getElementById('floating-lootbox')?.remove();
+}
+
+async function tryClaimLootbox() {
+    const pending = state.user?.pendingVideoWTC || 0;
+    if (pending < 50) {
+        toast(`মিনিমাম ৫০ WTC জমা হলে claim করতে পারবেন (এখন ${fmtWTC(pending)})।`, 'info');
         return;
     }
-    ytPlayer = new YT.Player('ytplayer', {
-        videoId,
-        playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
-        events: { onReady: e => e.target.playVideo() }
-    });
+    // ── এখানে আসল ad SDK কল হবে (Adsgram/Monetag/GigaPub-এর যেকোনো একটা থেকে random) ──
+    // TODO: রিয়েল ad network যুক্ত করার সময় এখানে show() কল করে রিওয়ার্ড callback-এ claimLootboxNow() ডাকবেন
+    toast('বিজ্ঞাপন দেখানো হচ্ছে...', 'info');
+    setTimeout(claimLootboxNow, 1200); // অস্থায়ী simulation — ad SDK বসানোর আগে পর্যন্ত
 }
 
-function renderUpNext(currentId) {
-    const list = document.getElementById('up-next-list');
-    const others = allVideos.filter(v => v.videoId !== currentId).slice(0, 8);
-    if (!others.length) { list.innerHTML = ''; return; }
-    list.innerHTML = others.map(v => `
-        <div class="up-next-row" onclick="window.openPlayerById('${v.videoId}','${escHtml(v.title)}','${v.category||''}')">
-            <img class="up-next-thumb" src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" loading="lazy">
-            <div class="up-next-info">
-                <div class="up-next-name">${escHtml(v.title)}</div>
-                ${v.category ? `<div class="up-next-cat">${catLabel(v.category)}</div>` : ''}
+async function claimLootboxNow() {
+    const r = await apiPost('earn', { action: 'claimLootbox', userId: USER_ID, adWatched: true });
+    if (r.ok) {
+        toast(`+${fmtWTC(r.pointsAdded)} WTC ব্যালেন্সে যুক্ত হয়েছে!`, 'success');
+        await refreshUser();
+        renderFloatingLootbox();
+        if (state.activeTab === 'home') renderHome();
+    } else {
+        toast(errorText(r.error), 'error');
+    }
+}
+
+function openVideoPlayer(video) {
+    document.getElementById('modal-root').innerHTML = `
+        <div class="overlay" style="align-items:stretch;">
+            <div class="sheet-fullscreen">
+                <div style="padding:14px 16px; display:flex; align-items:center; gap:10px;">
+                    <button class="icon-btn" id="vp-close" aria-label="বন্ধ করুন">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    </button>
+                    <div style="font-size:14px; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${video.title}</div>
+                </div>
+                <div style="aspect-ratio:16/9; background:#000;">
+                    <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${video.videoId}?autoplay=1&playsinline=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                </div>
+                <div class="section-pad" style="margin-top:18px;">
+                    <div class="card" style="text-align:center;">
+                        <div class="muted" style="font-size:12px; margin-bottom:6px;">এই সেশনে জমা হয়েছে</div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:24px; color:var(--coin);" id="vp-session-wtc">0 WTC</div>
+                        <div class="muted" style="font-size:11px; margin-top:6px;">প্রতি ঘণ্টা ভিডিও দেখায় ৬০ WTC জমা হয়</div>
+                    </div>
+                </div>
             </div>
-        </div>`).join('');
+        </div>`;
+
+    document.getElementById('vp-close').onclick = closeVideoPlayer;
+    startVideoSession();
 }
 
-// Back from player
-document.getElementById('player-back-btn').addEventListener('click', () => {
-    document.getElementById('player-section').classList.remove('open');
-    document.body.style.overflow = '';
-    if (ytPlayer) { try { ytPlayer.stopVideo(); } catch(e) {} }
-});
+let sessionEarnedTotal = 0;
 
-// ── CATEGORY CHIPS ──
-document.querySelectorAll('.cat-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-        document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        currentCat = chip.dataset.cat;
-        renderHome();
-        renderBrowse();
+async function startVideoSession() {
+    sessionEarnedTotal = 0;
+    const startRes = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
+    if (!startRes.success) { toast('ভিডিও সেশন শুরু করা যায়নি।', 'error'); return; }
+    state.videoSession = { startTime: startRes.startTime, signature: startRes.signature };
+
+    state.videoSessionInterval = setInterval(async () => {
+        if (!state.videoSession) return;
+        const elapsedSec = Math.floor((Date.now() - state.videoSession.startTime) / 1000);
+        const claimable = Math.floor(elapsedSec * (1 / 60)); // VIDEO_WTC_PER_SECOND
+        if (claimable <= 0) return;
+
+        const r = await apiPost('earn', {
+            action: 'videoClaim', userId: USER_ID,
+            startTime: state.videoSession.startTime, signature: state.videoSession.signature,
+            claimedPoints: claimable,
+        });
+        if (r.ok) {
+            sessionEarnedTotal += r.pendingVideoWTC !== undefined ? claimable : 0;
+            const out = document.getElementById('vp-session-wtc');
+            if (out) out.textContent = `${sessionEarnedTotal} WTC`;
+            if (state.user) state.user.pendingVideoWTC = r.pendingVideoWTC;
+            renderFloatingLootbox();
+            // পরের রাউন্ডের জন্য নতুন signed token নিন
+            const fresh = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
+            if (fresh.success) state.videoSession = { startTime: fresh.startTime, signature: fresh.signature };
+        }
+    }, 30000);
+}
+
+function closeVideoPlayer() {
+    if (state.videoSessionInterval) clearInterval(state.videoSessionInterval);
+    state.videoSession = null;
+    document.getElementById('modal-root').innerHTML = '';
+    renderVideoTab();
+}
+
+// ══════════════════════════════════════════════════════════════
+// EARNING SECTION — ৪টা ad-network বাটন
+// ══════════════════════════════════════════════════════════════
+const AD_NETWORKS_UI = [
+    { id: 'adsgramDaily',   label: 'Adsgram Daily',   reward: 10, limit: 10, counterField: 'adsgramDailyCountToday' },
+    { id: 'adsgramSpecial', label: 'Adsgram Special', reward: 25, limit: 5,  counterField: 'adsgramSpecialCountToday' },
+    { id: 'monetag',        label: 'Monetag',         reward: 15, limit: 20, counterField: 'monetagCountToday' },
+    { id: 'giga',           label: 'GigaPub',         reward: 15, limit: 20, counterField: 'gigaCountToday' },
+];
+
+function renderEarningTab() {
+    removeFloatingLootbox();
+    const root = document.getElementById('tab-content');
+    const u = state.user || {};
+    root.innerHTML = `
+        <div class="section-pad" style="margin-top:18px;">
+            <div class="section-title" style="margin-bottom:4px;">বিজ্ঞাপন দেখে আয় করুন</div>
+            <div class="muted" style="font-size:12px; margin-bottom:16px;">প্রতিটা নেটওয়ার্কের নিজস্ব দৈনিক সীমা আছে — সব মিলিয়ে দেখলে সবচেয়ে বেশি আয়।</div>
+            <div style="display:flex; flex-direction:column; gap:10px;" id="ad-network-list"></div>
+        </div>`;
+
+    const list = document.getElementById('ad-network-list');
+    list.innerHTML = AD_NETWORKS_UI.map(n => {
+        const count = u[n.counterField] || 0;
+        const maxed = count >= n.limit;
+        return `
+        <div class="card" style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+                <div style="font-weight:500; font-size:14px;">${n.label}</div>
+                <div class="muted" style="font-size:12px; margin-top:2px;">${count}/${n.limit} আজ · +${n.reward} WTC প্রতি বিজ্ঞাপন</div>
+            </div>
+            <button class="btn ${maxed ? 'btn-outline' : 'btn-primary'}" style="width:auto; padding:0 16px;" data-network="${n.id}" ${maxed ? 'disabled' : ''}>
+                ${maxed ? 'শেষ' : 'দেখুন'}
+            </button>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('button[data-network]').forEach(btn => {
+        btn.onclick = () => watchAdNetwork(btn.dataset.network);
     });
-});
+}
 
-// ── TABS ──
-window.switchTab = (tab) => {
-    ['home','browse','refer'].forEach(t => {
-        document.getElementById(`${t}-section`).classList.remove('active');
-        document.getElementById(`nav-${t}`).classList.remove('active');
+async function watchAdNetwork(network) {
+    // ── এখানে রিয়েল ad SDK কল হবে network অনুযায়ী (Adsgram.show() / show_9xxxxx() ইত্যাদি) ──
+    // TODO: প্রতিটা নেটওয়ার্কের রিয়েল SDK init + show() এখানে বসাবেন, reward callback-এ creditAdReward() ডাকবেন
+    toast('বিজ্ঞাপন দেখানো হচ্ছে...', 'info');
+    setTimeout(() => creditAdReward(network), 1200); // অস্থায়ী simulation
+}
+
+async function creditAdReward(network) {
+    const r = await apiPost('earn', { action: 'claimAdReward', userId: USER_ID, network });
+    if (r.ok) {
+        toast(`+${r.reward} WTC যুক্ত হয়েছে! (${r.countToday}/${r.dailyLimit})`, 'success');
+        await refreshUser();
+        renderEarningTab();
+    } else {
+        toast(errorText(r.error), 'error');
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TASK SECTION — channel-join (verified) + partner-link (non-verified) একই লিস্টে
+// ══════════════════════════════════════════════════════════════
+async function renderTaskTab() {
+    removeFloatingLootbox();
+    const root = document.getElementById('tab-content');
+    root.innerHTML = `
+        <div class="section-pad" style="margin-top:18px;">
+            <div class="section-title" style="margin-bottom:14px;">টাস্ক সম্পন্ন করে WTC জিতুন</div>
+            <div style="display:flex; flex-direction:column; gap:10px;" id="task-list">
+                <div class="muted" style="text-align:center; padding:20px 0;">লোড হচ্ছে...</div>
+            </div>
+        </div>`;
+
+    const r = await apiGet('data?type=tasks');
+    state.tasks = r.ok ? r.tasks : [];
+    const list = document.getElementById('task-list');
+    const done = new Set(state.user?.completedTasks || []);
+
+    if (!state.tasks.length) {
+        list.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">এখনো কোনো টাস্ক নেই।</div>`;
+        return;
+    }
+
+    list.innerHTML = state.tasks.map(t => {
+        const isDone = done.has(t._id);
+        const verified = t.category === 'channel';
+        return `
+        <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+                    <span class="pill ${verified ? 'pill-signal' : 'pill-coin'}">${verified ? '✓ Verified' : 'Link'}</span>
+                </div>
+                <div style="font-weight:500; font-size:14px;">${t.title}</div>
+                <div class="muted" style="font-size:12px; margin-top:2px;">+${t.rewardWtc || 0} WTC</div>
+            </div>
+            ${isDone
+                ? `<span class="pill" style="background:rgba(93,202,165,0.14); color:var(--success);">সম্পন্ন</span>`
+                : `<button class="btn btn-primary" style="width:auto; padding:0 16px;" data-task="${t._id}" data-url="${t.url || ''}">যান</button>`
+            }
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('button[data-task]').forEach(btn => {
+        btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url);
     });
-    document.getElementById(`${tab}-section`).classList.add('active');
-    document.getElementById(`nav-${tab}`).classList.add('active');
-};
-
-function setNav(tab) {
-    ['home','browse','refer'].forEach(t => document.getElementById(`nav-${t}`).classList.remove('active'));
-    document.getElementById(`nav-${tab}`).classList.add('active');
 }
 
-// ── REFER BUTTONS ──
-document.getElementById('refer-tg-btn').addEventListener('click', () => {
-    if (!currentUser) return;
-    const link = `https://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`;
-    const txt  = encodeURIComponent(`🎬 Watch movies & videos on NEWTUBE Felix!\n\nJoin using my link:`);
-    if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${txt}`);
-    else window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${txt}`, '_blank');
-});
+function goToTask(taskId, url) {
+    if (url) window.open(url, '_blank');
+    setTimeout(() => completeTask(taskId), 1500); // লিংকে যাওয়ার পর একটু সময় দিয়ে verify
+}
 
-document.getElementById('refer-copy-btn').addEventListener('click', () => {
-    if (!currentUser) return;
-    const link = `https://t.me/NewTube12_bot/WatchTo_Earn?startapp=${currentUser.id}`;
-    navigator.clipboard.writeText(link).then(() => showToast('✅ Link copied!')).catch(() => {
-        const inp = document.getElementById('ref-link-input');
-        inp.style.position = 'static'; inp.style.opacity = '1';
-        inp.select(); document.execCommand('copy');
-        inp.style.position = 'absolute'; inp.style.opacity = '0';
-        showToast('✅ Link copied!');
+async function completeTask(taskId) {
+    const r = await apiPost('earn', { action: 'taskComplete', userId: USER_ID, taskId });
+    if (r.ok) {
+        toast(`+${r.rewardWtc} WTC যুক্ত হয়েছে!`, 'success');
+        await refreshUser();
+        renderTaskTab();
+    } else if (r.alreadyDone) {
+        toast('এই টাস্ক আগেই সম্পন্ন করেছেন।', 'info');
+        renderTaskTab();
+    } else if (r.error === 'not_member') {
+        toast('চ্যানেল/গ্রুপে join করার পর আবার চেষ্টা করুন।', 'error');
+    } else {
+        toast(errorText(r.error), 'error');
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// REFER SECTION — রেফারেল লিংক + ৩-ধাপ মাইলস্টোন
+// ══════════════════════════════════════════════════════════════
+function renderReferTab() {
+    removeFloatingLootbox();
+    const root = document.getElementById('tab-content');
+    const u = state.user || {};
+    const link = `${MINI_APP_BASE}?startapp=${USER_ID}`;
+
+    root.innerHTML = `
+        <div class="section-pad" style="margin-top:18px;">
+            <div class="card" style="text-align:center; padding:24px 18px;">
+                <div style="font-size:32px; margin-bottom:8px;">👥</div>
+                <div style="font-weight:600; font-size:16px; margin-bottom:4px;">ফ্রেন্ড রেফার করে আয় করুন</div>
+                <div class="muted" style="font-size:13px; margin-bottom:18px;">প্রতিটা ফ্রেন্ড ৩টা ধাপ পার করলে আপনি পাবেন মোট ২২০ WTC পর্যন্ত।</div>
+                <div style="background:var(--surface-raised); border-radius:12px; padding:12px; font-size:12px; word-break:break-all; margin-bottom:12px;">${link}</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <button class="btn btn-primary" id="refer-share">শেয়ার করুন</button>
+                    <button class="btn btn-outline" id="refer-copy">কপি করুন</button>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+                <div class="card" style="padding:13px 15px;">
+                    <div class="muted" style="font-size:12px; margin-bottom:4px;">মোট রেফারেল</div>
+                    <div style="font-family:var(--font-display); font-weight:500; font-size:18px;">${u.referralCount || 0}</div>
+                </div>
+                <div class="card" style="padding:13px 15px;">
+                    <div class="muted" style="font-size:12px; margin-bottom:4px;">রেফারেল থেকে আয়</div>
+                    <div style="font-family:var(--font-display); font-weight:500; font-size:18px;">${(u.referralCount||0) > 0 ? '—' : '0'} WTC</div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin:22px 0 12px;">রিওয়ার্ড কীভাবে কাজ করে</div>
+            <div class="card">
+                <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);">
+                    <div style="width:30px; height:30px; border-radius:50%; background:var(--coin-soft); color:var(--coin); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">1</div>
+                    <div style="flex:1; font-size:13px;">ফ্রেন্ড channel + community join করে verify করলে</div>
+                    <div style="font-family:var(--font-display); color:var(--coin); font-size:13px;">+30</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);">
+                    <div style="width:30px; height:30px; border-radius:50%; background:var(--coin-soft); color:var(--coin); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">2</div>
+                    <div style="flex:1; font-size:13px;">ফ্রেন্ড ১০টা টাস্ক সম্পন্ন করলে</div>
+                    <div style="font-family:var(--font-display); color:var(--coin); font-size:13px;">+60</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; padding:8px 0;">
+                    <div style="width:30px; height:30px; border-radius:50%; background:var(--coin-soft); color:var(--coin); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">3</div>
+                    <div style="flex:1; font-size:13px;">ফ্রেন্ড ২০টা বিজ্ঞাপন দেখলে</div>
+                    <div style="font-family:var(--font-display); color:var(--coin); font-size:13px;">+130</div>
+                </div>
+            </div>
+        </div>`;
+
+    document.getElementById('refer-share').onclick = () => {
+        const text = encodeURIComponent('🎬 NEWTUBE-তে join করো! ভিডিও দেখে ফ্রি WTC ক্রিপ্টো আয় করো!');
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`, '_blank');
+    };
+    document.getElementById('refer-copy').onclick = () => {
+        navigator.clipboard.writeText(link);
+        toast('লিংক কপি হয়েছে!', 'success');
+    };
+}
+
+// ══════════════════════════════════════════════════════════════
+// USER REFRESH
+// ══════════════════════════════════════════════════════════════
+async function refreshUser() {
+    const r = await apiGet(`user?action=profile&userId=${USER_ID}`);
+    if (r.ok) state.user = r.user;
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT — সবকিছু একসাথে চালু হওয়ার ক্রম
+// ══════════════════════════════════════════════════════════════
+async function init() {
+    // ১) ব্যাকএন্ডে ইউজার রেজিস্টার করুন (নতুন হলে তৈরি হবে, পুরোনো হলে কিছু হবে না)
+    await apiPost('user', {
+        action: 'init', userId: USER_ID, firstName: FIRST_NAME, username: USERNAME,
+        referrerCode: startParam, fingerprint: await generateDeviceFingerprint(),
     });
-});
+    await refreshUser();
 
-// ── HELPERS ──
-function catLabel(cat) {
-    const map = { movie:'🎬 Movie', series:'📺 Series', music:'🎵 Music', news:'📰 News', education:'📚 Education', sports:'⚽ Sports', other:'📌 Other' };
-    return map[cat] || cat || '';
+    // ২) onboarding (শুধু প্রথমবার)
+    showOnboarding(async () => {
+        // ৩) channel/community join বাধ্যতামূলক
+        const joinCheck = await apiGet(`user?action=checkJoin&userId=${USER_ID}`);
+        if (joinCheck.joined) {
+            startApp();
+        } else {
+            showJoinGate({ leftAfterVerifying: joinCheck.leftAfterVerifying }, startApp);
+        }
+    });
 }
 
-function escHtml(str) {
-    return String(str).replace(/'/g,"&#39;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function startApp() {
+    renderShell();
+    switchTab('home');
+    startJoinWatcher();
 }
 
-window.showToast = (msg, duration = 2500) => {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.style.opacity = '1';
-    clearTimeout(t._to);
-    t._to = setTimeout(() => { t.style.opacity = '0'; }, duration);
-};
+// ── device fingerprint (client/fingerprint.js এর লজিক এখানে ইনলাইন করা) ──
+async function generateDeviceFingerprint() {
+    try {
+        const parts = [];
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 200; canvas.height = 50;
+        ctx.textBaseline = 'top'; ctx.font = '14px Arial'; ctx.fillStyle = '#f60'; ctx.fillRect(0, 0, 100, 20);
+        ctx.fillStyle = '#069'; ctx.fillText('NEWTUBE-fp', 2, 15);
+        parts.push(canvas.toDataURL());
+        parts.push(screen.width + 'x' + screen.height + 'x' + screen.colorDepth);
+        parts.push(navigator.language || '');
+        parts.push(Intl.DateTimeFormat().resolvedOptions().timeZone || '');
+        parts.push(navigator.hardwareConcurrency || '');
+        const data = new TextEncoder().encode(parts.join('|||'));
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch { return null; }
+}
 
-// ── START ──
 init();
 </script>
+
 </body>
 </html>
