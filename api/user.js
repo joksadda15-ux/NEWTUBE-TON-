@@ -1,27 +1,39 @@
-// api/user.js — CONSOLIDATED (Vercel Hobby-র ১২ ফাংশন সীমার মধ্যে থাকার জন্য)
+// api/user.js — CONSOLIDATED + SECURITY FIX (Telegram initData verification)
 //
-// init.js + checkJoin.js এর সব লজিক একটা ফাইলে — আলাদা ফাইল না করে একটা
-// "action" প্যারামিটার দিয়ে রুট করা হচ্ছে। নতুন UI থেকে কল করার ধরন:
-//   POST /api/user   body: { action: 'init', userId, firstName, username, referrerCode, fingerprint }
-//   GET  /api/user?action=checkJoin&userId=123
-//   GET  /api/user?action=profile&userId=123   ← নতুন, UI-এর ব্যালেন্স/প্রোফাইল দেখানোর জন্য
+// বড় পরিবর্তন: আগে client যা userId পাঠাতো তাই বিশ্বাস করা হতো — কেউ
+// browser DevTools থেকে সরাসরি API কল করে অন্য কারো userId বসিয়ে দিতে পারতো।
+// এখন প্রতিটা রিকোয়েস্টে Telegram-এর `initData` (signed string) লাগবে,
+// যেটা সার্ভার cryptographically verify করে — bot token ছাড়া কেউ এটা
+// বানাতে পারবে না, তাই userId স্পুফ করা সম্ভব না।
+//
+//   POST /api/user   body: { action: 'init', initData, fingerprint }
+//   GET  /api/user?action=checkJoin&initData=...
+//   GET  /api/user?action=profile&initData=...
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import { todayBD } from '../lib/constants.js';
 import { checkAndRecordFingerprint } from '../lib/fingerprintCheck.js';
 import { isMember, OFFICIAL_CHANNEL, COMMUNITY_GROUP } from '../lib/telegram.js';
 import { maybeAwardReferralMilestones } from '../lib/referral.js';
+import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 
 async function handleInit(req, res, db) {
-    const { userId, firstName, username, referrerCode, fingerprint } = req.body;
-    if (!userId) return res.status(400).json({ ok: false, error: 'missing_userId' });
+    const initData = req.body?.initData;
+    const verified = verifyTelegramInitData(initData);
+    if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
+
+    const userId = String(verified.user.id);
+    const firstName = verified.user.first_name;
+    const username = verified.user.username;
+    const referrerCode = verified.startParam; // ✅ verified initData থেকেই আসছে, client আলাদা করে পাঠাতে পারবে না
+    const { fingerprint } = req.body;
 
     const users = db.collection('users');
-    const existing = await users.findOne({ _id: String(userId) });
+    const existing = await users.findOne({ _id: userId });
     if (existing) return res.status(200).json({ ok: true, alreadyExists: true });
 
     const newUser = {
-        _id: String(userId),
+        _id: userId,
         firstName: firstName || 'User',
         telegramUsername: username || 'N/A',
         wtcBalance: 0,
@@ -29,7 +41,7 @@ async function handleInit(req, res, db) {
         pendingVideoWTC: 0,
         referralCount: 0,
         totalInvites: 0,
-        referredBy: (referrerCode && referrerCode !== String(userId)) ? String(referrerCode) : null,
+        referredBy: (referrerCode && referrerCode !== userId) ? String(referrerCode) : null,
         referralStep1Done: false,
         referralStep2Done: false,
         referralStep3Done: false,
@@ -64,13 +76,14 @@ async function handleInit(req, res, db) {
         await users.updateOne({ _id: newUser.referredBy }, { $inc: { referralCount: 1, totalInvites: 1 } });
     }
 
-    const fpResult = await checkAndRecordFingerprint(db, String(userId), fingerprint);
+    const fpResult = await checkAndRecordFingerprint(db, userId, fingerprint);
     return res.status(200).json({ ok: true, created: true, multiAccountFlagged: fpResult.flagged });
 }
 
 async function handleCheckJoin(req, res, db) {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ joined: false, error: 'missing_userId' });
+    const verified = verifyTelegramInitData(req.query.initData);
+    if (!verified.ok) return res.status(401).json({ joined: false, error: 'unauthorized', reason: verified.error });
+    const userId = String(verified.user.id);
 
     try {
         const [inChannel, inGroup] = await Promise.all([
@@ -78,12 +91,20 @@ async function handleCheckJoin(req, res, db) {
             isMember(userId, COMMUNITY_GROUP),
         ]);
         const joined = inChannel && inGroup;
+
         if (joined) {
             try {
-                await db.collection('users').updateOne({ _id: String(userId) }, { $set: { channelVerified: true } });
-                await maybeAwardReferralMilestones(db, String(userId), { channelVerified: true });
+                await db.collection('users').updateOne({ _id: userId }, { $set: { channelVerified: true } });
+                await maybeAwardReferralMilestones(db, userId, { channelVerified: true });
             } catch { /* non-blocking */ }
+        } else {
+            const existing = await db.collection('users').findOne({ _id: userId }, { projection: { channelVerified: 1 } });
+            if (existing?.channelVerified) {
+                await db.collection('users').updateOne({ _id: userId }, { $set: { channelVerified: false } });
+                return res.status(200).json({ joined: false, inChannel, inGroup, leftAfterVerifying: true });
+            }
         }
+
         return res.status(200).json({ joined, inChannel, inGroup });
     } catch (err) {
         console.error('checkJoin error:', err);
@@ -92,13 +113,13 @@ async function handleCheckJoin(req, res, db) {
 }
 
 async function handleProfile(req, res, db) {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ ok: false, error: 'missing_userId' });
+    const verified = verifyTelegramInitData(req.query.initData);
+    if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
+    const userId = String(verified.user.id);
 
-    const user = await db.collection('users').findOne({ _id: String(userId) });
+    const user = await db.collection('users').findOne({ _id: userId });
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
 
-    // পাসওয়ার্ড/সেনসিটিভ কিছু নেই এই কালেকশনে, কিন্তু internal flag গুলো client-কে না দেখানোই ভালো
     const { multiAccountSiblings, multiAccountFingerprint, ...safeUser } = user;
     return res.status(200).json({ ok: true, user: safeUser });
 }
