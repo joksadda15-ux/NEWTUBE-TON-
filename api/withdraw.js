@@ -8,6 +8,7 @@
 import { connectToDatabase } from '../lib/mongodb.js';
 import { tgSend } from '../lib/telegram.js';
 import { ensureDailyReset } from '../lib/dailyReset.js';
+import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     WITHDRAW_METHODS, WITHDRAW_MIN_WTC, WITHDRAW_FEE_PERCENT,
     FIRST_WITHDRAW_MIN_TASKS, calcAdsRequired, todayBD,
@@ -21,8 +22,15 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { userId, method, details, amount } = req.body;
-        if (!userId || !method || !details || amount === undefined) {
+        // ── SECURITY FIX: এখন real money নড়াচড়া করে এই endpoint, তাই
+        // initData verification সবচেয়ে জরুরি এখানেই — client-পাঠানো userId
+        // আর বিশ্বাস করা হয় না।
+        const verified = verifyTelegramInitData(req.body?.initData);
+        if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
+        const id = String(verified.user.id);
+
+        const { method, details, amount } = req.body;
+        if (!method || !details || amount === undefined) {
             return res.status(400).json({ ok: false, error: 'missing_fields' });
         }
 
@@ -34,12 +42,11 @@ export default async function handler(req, res) {
         const wtcAmount = Math.floor(Number(amount));
         const minWtc = WITHDRAW_MIN_WTC[method];
         if (isNaN(wtcAmount) || wtcAmount < minWtc) {
-            return res.status(400).json({ ok: false, error: 'below_minimum', message: `Minimum ${minWtc.toLocaleString()} WTC (${methodConfig.minCurrency} ${methodConfig.currency}) প্রয়োজন।` });
+            return res.status(400).json({ ok: false, error: 'below_minimum', message: `Minimum ${minWtc.toLocaleString()} WTC (${methodConfig.minCurrency} ${methodConfig.currency}) required.` });
         }
 
         const { db } = await connectToDatabase();
         const users = db.collection('users');
-        const id = String(userId);
 
         const today = await ensureDailyReset(users, id);
 
