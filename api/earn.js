@@ -29,7 +29,10 @@ const sign = (userId, startTime) => crypto.createHmac('sha256', SECRET).update(`
 
 // ── videoStart ──
 async function handleVideoStart(req, res, userId) {
-    if (!SECRET) return res.status(500).json({ success: false, error: 'server_misconfigured' });
+    if (!SECRET) {
+        console.error('VIDEO_SIGNING_SECRET env variable is missing on Vercel — video sessions cannot be signed.');
+        return res.status(500).json({ success: false, error: 'video_secret_missing' });
+    }
     const startTime = Date.now();
     return res.status(200).json({ success: true, startTime, signature: sign(userId, startTime) });
 }
@@ -225,4 +228,4 @@ export default async function handler(req, res) {
         case 'claimPromo':     return handleClaimPromo(req, res, db, userId);
         default: return res.status(400).json({ ok: false, error: 'unknown_action' });
     }
-}
+                                   }
