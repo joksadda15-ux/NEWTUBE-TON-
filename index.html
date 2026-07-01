@@ -517,7 +517,13 @@ async function renderHome() {
         <div class="card anim-in" style="margin:18px 20px 0; position:relative; overflow:hidden; background:radial-gradient(circle at 85% 0%, var(--coin-soft), transparent 60%), var(--surface);">
             <div class="shimmer-sweep"></div>
             <div class="coin-ring-spin" style="position:absolute; right:-18px; top:-18px; width:110px; height:110px; border-radius:50%; border:14px solid var(--coin-deep);"></div>
-            <div class="muted" style="font-size:13px; margin-bottom:6px;">Your balance</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                <div class="muted" style="font-size:13px;">Your balance</div>
+                <div style="font-size:11px; color:var(--ink-faint);">
+                    ID <span style="font-family:var(--font-display); color:var(--ink-muted);">${USER_ID}</span>
+                    ${u.telegramUsername && u.telegramUsername !== 'N/A' ? `· @${u.telegramUsername}` : ''}
+                </div>
+            </div>
             <div style="display:flex; align-items:flex-end; gap:10px;">
                 <span id="home-balance-num" style="font-family:var(--font-display); font-weight:700; font-size:38px; line-height:1;">${fmtWTC(prevBalance)}</span>
                 <span style="font-family:var(--font-display); font-weight:500; font-size:16px; color:var(--coin); padding-bottom:5px;">WTC</span>
@@ -546,8 +552,11 @@ async function renderHome() {
         </div>
 
         <div class="section-pad anim-in-4" style="margin-top:26px;">
-            <div class="section-title" style="margin-bottom:12px;">Top 20 Referrers</div>
-            <div class="card" id="home-leaderboard" style="padding: 4px 18px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                <div class="section-title">Top 20 Referrers</div>
+                <button id="lb-toggle-btn" class="btn btn-outline" style="width:auto; padding:0 12px; height:32px; font-size:12px;">Show</button>
+            </div>
+            <div id="home-leaderboard" class="card" style="padding:4px 18px; display:none;">
                 <div class="skel" style="height:14px; width:70%; margin:10px 0;"></div>
                 <div class="skel" style="height:14px; width:50%; margin:10px 0;"></div>
                 <div class="skel" style="height:14px; width:60%; margin:10px 0;"></div>
@@ -560,19 +569,31 @@ async function renderHome() {
     document.getElementById('home-withdraw-btn').onclick = openWithdrawModal;
     document.getElementById('home-promo-btn').onclick = openPromoModal;
 
-    const r = await apiGet('data?type=leaderboard');
-    const board = document.getElementById('home-leaderboard');
-    if (r.ok && r.leaderboard?.length) {
-        board.innerHTML = r.leaderboard.slice(0, 20).map((p, i) => `
-            <div style="display:flex; align-items:center; gap:12px; padding:10px 0; opacity:0; animation: rise-in 0.4s ease ${Math.min(i * 0.04, 0.5)}s forwards; ${i < r.leaderboard.length - 1 ? 'border-bottom:0.5px solid var(--border);' : ''}">
-                <div style="width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:12px; ${i < 3 ? 'background:var(--coin-soft); color:var(--coin);' : 'background:var(--surface-raised); color:var(--ink-faint);'}">${i + 1}</div>
-                <div style="width:34px; height:34px; border-radius:50%; background:var(--signal-soft); color:var(--signal); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">${(p.firstName || '?')[0].toUpperCase()}</div>
-                <div style="flex:1; font-size:14px; font-weight:500;">${p.firstName || 'User'}</div>
-                <div style="font-size:13px; color:var(--ink-muted); font-family:var(--font-display);">${p.referralCount || 0} refs</div>
-            </div>`).join('');
-    } else {
-        board.innerHTML = `<div class="muted" style="padding:14px 0; font-size:13px; text-align:center;">No data yet.</div>`;
-    }
+    // Leaderboard toggle — loads lazily on first expand
+    let lbLoaded = false;
+    let lbOpen = false;
+    document.getElementById('lb-toggle-btn').onclick = async () => {
+        lbOpen = !lbOpen;
+        const board = document.getElementById('home-leaderboard');
+        const btn = document.getElementById('lb-toggle-btn');
+        board.style.display = lbOpen ? 'block' : 'none';
+        btn.textContent = lbOpen ? 'Hide' : 'Show';
+        if (lbOpen && !lbLoaded) {
+            lbLoaded = true;
+            const r = await apiGet('data?type=leaderboard');
+            if (r.ok && r.leaderboard?.length) {
+                board.innerHTML = r.leaderboard.slice(0, 20).map((p, i) => `
+                    <div style="display:flex; align-items:center; gap:12px; padding:10px 0; opacity:0; animation:rise-in 0.4s ease ${Math.min(i * 0.04, 0.5)}s forwards; ${i < r.leaderboard.length - 1 ? 'border-bottom:0.5px solid var(--border);' : ''}">
+                        <div style="width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:12px; ${i < 3 ? 'background:var(--coin-soft); color:var(--coin);' : 'background:var(--surface-raised); color:var(--ink-faint);'}">${i + 1}</div>
+                        <div style="width:34px; height:34px; border-radius:50%; background:var(--signal-soft); color:var(--signal); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">${(p.firstName || '?')[0].toUpperCase()}</div>
+                        <div style="flex:1; font-size:14px; font-weight:500;">${p.firstName || 'User'}</div>
+                        <div style="font-size:13px; color:var(--ink-muted); font-family:var(--font-display);">${p.referralCount || 0} refs</div>
+                    </div>`).join('');
+            } else {
+                board.innerHTML = `<div class="muted" style="padding:14px 0; font-size:13px; text-align:center;">No data yet.</div>`;
+            }
+        }
+    };
 }
 
 function openProfileModal() {
