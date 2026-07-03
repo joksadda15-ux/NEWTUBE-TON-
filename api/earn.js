@@ -27,16 +27,6 @@ import {
 const SECRET = process.env.VIDEO_SIGNING_SECRET;
 const sign = (userId, startTime) => crypto.createHmac('sha256', SECRET).update(`${userId}:${startTime}`).digest('hex');
 
-// ── videoStart ──
-async function handleVideoStart(req, res, userId) {
-    if (!SECRET) {
-        console.error('VIDEO_SIGNING_SECRET env variable is missing on Vercel — video sessions cannot be signed.');
-        return res.status(500).json({ success: false, error: 'video_secret_missing' });
-    }
-    const startTime = Date.now();
-    return res.status(200).json({ success: true, startTime, signature: sign(userId, startTime) });
-}
-
 // ── videoClaim ──
 async function handleVideoClaim(req, res, db, userId) {
     const { startTime, signature, claimedPoints } = req.body;
@@ -211,13 +201,22 @@ async function handleClaimPromo(req, res, db, userId) {
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'method_not_allowed' });
 
-    // ── সব action-এর জন্য একবারই verify করা হচ্ছে ──
+    const { action } = req.body || {};
+
+    // videoStart only HMAC-signs a timestamp — no DB, no user data touched.
+    // Keeping it outside initData verification prevents session renewal failures
+    // when TG_INIT_DATA expires mid-session (which would break the 30-second ticker).
+    if (action === 'videoStart') {
+        if (!SECRET) return res.status(500).json({ success: false, error: 'video_secret_missing' });
+        const startTime = Date.now();
+        const userId = req.body?.userId || 'anon';
+        return res.status(200).json({ success: true, startTime, signature: sign(userId, startTime) });
+    }
+
+    // All other actions require a valid Telegram session
     const verified = verifyTelegramInitData(req.body?.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const userId = String(verified.user.id);
-
-    const { action } = req.body || {};
-    if (action === 'videoStart') return handleVideoStart(req, res, userId); // DB লাগে না
 
     const { db } = await connectToDatabase();
     switch (action) {
@@ -228,4 +227,4 @@ export default async function handler(req, res) {
         case 'claimPromo':     return handleClaimPromo(req, res, db, userId);
         default: return res.status(400).json({ ok: false, error: 'unknown_action' });
     }
-}
+        }
