@@ -169,11 +169,60 @@
     /* ── skeleton loading ── */
     .skel { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-raised) 50%, var(--surface) 75%); background-size: 200% 100%; animation: skel-shine 1.4s ease-in-out infinite; border-radius: 10px; }
     @keyframes skel-shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ══════════════════════════════════════════════════════════
+       SPLASH — extra glow + rising sparkle particles (purely
+       decorative, layered behind the existing logo/text).
+       ══════════════════════════════════════════════════════════ */
+    .splash-glow { position: absolute; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(126,217,87,0.28), transparent 70%); animation: splash-glow-pulse 2.4s ease-in-out infinite; z-index: 0; }
+    @keyframes splash-glow-pulse { 0%,100% { opacity: 0.45; transform: scale(0.9); } 50% { opacity: 0.85; transform: scale(1.15); } }
+    .splash-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+    .splash-particles span { position: absolute; bottom: -10px; width: 5px; height: 5px; border-radius: 50%; background: var(--coin); opacity: 0.75; box-shadow: 0 0 8px rgba(126,217,87,0.7); animation: splash-particle-rise 3.4s ease-in infinite; }
+    .splash-particles span:nth-child(1) { left: 14%; animation-delay: 0s; }
+    .splash-particles span:nth-child(2) { left: 30%; animation-delay: 0.5s; background: var(--signal); box-shadow: 0 0 8px rgba(184,242,160,0.7); }
+    .splash-particles span:nth-child(3) { left: 48%; animation-delay: 1.05s; }
+    .splash-particles span:nth-child(4) { left: 64%; animation-delay: 1.65s; background: var(--signal); box-shadow: 0 0 8px rgba(184,242,160,0.7); }
+    .splash-particles span:nth-child(5) { left: 80%; animation-delay: 0.85s; }
+    .splash-particles span:nth-child(6) { left: 22%; animation-delay: 2.15s; background: var(--signal); box-shadow: 0 0 8px rgba(184,242,160,0.7); }
+    @keyframes splash-particle-rise { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 15% { opacity: 0.85; } 100% { transform: translateY(-340px) scale(1.1); opacity: 0; } }
+    .splash-mark { box-shadow: 0 0 34px rgba(126,217,87,0.45); position: relative; z-index: 1; }
+    .splash-name, .splash-tagline { position: relative; z-index: 1; }
+
+    /* ── nav-earn: soft breathing halo, extra polish ── */
+    .nav-earn { position: relative; }
+    .nav-earn::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--coin); opacity: 0; animation: nav-earn-pulse 2.6s ease-out infinite; }
+    @keyframes nav-earn-pulse { 0% { transform: scale(0.85); opacity: 0.5; } 100% { transform: scale(1.4); opacity: 0; } }
+
+    /* ══════════════════════════════════════════════════════════
+       REWARD CELEBRATION — "Congratulations" overlay shown any
+       time a reward is credited (promo / lootbox / ad / task).
+       Pure visual layer — does not touch any reward logic.
+       ══════════════════════════════════════════════════════════ */
+    .congrats-overlay { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; background: rgba(6,10,6,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: congrats-bg-in 0.3s ease both; }
+    .congrats-overlay.closing { animation: congrats-bg-out 0.3s ease both; }
+    @keyframes congrats-bg-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes congrats-bg-out { from { opacity: 1; } to { opacity: 0; } }
+    .congrats-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 34px 38px; border-radius: 24px; background: linear-gradient(160deg, var(--surface-pop), var(--surface-raised)); border: 0.5px solid var(--border-strong); box-shadow: 0 24px 60px rgba(0,0,0,0.55); animation: congrats-card-in 0.5s cubic-bezier(.34,1.56,.64,1) both; text-align: center; max-width: 300px; }
+    .congrats-overlay.closing .congrats-card { animation: congrats-card-out 0.28s ease both; }
+    @keyframes congrats-card-in { 0% { transform: scale(0.6) translateY(24px); opacity: 0; } 60% { transform: scale(1.06) translateY(0); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+    @keyframes congrats-card-out { to { transform: scale(0.85); opacity: 0; } }
+    .congrats-glow { position: absolute; inset: -34%; border-radius: 50%; background: radial-gradient(circle, rgba(126,217,87,0.35), transparent 70%); animation: congrats-glow-pulse 1.8s ease-in-out infinite; z-index: 0; pointer-events: none; }
+    @keyframes congrats-glow-pulse { 0%,100% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 0.9; transform: scale(1.1); } }
+    .congrats-icon { position: relative; z-index: 1; font-size: 50px; line-height: 1; animation: congrats-icon-bounce 0.8s cubic-bezier(.34,1.56,.64,1) 0.05s both, congrats-icon-wiggle 2.1s ease-in-out 0.85s infinite; }
+    @keyframes congrats-icon-bounce { 0% { transform: scale(0) rotate(-18deg); } 60% { transform: scale(1.25) rotate(8deg); } 100% { transform: scale(1) rotate(0); } }
+    @keyframes congrats-icon-wiggle { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+    .congrats-title { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: 0.3px; margin-top: 6px; opacity: 0; animation: fade-up 0.5s ease 0.22s forwards; }
+    .congrats-sub { position: relative; z-index: 1; font-size: 12px; color: var(--ink-muted); margin-top: 3px; opacity: 0; animation: fade-up 0.5s ease 0.32s forwards; }
+    .congrats-amount { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 27px; color: var(--coin); margin-top: 4px; opacity: 0; text-shadow: 0 0 18px rgba(126,217,87,0.55); animation: congrats-amount-in 0.55s cubic-bezier(.34,1.56,.64,1) 0.42s forwards; }
+    @keyframes congrats-amount-in { from { opacity: 0; transform: scale(0.6) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .congrats-hint { position: relative; z-index: 1; font-size: 10.5px; color: var(--ink-faint); margin-top: 14px; opacity: 0; animation: fade-up 0.5s ease 0.6s forwards; }
 </style>
 </head>
 <body>
 
 <div id="splash">
+    <div class="splash-glow"></div>
+    <div class="splash-particles"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="splash-mark">N</div>
     <div class="splash-name">NEWTUBE</div>
     <div class="splash-tagline">Watch · Earn · Withdraw</div>
@@ -359,6 +408,37 @@ function triggerBurst(originEl) {
         else burstCtx.clearRect(0, 0, burstCanvas.width, burstCanvas.height);
     }
     tick();
+}
+
+// ══════════════════════════════════════════════════════════════
+// REWARD CELEBRATION — pure visual layer, shown on top of the
+// existing toast whenever a reward is actually credited. Does not
+// read/write any state itself — just displays what it's told.
+// ══════════════════════════════════════════════════════════════
+function showCongrats(amountText, icon = '🎉') {
+    document.getElementById('congrats-overlay')?.remove();
+    const el = document.createElement('div');
+    el.id = 'congrats-overlay';
+    el.className = 'congrats-overlay';
+    el.innerHTML = `
+        <div class="congrats-card">
+            <div class="congrats-glow"></div>
+            <div class="congrats-icon">${icon}</div>
+            <div class="congrats-title">Congratulations!</div>
+            <div class="congrats-sub">You have received</div>
+            <div class="congrats-amount">${amountText}</div>
+            <div class="congrats-hint">Tap anywhere to continue</div>
+        </div>`;
+    document.body.appendChild(el);
+    triggerBurst(el.querySelector('.congrats-card'));
+    el.addEventListener('click', () => dismissCongrats(el));
+    setTimeout(() => dismissCongrats(el), 1800);
+}
+function dismissCongrats(el) {
+    if (!el || el.dataset.closing) return;
+    el.dataset.closing = '1';
+    el.classList.add('closing');
+    setTimeout(() => el.remove(), 300);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -704,6 +784,7 @@ function openPromoModal() {
         if (r.ok) {
             toast(`+${r.reward} WTC added!`, 'success');
             triggerBurst(btn);
+            showCongrats(`+${r.reward} WTC`, '🎁');
             setTimeout(() => { document.getElementById('modal-root').innerHTML = ''; }, 200);
             await refreshUser();
             if (state.activeTab === 'home') renderHome();
@@ -811,6 +892,7 @@ async function claimLootboxNow() {
     if (r.ok) {
         toast(`+${fmtWTC(r.pointsAdded)} WTC added to your balance!`, 'success');
         triggerBurst(document.getElementById('floating-lootbox'));
+        showCongrats(`+${fmtWTC(r.pointsAdded)} WTC`, '🪙');
         await refreshUser();
         renderFloatingLootbox();
         if (state.activeTab === 'home') renderHome();
@@ -844,25 +926,38 @@ function openVideoPlayer(video) {
 }
 
 let sessionEarnedTotal = 0;
+let sessionDisplayWTC = 0; // visual only — increments every 10s for mining feel
 let videoWatchSeconds = 0;
 let lastMonetagInterstitialAt = 0;
 
 async function startVideoSession() {
     sessionEarnedTotal = 0;
+    sessionDisplayWTC = 0;
     videoWatchSeconds = 0;
     lastMonetagInterstitialAt = 0;
-    const startRes = await apiPost('earn', { action: 'videoStart' });
+    const startRes = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
     if (!startRes.success) { toast(errorText(startRes.error), 'error'); return; }
     state.videoSession = { startTime: startRes.startTime, signature: startRes.signature };
 
+    // ── Visual counter: every 10 seconds, adds 0.167 WTC (= 60 WTC/hr / 360 ticks/hr)
+    // This is purely for display — it makes the UI feel like a miner ticking up.
+    // The real WTC is only credited by the 30-second backend call below.
+    state.videoDisplayInterval = setInterval(() => {
+        if (!state.videoSession) return;
+        sessionDisplayWTC = parseFloat((sessionDisplayWTC + 0.167).toFixed(3));
+        const out = document.getElementById('vp-session-wtc');
+        if (out) out.textContent = `${sessionDisplayWTC.toFixed(1)} WTC`;
+    }, 10000);
+
+    // ── Backend API: every 30 seconds, actually credits WTC to pendingVideoWTC ──
     state.videoSessionInterval = setInterval(async () => {
         if (!state.videoSession) return;
         videoWatchSeconds += 30;
 
-        // Passive Monetag in-app interstitial — every 10 minutes, video section only, no reward
+        // Passive Monetag interstitial every 10 minutes — no reward, just passive monetization
         if (videoWatchSeconds - lastMonetagInterstitialAt >= MONETAG_INTERVAL_SECONDS) {
             lastMonetagInterstitialAt = videoWatchSeconds;
-            try { showMonetagAd(); } catch (e) { /* non-blocking passive ad */ }
+            try { showMonetagAd(); } catch (e) { /* non-blocking */ }
         }
 
         const elapsedSec = Math.floor((Date.now() - state.videoSession.startTime) / 1000);
@@ -872,12 +967,14 @@ async function startVideoSession() {
         const r = await apiPost('earn', { action: 'videoClaim', startTime: state.videoSession.startTime, signature: state.videoSession.signature, claimedPoints: claimable });
         if (r.ok) {
             sessionEarnedTotal += claimable;
+            // Sync display to actual earned value after each real credit
+            sessionDisplayWTC = Math.max(sessionDisplayWTC, sessionEarnedTotal);
             const out = document.getElementById('vp-session-wtc');
-            if (out) out.textContent = `${sessionEarnedTotal} WTC`;
+            if (out) out.textContent = `${sessionDisplayWTC.toFixed(1)} WTC`;
             if (state.user) state.user.pendingVideoWTC = r.pendingVideoWTC;
             renderFloatingLootbox();
             showLootboxGain(claimable);
-            const fresh = await apiPost('earn', { action: 'videoStart' });
+            const fresh = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
             if (fresh.success) state.videoSession = { startTime: fresh.startTime, signature: fresh.signature };
         }
     }, 30000);
@@ -885,6 +982,7 @@ async function startVideoSession() {
 
 function closeVideoPlayer() {
     if (state.videoSessionInterval) clearInterval(state.videoSessionInterval);
+    if (state.videoDisplayInterval) clearInterval(state.videoDisplayInterval);
     state.videoSession = null;
     document.getElementById('modal-root').innerHTML = '';
     renderVideoTab();
@@ -943,6 +1041,7 @@ async function creditAdReward(network) {
     if (r.ok) {
         toast(`+${r.reward} WTC added! (${r.countToday}/${r.dailyLimit})`, 'success');
         triggerBurst(document.querySelector(`button[data-network="${network}"]`));
+        showCongrats(`+${r.reward} WTC`, '📺');
         await refreshUser();
         renderEarningTab();
     } else { toast(errorText(r.error), 'error'); }
@@ -983,23 +1082,66 @@ async function renderTaskTab() {
             </div>
             ${isDone
                 ? `<span class="pill" style="background:rgba(93,202,165,0.14); color:var(--success);">Done</span>`
-                : `<button class="btn btn-primary" style="width:auto; padding:0 16px;" data-task="${t._id}" data-url="${t.url || ''}">Go</button>`
+                : `<button class="btn btn-primary" style="width:auto; padding:0 16px;" data-task="${t._id}" data-url="${t.url || ''}" data-category="${t.category || 'partner'}">Go</button>`
             }
         </div>`;
     }).join('');
-    list.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url); });
+    list.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
 }
 
-function goToTask(taskId, url) {
+function goToTask(taskId, url, category) {
+    // Open the link first
     if (url) window.open(url, '_blank');
-    setTimeout(() => completeTask(taskId), 1500);
+
+    // Then show the claim/verify sheet — user must actively press Claim
+    const task = state.tasks.find(t => t._id === taskId);
+    const isVerified = category === 'channel';
+
+    document.getElementById('modal-root').innerHTML = `
+        <div class="overlay" onclick="if(event.target===this)this.remove()">
+            <div class="sheet anim-in">
+                <div class="sheet-handle"></div>
+                <div style="font-weight:600; font-size:16px; margin-bottom:6px;">${task?.title || 'Task'}</div>
+                <div class="muted" style="font-size:13px; margin-bottom:18px;">
+                    ${isVerified
+                        ? 'After joining the channel/group, tap Verify below. Our server will check your membership.'
+                        : 'After completing the task above, tap Claim to receive your reward.'}
+                </div>
+                ${isVerified ? `
+                    <button class="btn btn-signal" id="task-verify-btn" style="margin-bottom:10px;">
+                        ✅ Verify Membership
+                    </button>` : `
+                    <button class="btn btn-primary" id="task-claim-btn" style="margin-bottom:10px;">
+                        🎁 Claim Reward
+                    </button>`}
+                <button class="btn btn-outline" onclick="document.getElementById('modal-root').innerHTML=''">
+                    Cancel
+                </button>
+            </div>
+        </div>`;
+
+    const actionBtn = document.getElementById('task-verify-btn') || document.getElementById('task-claim-btn');
+    if (actionBtn) {
+        actionBtn.onclick = async () => {
+            actionBtn.disabled = true;
+            actionBtn.textContent = 'Checking...';
+            await completeTask(taskId);
+        };
+    }
 }
 
 async function completeTask(taskId) {
     const r = await apiPost('earn', { action: 'taskComplete', taskId });
-    if (r.ok) { toast(`+${r.rewardWtc} WTC added!`, 'success'); triggerBurst(document.querySelector(`button[data-task="${taskId}"]`)); await refreshUser(); renderTaskTab(); }
+    document.getElementById('modal-root').innerHTML = ''; // close sheet
+    if (r.ok) {
+        toast(`+${r.rewardWtc} WTC added!`, 'success');
+        triggerBurst(document.querySelector(`button[data-task="${taskId}"]`) || document.body);
+        showCongrats(`+${r.rewardWtc} WTC`, '✅');
+        await refreshUser();
+        renderTaskTab();
+    }
     else if (r.alreadyDone) { toast('You already completed this task.', 'info'); renderTaskTab(); }
-    else if (r.error === 'not_member') { toast('Join the channel/group, then try again.', 'error'); }
+    else if (r.error === 'not_member') { toast('Not a member yet — join first, then verify.', 'error'); }
     else { toast(errorText(r.error), 'error'); }
 }
 
@@ -1068,7 +1210,20 @@ function renderReferTab() {
 // ══════════════════════════════════════════════════════════════
 async function refreshUser() {
     const r = await apiGet(`user?action=profile&initData=${encodeURIComponent(TG_INIT_DATA)}`);
-    if (r.ok) state.user = r.user;
+    if (r.ok) {
+        state.user = r.user;
+        // Ban gate — if user is banned, show ban screen and stop everything
+        if (r.user?.isBanned) {
+            document.getElementById('app-root').innerHTML = '';
+            document.getElementById('modal-root').innerHTML = `
+                <div style="position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;z-index:999;">
+                    <div style="font-size:52px;margin-bottom:20px;">⛔</div>
+                    <div style="font-family:var(--font-display);font-weight:700;font-size:22px;margin-bottom:12px;">Account Banned</div>
+                    <div style="color:var(--ink-muted);font-size:14px;line-height:1.7;">Your account has been banned for using multiple accounts on the same device.<br><br>If you believe this is a mistake, please contact the admin to appeal.</div>
+                </div>`;
+            throw new Error('banned'); // stop further execution in init()
+        }
+    }
 }
 
 async function init() {
@@ -1096,7 +1251,17 @@ async function init() {
     }
 
     await apiPost('user', { action: 'init', fingerprint: await generateDeviceFingerprint() });
-    await refreshUser();
+    try {
+        await refreshUser();
+    } catch (e) {
+        if (e.message === 'banned') {
+            // Ban screen already shown in refreshUser() — remove splash and stop
+            const splash = document.getElementById('splash');
+            if (splash) { splash.classList.add('out'); setTimeout(() => splash.remove(), 550); }
+            return;
+        }
+        throw e;
+    }
 
     // Splash stays for at least 900ms so its entrance animation is always seen,
     // even when the network is fast — avoids an abrupt flash-then-gone feel.
