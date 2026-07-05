@@ -1230,11 +1230,13 @@ async function refreshUser() {
         // Ban gate — if user is banned, show ban screen and stop everything
         if (r.user?.isBanned) {
             document.getElementById('app-root').innerHTML = '';
+            const appealUrl = `https://t.me/NewTube12_bot?start=appeal_${USER_ID}`;
             document.getElementById('modal-root').innerHTML = `
                 <div style="position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;z-index:999;">
                     <div style="font-size:52px;margin-bottom:20px;">⛔</div>
                     <div style="font-family:var(--font-display);font-weight:700;font-size:22px;margin-bottom:12px;">Account Banned</div>
-                    <div style="color:var(--ink-muted);font-size:14px;line-height:1.7;">Your account has been banned for using multiple accounts on the same device.<br><br>If you believe this is a mistake, please contact the admin to appeal.</div>
+                    <div style="color:var(--ink-muted);font-size:14px;line-height:1.7;margin-bottom:24px;">Your account has been banned for using multiple accounts on the same device.<br><br>If you believe this is a mistake, tap below to request a review from the admin.</div>
+                    <a href="${appealUrl}" target="_blank" class="btn btn-primary" style="width:auto; padding:0 22px; text-decoration:none;">🆘 Request Review</a>
                 </div>`;
             throw new Error('banned'); // stop further execution in init()
         }
