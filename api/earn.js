@@ -28,6 +28,14 @@ const SECRET = process.env.VIDEO_SIGNING_SECRET;
 const sign = (userId, startTime) => crypto.createHmac('sha256', SECRET).update(`${userId}:${startTime}`).digest('hex');
 
 // ── videoClaim ──
+// ✅ অডিট করা হয়েছে — এটা secure: `startTime` cryptographically signed (HMAC),
+// client বদলাতে পারবে না। `claimedPoints` client পাঠায় ঠিকই, কিন্তু
+// `award = min(requested, maxEarnable)` — আর maxEarnable বের হয় সার্ভারের
+// নিজের ঘড়ি (Date.now()) আর verified startTime থেকে, client-এর সংখ্যা
+// শুধু upper-bound হিসেবে ব্যবহার হয়, বিশ্বাস করা হয় না। এর ওপর দৈনিক
+// cap (dailyVideoWtcMined atomic $min) একটা দ্বিতীয় স্তরের সুরক্ষা —
+// যতগুলো signature-ই স্টক করে রাখা হোক না কেন, দিনে ৩০০ WTC-র বেশি
+// কখনো pendingVideoWTC-তে যোগ হতে পারবে না।
 async function handleVideoClaim(req, res, db, userId) {
     const { startTime, signature, claimedPoints } = req.body;
     if (!startTime || !signature || claimedPoints === undefined) {
@@ -130,6 +138,16 @@ async function handleClaimAdReward(req, res, db, userId) {
 }
 
 // ── taskComplete ──
+// ⚠️ SECURITY FIX: আগে task.limit চেক করা হতো একটা সাধারণ read দিয়ে
+// (`task.completionCount >= task.limit`), আর completionCount বাড়ানো হতো
+// সম্পূর্ণ আলাদা, unconditional একটা updateOne দিয়ে — এই দুটোর মাঝখানে
+// race window ছিল। একই সীমিত (limited) টাস্ক অনেক ইউজার ঠিক একই মুহূর্তে
+// সম্পন্ন করলে সবাই "এখনো ফুল হয়নি" দেখে পাস করে যেতে পারতো, ফলে
+// completionCount টাস্কের limit-কে ছাড়িয়ে যেতে পারতো (কম severity,
+// কিন্তু আসল বাগ)। এখন টাস্কের "slot" নেওয়াটাও atomic — নিজের
+// completionCount+limit শর্ত সহ একই findOneAndUpdate-এ চেক+increment হয়,
+// আর ইউজারের ঘরে ক্রেডিট ব্যর্থ হলে (যেমন ডাবল-ক্লিক রেসে) slot-টা
+// রোলব্যাক করে দেওয়া হয়।
 async function handleTaskComplete(req, res, db, userId) {
     const { taskId } = req.body;
     if (!taskId) return res.status(400).json({ ok: false, error: 'missing_fields' });
@@ -143,24 +161,38 @@ async function handleTaskComplete(req, res, db, userId) {
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
     if ((user.completedTasks || []).includes(taskId)) return res.status(200).json({ ok: false, alreadyDone: true });
 
-    let task;
-    try { task = await tasks.findOne({ _id: new ObjectId(taskId) }); } catch { return res.status(400).json({ ok: false, error: 'invalid_task_id' }); }
+    let taskObjId;
+    try { taskObjId = new ObjectId(taskId); } catch { return res.status(400).json({ ok: false, error: 'invalid_task_id' }); }
+
+    const task = await tasks.findOne({ _id: taskObjId });
     if (!task || !task.isApproved) return res.status(404).json({ ok: false, error: 'task_not_found' });
-    if (task.limit > 0 && (task.completionCount || 0) >= task.limit) return res.status(400).json({ ok: false, error: 'task_full' });
     if (task.category === 'channel') {
         const member = await isMember(userId, task.channelId);
         if (!member) return res.status(200).json({ ok: false, error: 'not_member' });
     }
 
+    // ── STEP 1: টাস্কের "slot" atomically claim করুন (limit চেক + increment একসাথে) ──
+    const taskGate = await tasks.findOneAndUpdate(
+        { _id: taskObjId, $or: [{ limit: { $lte: 0 } }, { limit: { $exists: false } }, { $expr: { $lt: ['$completionCount', '$limit'] } }] },
+        { $inc: { completionCount: 1 } },
+        { returnDocument: 'after' }
+    );
+    if (!taskGate) return res.status(400).json({ ok: false, error: 'task_full' });
+
     const rewardWtc = task.rewardWtc || task.rewardGold || task.rewardPoints || 250;
+
+    // ── STEP 2: ইউজারকে atomically ক্রেডিট করুন (একই ইউজার ডাবল-ক্লেইম করলে এখানেই ঠেকে যাবে) ──
     const gate = await users.findOneAndUpdate(
         { _id: userId, completedTasks: { $ne: taskId } },
         { $inc: { wtcBalance: rewardWtc, lifetimeWtcEarned: rewardWtc, tasksCompletedToday: 1 }, $addToSet: { completedTasks: taskId } },
         { returnDocument: 'after' }
     );
-    if (!gate) return res.status(200).json({ ok: false, alreadyDone: true });
+    if (!gate) {
+        // ইউজার ক্রেডিট ব্যর্থ হয়েছে (যেমন রেস-এ অলরেডি করা হয়ে গেছে) — টাস্কের slot-টা ফিরিয়ে দিন
+        await tasks.updateOne({ _id: taskObjId }, { $inc: { completionCount: -1 } });
+        return res.status(200).json({ ok: false, alreadyDone: true });
+    }
 
-    await tasks.updateOne({ _id: new ObjectId(taskId) }, { $inc: { completionCount: 1 } });
     await maybeAwardReferralMilestones(db, userId, { completedTasksCount: gate.completedTasks.length });
     return res.status(200).json({ ok: true, rewardWtc });
 }
@@ -227,4 +259,4 @@ export default async function handler(req, res) {
         case 'claimPromo':     return handleClaimPromo(req, res, db, userId);
         default: return res.status(400).json({ ok: false, error: 'unknown_action' });
     }
-        }
+            }
