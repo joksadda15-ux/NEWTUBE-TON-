@@ -182,6 +182,18 @@
     .skel { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-raised) 50%, var(--surface) 75%); background-size: 200% 100%; animation: skel-shine 1.4s ease-in-out infinite; border-radius: 10px; }
     @keyframes skel-shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
+    /* ── Task complete → vanish animation ── */
+    .task-card { transition: none; }
+    .task-vanish {
+        animation: task-vanish 0.46s cubic-bezier(.4,0,.6,1) forwards;
+        pointer-events: none;
+    }
+    @keyframes task-vanish {
+        0%   { opacity: 1; transform: scale(1) translateX(0); max-height: 200px; margin-bottom: 10px; }
+        40%  { opacity: 0; transform: scale(0.92) translateX(40px); }
+        100% { opacity: 0; transform: scale(0.9) translateX(60px); max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; overflow: hidden; }
+    }
+
     /* ══════════════════════════════════════════════════════════
        SPLASH — extra glow + rising sparkle particles (purely
        decorative, layered behind the existing logo/text).
@@ -799,7 +811,22 @@ function openPromoModal() {
         const code = document.getElementById('promo-code').value.trim();
         if (!code) return toast('Please enter a code.', 'error');
         const btn = document.getElementById('promo-submit');
-        btn.textContent = 'Checking...'; btn.disabled = true;
+        btn.textContent = 'Loading ad...'; btn.disabled = true;
+
+        // ── প্রমো কোড রিডিম করার আগে একটা real ad দেখানো হচ্ছে (lootbox claim-এর
+        // মতোই একই প্যাটার্ন) — আগে এই স্টেপটা ছিলই না, তাই কোনো ad দেখাতোই না।
+        // ad শেষ না হলে কোড রিডিম করা হবে না, তাই single-use কোড নষ্ট হওয়ার ঝুঁকি নেই।
+        const candidates = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
+        const pick = candidates[Math.floor(Math.random() * candidates.length)];
+        try {
+            await pick();
+        } catch (e) {
+            toast(errorText(e.message), 'error');
+            btn.textContent = 'Redeem'; btn.disabled = false;
+            return;
+        }
+
+        btn.textContent = 'Checking...';
         const r = await apiPost('earn', { action: 'claimPromo', code });
         if (r.ok) {
             toast(`+${r.reward} WTC added!`, 'success');
@@ -939,10 +966,45 @@ function openVideoPlayer(video) {
                         <div class="muted" style="font-size:11px; margin-top:6px;">60 WTC earned per hour watched</div>
                     </div>
                 </div>
+                <div class="section-pad" style="margin-top:20px;">
+                    <div class="section-title" style="margin-bottom:12px; font-size:13px;">Up next</div>
+                    <div id="vp-up-next" style="display:flex; flex-direction:column; gap:12px;"></div>
+                </div>
             </div>
         </div>`;
     document.getElementById('vp-close').onclick = closeVideoPlayer;
+
+    // ── "Up next" — YouTube-এর মতো অন্য ভিডিওগুলো রেকমেন্ড করা, ক্লিক করলে সাথে সাথে সুইচ হবে ──
+    const others = (state.videos || []).filter(v => v.videoId !== video.videoId);
+    const upNext = document.getElementById('vp-up-next');
+    if (others.length) {
+        upNext.innerHTML = others.map(v => `
+            <div class="vp-next-item" data-vid="${v.videoId}" style="display:flex; gap:10px; align-items:center; cursor:pointer;">
+                <div style="position:relative; width:112px; flex-shrink:0; border-radius:10px; overflow:hidden; background:var(--surface); aspect-ratio:16/9;">
+                    <img src="${v.thumbnail || ''}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                    <div style="position:absolute; right:5px; bottom:5px; background:rgba(0,0,0,0.65); border-radius:5px; padding:1px 5px; font-size:9px;">▶</div>
+                </div>
+                <div style="font-size:13px; font-weight:500; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${v.title}</div>
+            </div>`).join('');
+        upNext.querySelectorAll('.vp-next-item').forEach(el => {
+            el.onclick = () => {
+                const nextVideo = others.find(v => v.videoId === el.dataset.vid);
+                if (nextVideo) switchVideoPlayer(nextVideo);
+            };
+        });
+    } else {
+        upNext.innerHTML = `<div class="muted" style="font-size:12px;">No other videos yet.</div>`;
+    }
+
     startVideoSession();
+}
+
+function switchVideoPlayer(newVideo) {
+    // আগের সেশনের টাইমার বন্ধ করে নতুন ভিডিও চালু করা — modal বন্ধ না করেই সুইচ হবে
+    if (state.videoSessionInterval) clearInterval(state.videoSessionInterval);
+    if (state.videoDisplayInterval) clearInterval(state.videoDisplayInterval);
+    state.videoSession = null;
+    openVideoPlayer(newVideo);
 }
 
 let sessionEarnedTotal = 0;
@@ -1088,14 +1150,16 @@ async function renderTaskTab() {
     state.tasks = r.ok ? r.tasks : [];
     const list = document.getElementById('task-list');
     const done = new Set(state.user?.completedTasks || []);
+    // ⚠️ সম্পন্ন করা টাস্ক এখন আর তালিকায় দেখানো হয় না — animation দিয়ে vanish হওয়ার পর
+    // এটাই আসল আচরণ, তাই এখান থেকেই ফিল্টার করে বাদ দেওয়া হচ্ছে।
+    const visibleTasks = state.tasks.filter(t => !done.has(t._id));
 
-    if (!state.tasks.length) { list.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">No tasks available yet.</div>`; return; }
+    if (!visibleTasks.length) { list.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">${state.tasks.length ? 'All tasks completed! 🎉' : 'No tasks available yet.'}</div>`; return; }
 
-    list.innerHTML = state.tasks.map(t => {
-        const isDone = done.has(t._id);
+    list.innerHTML = visibleTasks.map(t => {
         const verified = t.category === 'channel';
         return `
-        <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div class="card task-card" data-task-card="${t._id}" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
             <div style="flex:1; min-width:0;">
                 <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
                     <span class="pill ${verified ? 'pill-signal' : 'pill-coin'}">${verified ? '✓ Verified' : 'Link'}</span>
@@ -1103,10 +1167,7 @@ async function renderTaskTab() {
                 <div style="font-weight:500; font-size:14px;">${t.title}</div>
                 <div class="muted" style="font-size:12px; margin-top:2px;">+${t.rewardWtc || 0} WTC</div>
             </div>
-            ${isDone
-                ? `<span class="pill" style="background:rgba(93,202,165,0.14); color:var(--success);">Done</span>`
-                : `<button class="btn btn-primary" style="width:auto; padding:0 16px;" data-task="${t._id}" data-url="${t.url || ''}" data-category="${t.category || 'partner'}">Go</button>`
-            }
+            <button class="btn btn-primary" style="width:auto; padding:0 16px;" data-task="${t._id}" data-url="${t.url || ''}" data-category="${t.category || 'partner'}">Go</button>
         </div>`;
     }).join('');
     list.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
@@ -1161,7 +1222,14 @@ async function completeTask(taskId) {
         triggerBurst(document.querySelector(`button[data-task="${taskId}"]`) || document.body);
         showCongrats(`+${r.rewardWtc} WTC`, '✅');
         await refreshUser();
-        renderTaskTab();
+        // ── সম্পন্ন হওয়া টাস্ক কার্ডটা animation দিয়ে vanish করে তারপর তালিকা রিফ্রেশ ──
+        const card = document.querySelector(`[data-task-card="${taskId}"]`);
+        if (card) {
+            card.classList.add('task-vanish');
+            setTimeout(() => renderTaskTab(), 480);
+        } else {
+            renderTaskTab();
+        }
     }
     else if (r.alreadyDone) { toast('You already completed this task.', 'info'); renderTaskTab(); }
     else if (r.error === 'not_member') { toast('Not a member yet — join first, then verify.', 'error'); }
@@ -1197,7 +1265,7 @@ function renderReferTab() {
                 </div>
                 <div class="card" style="padding:13px 15px;">
                     <div class="muted" style="font-size:12px; margin-bottom:4px;">Referral earnings</div>
-                    <div style="font-family:var(--font-display); font-weight:500; font-size:18px;">${(u.referralCount||0) > 0 ? '—' : '0'} WTC</div>
+                    <div style="font-family:var(--font-display); font-weight:500; font-size:18px;">${fmtWTC(u.referralWtcEarned || 0)} WTC</div>
                 </div>
             </div>
 
