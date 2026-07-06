@@ -1,9 +1,13 @@
-// api/withdraw.js — SEASON 2 আপডেট + RACE-CONDITION FIX
+// api/withdraw.js — SEASON 2 আপডেট + RACE-CONDITION FIX + LIVE TON PRICE
 //
-// গুরুত্বপূর্ণ: balance check আর deduct এখন একটাই atomic findOneAndUpdate-এ।
+// গুরুত্বপূর্ণ: balance check আর deduct একটাই atomic findOneAndUpdate-এ।
 // filter-এর মধ্যেই শর্ত বসানো আছে (balance যথেষ্ট, আজ withdraw করা হয়নি, banned না) —
 // MongoDB গ্যারান্টি দেয় শর্ত সত্য না থাকলে update হবেই না, তাই একই ইউজার
 // একসাথে ২-৩টা withdraw request পাঠালেও মাত্র ১টা-ই সফল হতে পারবে।
+//
+// ⚠️ নতুন: TON withdraw-এর সময় এখন লাইভ TON/USD প্রাইস (CoinGecko) ব্যবহার
+// করা হয় — আসল backing value (20,000 WTC = $1 USD) স্থির রেখে, শুধু
+// TON-এর পরিমাণটা প্রতিদিনের বাজার-দাম অনুযায়ী হিসাব হয়।
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import { tgSend } from '../lib/telegram.js';
@@ -11,7 +15,7 @@ import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     WITHDRAW_METHODS, WITHDRAW_MIN_WTC, WITHDRAW_FEE_PERCENT,
-    FIRST_WITHDRAW_MIN_TASKS, calcAdsRequired, todayBD,
+    FIRST_WITHDRAW_MIN_TASKS, calcAdsRequired, todayBD, getLiveTonPriceUsd,
 } from '../lib/constants.js';
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
@@ -42,7 +46,7 @@ export default async function handler(req, res) {
         const wtcAmount = Math.floor(Number(amount));
         const minWtc = WITHDRAW_MIN_WTC[method];
         if (isNaN(wtcAmount) || wtcAmount < minWtc) {
-            return res.status(400).json({ ok: false, error: 'below_minimum', message: `Minimum ${minWtc.toLocaleString()} WTC (${methodConfig.minCurrency} ${methodConfig.currency}) required.` });
+            return res.status(400).json({ ok: false, error: 'below_minimum', message: `Minimum ${minWtc.toLocaleString()} WTC required.` });
         }
 
         const { db } = await connectToDatabase();
@@ -61,7 +65,15 @@ export default async function handler(req, res) {
             return res.status(400).json({ ok: false, error: 'need_5_tasks' });
         }
 
-        const grossCurrencyAmount = methodConfig.wtcToCurrency(wtcAmount);
+        // ── TON হলে লাইভ প্রাইস আনা হচ্ছে, নাহলে USDT-এর জন্য দরকার নেই ──
+        let tonPriceUsd = null;
+        if (method === 'tonkeeper') {
+            tonPriceUsd = await getLiveTonPriceUsd();
+        }
+
+        const grossCurrencyAmount = method === 'tonkeeper'
+            ? methodConfig.wtcToCurrency(wtcAmount, tonPriceUsd)
+            : methodConfig.wtcToCurrency(wtcAmount);
         const adsRequired = calcAdsRequired(grossCurrencyAmount);
         const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
         if (adsToday < adsRequired) {
@@ -78,13 +90,13 @@ export default async function handler(req, res) {
 
         const feeWtc = Math.floor(wtcAmount * (WITHDRAW_FEE_PERCENT / 100));
         const netWtc = wtcAmount - feeWtc;
-        const netCurrencyAmount = methodConfig.wtcToCurrency(netWtc);
+        const netCurrencyAmount = method === 'tonkeeper'
+            ? methodConfig.wtcToCurrency(netWtc, tonPriceUsd)
+            : methodConfig.wtcToCurrency(netWtc);
 
         // ══════════════════════════════════════════════════════════
         // ATOMIC GATE — এই একটা অপারেশনেই balance/once-per-day শর্ত যাচাই + deduct
-        // হয়, কোনো race window ছাড়াই। দুটো রিকোয়েস্ট একসাথে এলে MongoDB ডকুমেন্ট-লেভেল
-        // লক করে একটা একটা করে প্রসেস করবে — দ্বিতীয়টা এসে দেখবে lastWithdrawDate
-        // ইতিমধ্যে আজকের তারিখ, ফলে আর কখনো ম্যাচ করবে না।
+        // হয়, কোনো race window ছাড়াই।
         // ══════════════════════════════════════════════════════════
         const gate = await users.findOneAndUpdate(
             {
@@ -101,8 +113,6 @@ export default async function handler(req, res) {
         );
 
         if (!gate) {
-            // এই মুহূর্তে state বদলে গেছে (balance কমে গেছে, বা ইতিমধ্যে আজ withdraw হয়ে গেছে,
-            // বা ban হয়ে গেছে) — soft check পাস করেও atomic gate fail হলে এটাই কারণ
             return res.status(409).json({ ok: false, error: 'conflict_retry' });
         }
 
@@ -112,14 +122,16 @@ export default async function handler(req, res) {
             method, details, wtcAmount, feeWtc,
             feePercent: WITHDRAW_FEE_PERCENT, netWtc,
             cashAmount: netCurrencyAmount, currency: methodConfig.currency,
+            tonPriceUsdAtRequest: tonPriceUsd, // ⚠️ audit-এর জন্য — কোন রেটে হিসাব হয়েছিল সেটা রেকর্ড থাকছে
             adsRequired, status: 'pending', createdAt: new Date(),
         });
 
         if (ADMIN_ID) {
+            const rateNote = method === 'tonkeeper' ? `\n📈 TON rate used: $${tonPriceUsd.toFixed(3)}` : '';
             tgSend(ADMIN_ID,
                 `💸 <b>Withdrawal Request</b>\n\n` +
                 `👤 <code>${id}</code> (@${user.telegramUsername || '?'})\n` +
-                `💰 ${wtcAmount.toLocaleString()} WTC (fee ${feeWtc.toLocaleString()} WTC) → <b>${netCurrencyAmount.toFixed(4)} ${methodConfig.currency}</b>\n` +
+                `💰 ${wtcAmount.toLocaleString()} WTC (fee ${feeWtc.toLocaleString()} WTC) → <b>${netCurrencyAmount.toFixed(4)} ${methodConfig.currency}</b>${rateNote}\n` +
                 `📤 Method: <b>${methodConfig.label}</b>\n` +
                 `📍 Address: <code>${details}</code>\n` +
                 `📅 ${new Date().toLocaleString()}`,
