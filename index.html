@@ -301,7 +301,7 @@ const COMMUNITY_GROUP = 'newtube_commonity';
 const MONETAG_INTERVAL_SECONDS = 600; // periodic non-reward interstitial, video section only
 
 const tg = window.Telegram?.WebApp;
-if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#0A0B14'); } catch (e) {} }
+if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#09070F'); } catch (e) {} }
 
 // ⚠️ SECURITY: USER_ID/FIRST_NAME/USERNAME here are for DISPLAY ONLY (cosmetic).
 // They are never sent to the backend as a trusted identity — every API call
@@ -340,7 +340,15 @@ const showAdsgramSpecialAd = () => new Promise((res, rej) => {
 });
 const showMonetagAd = () => new Promise((res, rej) => {
     if (typeof show_9442539 === 'function') {
-        const t = setTimeout(() => rej(new Error('timeout')), 15000);
+        // ⚠️ FIX: আগে টাইমআউট ছিল ১৫ সেকেন্ড — rewarded video ad প্রায়ই তার
+        // চেয়ে বেশি সময় নেয় (১৫-৩০+ সেকেন্ড)। ফলে ইউজার পুরো ad দেখে ফেললেও
+        // আমাদের নিজের timeout SDK-এর আসল resolve-এর আগেই promise reject
+        // করে দিতো, তাই reward claim-ই হতো না — যদিও একবার reject হয়ে গেলে
+        // পরে SDK আসল resolve পাঠালেও তার আর কোনো প্রভাব থাকে না (promise
+        // একবারই settle হয়)। এখন টাইমআউট বাড়িয়ে ৯০ সেকেন্ড করা হলো, যাতে
+        // স্বাভাবিক দৈর্ঘ্যের যেকোনো ad শেষ হওয়ার সময় পায় — শুধু আসলেই
+        // stuck/broken SDK কল থেকে বাঁচার জন্যই এই সেফটি-নেট রাখা হয়েছে।
+        const t = setTimeout(() => rej(new Error('timeout')), 90000);
         show_9442539().then(() => { clearTimeout(t); res(); }).catch((e) => { clearTimeout(t); rej(e); });
     } else { rej(new Error('sdk_not_loaded')); }
 });
@@ -350,7 +358,12 @@ const showGigaPubAd = () => new Promise((res, rej) => {
     // স্ক্রিপ্ট এখনো লোড না হয়ে থাকলে সরাসরি 'sdk_not_loaded' error দেওয়া হয়,
     // যাতে ইউজারকে স্পষ্টভাবে "try again" বলা যায় — চুপচাপ অন্য ad চালানো হয় না।
     if (typeof window.showGiga !== 'function') { rej(new Error('sdk_not_loaded')); return; }
-    const t = setTimeout(() => rej(new Error('timeout')), 15000);
+    // ⚠️ FIX: আগে এখানেও ১৫ সেকেন্ডের timeout ছিল — এটাই ছিল GigaPub reward
+    // না পাওয়ার আসল কারণ। GigaPub-এর ভিডিও ad সাধারণত ১৫ সেকেন্ডের বেশি সময়
+    // নেয়, তাই ইউজার পুরো ad দেখে ফিরে এলেও আমাদের timeout ততক্ষণে promise-টা
+    // ইতিমধ্যে reject করে ফেলেছে — GigaPub-এর আসল resolve() পরে এলেও তার আর
+    // কোনো মূল্য থাকে না (promise একবারই settle হয়)। এখন ৯০ সেকেন্ড দেওয়া হলো।
+    const t = setTimeout(() => rej(new Error('timeout')), 90000);
     window.showGiga("main").then(() => { clearTimeout(t); res(); }).catch((e) => { clearTimeout(t); rej(e); });
 });
 
@@ -439,7 +452,7 @@ function triggerBurst(originEl) {
     const rect = originEl ? originEl.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
     const ox = rect.left + rect.width / 2;
     const oy = rect.top + rect.height / 2;
-    const colors = ['#7C5CFF', '#5B3DE0', '#22D3EE', '#F1F0FF'];
+    const colors = ['#7A3CFF', '#FF3CAC', '#00E5FF', '#FDFDFF'];
     const particles = Array.from({ length: 26 }, () => {
         const angle = Math.random() * Math.PI * 2;
         const speed = 2.5 + Math.random() * 4.5;
