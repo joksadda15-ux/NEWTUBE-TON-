@@ -12,6 +12,7 @@
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import { todayBD } from '../lib/constants.js';
+import { ensureDailyReset } from '../lib/dailyReset.js';
 import { checkAndRecordFingerprint } from '../lib/fingerprintCheck.js';
 import { isMember, OFFICIAL_CHANNEL, COMMUNITY_GROUP } from '../lib/telegram.js';
 import { maybeAwardReferralMilestones } from '../lib/referral.js';
@@ -117,7 +118,19 @@ async function handleProfile(req, res, db) {
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const userId = String(verified.user.id);
 
-    const user = await db.collection('users').findOne({ _id: userId });
+    const users = db.collection('users');
+
+    // ⚠️ BUG FIX: profile fetch করার আগে daily reset নিশ্চিত করা হচ্ছে।
+    // আগে এই কলটা ছিল না — শুধু earn.js-এ (অর্থাৎ ইউজার সত্যিই একটা ad
+    // ক্লেইম করলে) reset ঘটতো। ফলে app খোলার সাথে সাথে যে profile আসতো
+    // তাতে গতকালের পুরনো counter (যেমন gigaCountToday: 20) থেকেই যেত,
+    // frontend সেটা দেখে বাটন "Done"/disabled করে দিতো, আর ইউজার ক্লিকই
+    // করতে পারতো না — ফলে backend-এর reset কখনো ট্রিগার হওয়ার সুযোগই
+    // পেতো না (deadlock)। এখন profile লোড হওয়ার সময়েই reset নিশ্চিত হয়,
+    // তাই নতুন দিনে UI সবসময় সঠিক (0) count নিয়ে খোলে।
+    await ensureDailyReset(users, userId);
+
+    const user = await users.findOne({ _id: userId });
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
 
     const { multiAccountSiblings, multiAccountFingerprint, ...safeUser } = user;
@@ -141,4 +154,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-}
+            }
