@@ -1,13 +1,14 @@
-// api/gift.js — নতুন — অ্যাডমিনের পাঠানো surprise gift চেক ও claim করার endpoint
+// api/gift.js — New — endpoint to check and claim admin-sent surprise gifts
 //
-//   GET  /api/gift?action=check&initData=...              → pending gift (সবচেয়ে পুরনোটা) থাকলে ফেরত দেয়
-//   POST /api/gift   { action:'claim', initData, giftId }  → gift claim করে balance-এ যোগ করে
+//   GET  /api/gift?action=check&initData=...              → returns the oldest pending gift, if any
+//   POST /api/gift   { action:'claim', initData, giftId }  → claims the gift and credits the balance
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import { ObjectId } from 'mongodb';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 
 async function handleCheck(req, res, db) {
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     const verified = verifyTelegramInitData(req.query.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const userId = String(verified.user.id);
@@ -35,7 +36,7 @@ async function handleClaim(req, res, db) {
     const gifts = db.collection('gifts');
     const users = db.collection('users');
 
-    // ── ATOMIC — status: 'pending' শর্তসহ claim, একই gift দুইবার claim হওয়া ঠেকাতে ──
+    // ── ATOMIC — claim gated on status: 'pending' to prevent the same gift being claimed twice ──
     const gate = await gifts.findOneAndUpdate(
         { _id: giftObjId, userId, status: 'pending' },
         { $set: { status: 'claimed', claimedAt: new Date() } },
