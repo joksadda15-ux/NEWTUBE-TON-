@@ -12,11 +12,12 @@
      ══════════════════════════════════════════════════════════ -->
 <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
 <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-<!-- ⚠️ Monetag (libtl.com) SDK ইচ্ছাকৃতভাবে এখানে স্ট্যাটিকভাবে লোড করা হচ্ছে না।
-     এই SDK পুরো পেজ লোড হওয়ার সাথে সাথেই global click listener বসিয়ে দেয় (aggressive
-     monetization pattern), যার ফলে GigaPub/Adsgram বাটনে ক্লিক করলেও Monetag-এর ad
-     চলে আসতো। এখন এটা lazy-load হয় — শুধু ইউজার Monetag বাটনে ক্লিক করলেই স্ক্রিপ্ট
-     ইনজেক্ট হয়, watchAdNetwork() ফাংশনে দেখুন loadMonetagSDK()। -->
+<!-- ⚠️ The Monetag (libtl.com) SDK is intentionally NOT statically loaded here.
+     This SDK attaches a global click listener as soon as the page loads (an
+     aggressive monetization pattern), which caused Monetag's ad to fire even
+     when clicking the GigaPub/Adsgram button. Now it's lazy-loaded — the
+     script is only injected when the user actually clicks the Monetag
+     button, see loadMonetagSDK() inside watchAdNetwork(). -->
 <script src="https://ad.gigapub.tech/script?id=846"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -359,10 +360,11 @@ const showAdsgramSpecialAd = () => new Promise((res, rej) => {
     if (window.Adsgram) { window.Adsgram.init({ blockId: "27566" }).show().then(res).catch(rej); }
     else { rej(new Error('sdk_not_loaded')); }
 });
-// ⚠️ Monetag SDK এখন lazy-load হয় — শুধু ইউজার আসলেই Monetag বাটনে ক্লিক করলে
-// script ইনজেক্ট করা হয়, আর কাজ শেষে সরিয়ে ফেলা হয়। এভাবে GigaPub/Adsgram-এ
-// ক্লিক করার সময় Monetag-এর global click-listener পেজে উপস্থিতই থাকে না, তাই
-// অন্য নেটওয়ার্কের ক্লিক আর hijack করতে পারে না।
+// ⚠️ The Monetag SDK is now lazy-loaded — the script is only injected when
+// the user actually clicks the Monetag button, and it's removed again once
+// done. This way Monetag's global click-listener simply isn't present on
+// the page when clicking GigaPub/Adsgram, so it can no longer hijack clicks
+// meant for other networks.
 let _monetagLoading = null;
 function loadMonetagSDK() {
     if (typeof show_9442539 === 'function') return Promise.resolve();
@@ -385,20 +387,22 @@ function unloadMonetagSDK() {
 }
 const showMonetagAd = () => loadMonetagSDK().then(() => new Promise((res, rej) => {
     if (typeof show_9442539 !== 'function') { rej(new Error('sdk_not_loaded')); return; }
-    // ⚠️ শুধু Monetag-এর জন্যই ৯০ সেকেন্ডের সেফটি-নেট রাখা হয়েছে (ইউজারের
-    // অনুরোধে) — যদি SDK কখনো আটকে যায় (কোনো resolve/reject-ই না দেয়)।
+    // ⚠️ A 90-second safety-net is kept only for Monetag (per the user's
+    // request) — in case the SDK ever gets stuck (never resolves or rejects).
     const t = setTimeout(() => rej(new Error('timeout')), 90000);
     show_9442539().then(() => { clearTimeout(t); unloadMonetagSDK(); res(); }).catch((e) => { clearTimeout(t); unloadMonetagSDK(); rej(e); });
 })).catch((e) => { unloadMonetagSDK(); throw e; });
 const showGigaPubAd = () => new Promise((res, rej) => {
-    // ⚠️ কড়াভাবে শুধু GigaPub-এর নিজের ফাংশন চেক করা হচ্ছে — অন্য কোনো নেটওয়ার্কের
-    // SDK (Monetag ইত্যাদি) এখানে কখনোই fallback হিসেবে কল হয় না। GigaPub-এর
-    // স্ক্রিপ্ট এখনো লোড না হয়ে থাকলে সরাসরি 'sdk_not_loaded' error দেওয়া হয়,
-    // যাতে ইউজারকে স্পষ্টভাবে "try again" বলা যায় — চুপচাপ অন্য ad চালানো হয় না।
+    // ⚠️ Strictly only checks GigaPub's own function — no other network's
+    // SDK (Monetag, etc.) is ever called here as a fallback. If GigaPub's
+    // script hasn't loaded yet, it returns a plain 'sdk_not_loaded' error so
+    // the user can be clearly told "try again" — never silently plays a
+    // different ad.
     if (typeof window.showGiga !== 'function') { rej(new Error('sdk_not_loaded')); return; }
-    // ⚠️ কোনো artificial timeout নেই — শুধু GigaPub-এর নিজের promise-ই ঠিক করবে
-    // ad সফল (reward) না ব্যর্থ (try again)। ad যত সময়ই লাগুক, পুরোটা দেখলেই
-    // reward পাবে; মাঝে কেটে দেওয়ার কোনো কৃত্রিম সময়সীমা নেই।
+    // ⚠️ No artificial timeout — only GigaPub's own promise decides whether
+    // the ad succeeded (reward) or failed (try again). No matter how long
+    // the ad takes, watching it all the way through earns the reward; there's
+    // no artificial cutoff in between.
     window.showGiga("main").then(res).catch(rej);
 });
 
@@ -726,10 +730,21 @@ async function openHistoryModal() {
         const r = await apiGet(`withdraw?action=history&initData=${encodeURIComponent(TG_INIT_DATA)}`);
         const listEl = document.getElementById('history-list');
         if (!listEl) return; // modal closed before response arrived
+
+        // ⚠️ FIX: previously r.history was filtered directly without checking
+        // r.ok first — so any auth/server error silently showed "no requests"
+        // instead, and the real cause was never visible. Errors are now shown
+        // explicitly and separately.
+        if (!r.ok) {
+            console.error('history fetch failed:', r.error, r.reason);
+            listEl.innerHTML = `<div class="muted" style="text-align:center; padding:30px 0;">Couldn't load history (${r.error || 'unknown'}). Close the app and reopen it.</div>`;
+            return;
+        }
+
         const items = (r.history || []).filter(h => h.status === 'pending' || h.status === 'approved');
 
         if (!items.length) {
-            listEl.innerHTML = `<div class="muted" style="text-align:center; padding:30px 0;">এখনো কোনো withdraw request নেই।</div>`;
+            listEl.innerHTML = `<div class="muted" style="text-align:center; padding:30px 0;">No withdraw requests yet.</div>`;
             return;
         }
 
@@ -756,7 +771,7 @@ async function openHistoryModal() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// GIFT BOX — admin-এর পাঠানো surprise gift, app খুললে চেক হয়
+// GIFT BOX — admin-sent surprise gift, checked when the app opens
 // ══════════════════════════════════════════════════════════════
 async function checkPendingGift() {
     try {
@@ -790,7 +805,7 @@ function showGiftBox(gift) {
             const r = await apiPost('gift', { action: 'claim', giftId: gift.id });
             if (!r.ok) { btn.textContent = '🎁 Claim Gift'; btn.disabled = false; toast('Gift already claimed or expired.', 'error'); return; }
 
-            // ── reveal amount + confetti, তারপর balance আপডেট ──
+            // ── reveal amount + confetti, then update balance ──
             const sheet = document.querySelector('.sheet');
             sheet.innerHTML = `
                 <div class="gb-glow"></div>
@@ -841,7 +856,7 @@ async function startWithdrawTicker() {
     if (!liveTextEl) return;
 
     if (!items.length) {
-        liveTextEl.textContent = '💸 Withdraw করে TON/USDT আপনার ওয়ালেটে নিয়ে যান!';
+        liveTextEl.textContent = '💸 Withdraw your earnings straight to TON/USDT!';
         return;
     }
 
@@ -997,8 +1012,9 @@ function openProfileModal() {
 // ══════════════════════════════════════════════════════════════
 // WITHDRAW MODAL
 // ══════════════════════════════════════════════════════════════
-// ⚠️ এই দুটো রেট ব্যাকএন্ডের lib/constants.js-এর WTC_PER_USD / WTC_PER_TON-এর
-// সাথে হুবহু মিলিয়ে রাখা — শুধু preview দেখানোর জন্য, আসল হিসাব সবসময় সার্ভারেই হয়।
+// ⚠️ These two rates are kept exactly in sync with WTC_PER_USD / WTC_PER_TON in
+// the backend's lib/constants.js — used only to show a preview; the actual
+// calculation always happens server-side.
 const WTC_PER_USD_UI = 20000;          // 20,000 WTC = 1 USD(T)
 const WTC_PER_TON_UI = 20000 / 0.6;    // 20,000 WTC = 0.6 TON
 const WITHDRAW_METHODS_UI = {
@@ -1085,9 +1101,10 @@ function openPromoModal() {
         const btn = document.getElementById('promo-submit');
         btn.textContent = 'Loading ad...'; btn.disabled = true;
 
-        // ── প্রমো কোড রিডিম করার আগে একটা real ad দেখানো হচ্ছে (lootbox claim-এর
-        // মতোই একই প্যাটার্ন) — আগে এই স্টেপটা ছিলই না, তাই কোনো ad দেখাতোই না।
-        // ad শেষ না হলে কোড রিডিম করা হবে না, তাই single-use কোড নষ্ট হওয়ার ঝুঁকি নেই।
+        // ── Shows a real ad before redeeming the promo code (same pattern as
+        // the lootbox claim) — this step didn't exist before, so no ad was ever
+        // shown. The code won't be redeemed until the ad finishes, so there's no
+        // risk of wasting a single-use code.
         const candidates = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
         const pick = candidates[Math.floor(Math.random() * candidates.length)];
         try {
@@ -1246,7 +1263,7 @@ function openVideoPlayer(video) {
         </div>`;
     document.getElementById('vp-close').onclick = closeVideoPlayer;
 
-    // ── "Up next" — YouTube-এর মতো অন্য ভিডিওগুলো রেকমেন্ড করা, ক্লিক করলে সাথে সাথে সুইচ হবে ──
+    // ── "Up next" — recommends other videos YouTube-style, clicking one switches immediately ──
     const others = (state.videos || []).filter(v => v.videoId !== video.videoId);
     const upNext = document.getElementById('vp-up-next');
     if (others.length) {
@@ -1272,7 +1289,7 @@ function openVideoPlayer(video) {
 }
 
 function switchVideoPlayer(newVideo) {
-    // আগের সেশনের টাইমার বন্ধ করে নতুন ভিডিও চালু করা — modal বন্ধ না করেই সুইচ হবে
+    // Stops the previous session's timer and starts the new video — switches without closing the modal
     if (state.videoSessionInterval) clearInterval(state.videoSessionInterval);
     if (state.videoDisplayInterval) clearInterval(state.videoDisplayInterval);
     state.videoSession = null;
@@ -1387,8 +1404,9 @@ async function watchAdNetwork(network) {
         await showFn();
         await creditAdReward(network);
     } catch (e) {
-        // নেটওয়ার্ক-নির্দিষ্ট স্পষ্ট মেসেজ — কখনোই অন্য নেটওয়ার্কের অ্যাড চালানো হয় না,
-        // ব্যর্থ হলে ইউজারকে সরাসরি জানিয়ে দেওয়া হয় আবার চেষ্টা করতে বা অন্য অপশন বেছে নিতে।
+        // A network-specific, explicit message — a different network's ad is
+        // never played instead; on failure the user is told directly to try
+        // again or pick a different option.
         toast(`${networkLabel} ad isn't available right now. Please try again or pick a different network.`, 'error');
     }
 }
@@ -1422,8 +1440,9 @@ async function renderTaskTab() {
     state.tasks = r.ok ? r.tasks : [];
     const list = document.getElementById('task-list');
     const done = new Set(state.user?.completedTasks || []);
-    // ⚠️ সম্পন্ন করা টাস্ক এখন আর তালিকায় দেখানো হয় না — animation দিয়ে vanish হওয়ার পর
-    // এটাই আসল আচরণ, তাই এখান থেকেই ফিল্টার করে বাদ দেওয়া হচ্ছে।
+    // ⚠️ A completed task is no longer shown in the list — after it vanishes
+    // with an animation this is the intended behavior, so it's filtered out
+    // right here.
     const visibleTasks = state.tasks.filter(t => !done.has(t._id));
 
     if (!visibleTasks.length) { list.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">${state.tasks.length ? 'All tasks completed! 🎉' : 'No tasks available yet.'}</div>`; return; }
@@ -1494,7 +1513,7 @@ async function completeTask(taskId) {
         triggerBurst(document.querySelector(`button[data-task="${taskId}"]`) || document.body);
         showCongrats(`+${r.rewardWtc} WTC`, '✅');
         await refreshUser();
-        // ── সম্পন্ন হওয়া টাস্ক কার্ডটা animation দিয়ে vanish করে তারপর তালিকা রিফ্রেশ ──
+        // ── Vanishes the completed task's card with an animation, then refreshes the list ──
         const card = document.querySelector(`[data-task-card="${taskId}"]`);
         if (card) {
             card.classList.add('task-vanish');
@@ -1647,7 +1666,7 @@ function startApp() {
     renderShell();
     switchTab('home');
     startJoinWatcher();
-    setTimeout(checkPendingGift, 900); // splash/home entrance animation-এর পর, যাতে দুটো একসাথে না দেখায়
+    setTimeout(checkPendingGift, 900); // after the splash/home entrance animation, so the two don't show at once
 }
 
 async function generateDeviceFingerprint() {
