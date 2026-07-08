@@ -1,11 +1,18 @@
-// api/data.js — নতুন (পরে UI বানানোর সময় লাগবে)
-//
-// নতুন UI-তে video section আর task list দেখানোর জন্য পাবলিক read-only ডেটা।
+// api/data.js — নতুন UI-তে video section, task list, ও recent-withdrawals ticker-এর জন্য
+// পাবলিক read-only ডেটা।
 //   GET /api/data?type=videos
 //   GET /api/data?type=tasks
-//   GET /api/data?type=leaderboard   (lifetimeWtcEarned অনুযায়ী টপ ২০)
+//   GET /api/data?type=leaderboard        (referralCount অনুযায়ী টপ ২০)
+//   GET /api/data?type=recentWithdrawals   (Home-এ "social proof" ticker-এর জন্য — সত্যিকারের approved withdraw, username মাস্ক করা)
 
 import { connectToDatabase } from '../lib/mongodb.js';
+
+// প্রাইভেসির জন্য username আংশিক মাস্ক করা হয় — যেমন "Rashu_Xansi" → "Ras***si"
+function maskUsername(name) {
+    if (!name || name === 'N/A') return 'User';
+    if (name.length <= 4) return name[0] + '***';
+    return name.slice(0, 3) + '***' + name.slice(-2);
+}
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -44,6 +51,21 @@ export default async function handler(req, res) {
                 .limit(20)
                 .toArray();
             return res.status(200).json({ ok: true, leaderboard: top });
+        }
+
+        if (type === 'recentWithdrawals') {
+            const recent = await db.collection('withdrawals')
+                .find({ status: 'approved' })
+                .project({ username: 1, cashAmount: 1, currency: 1, processedAt: 1 })
+                .sort({ processedAt: -1 })
+                .limit(15)
+                .toArray();
+            const items = recent.map(w => ({
+                username: maskUsername(w.username),
+                cashAmount: w.cashAmount,
+                currency: w.currency,
+            }));
+            return res.status(200).json({ ok: true, items });
         }
 
         return res.status(400).json({ ok: false, error: 'unknown_type' });
