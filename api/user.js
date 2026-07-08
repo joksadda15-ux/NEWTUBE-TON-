@@ -82,6 +82,7 @@ async function handleInit(req, res, db) {
 }
 
 async function handleCheckJoin(req, res, db) {
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     const verified = verifyTelegramInitData(req.query.initData);
     if (!verified.ok) return res.status(401).json({ joined: false, error: 'unauthorized', reason: verified.error });
     const userId = String(verified.user.id);
@@ -114,6 +115,7 @@ async function handleCheckJoin(req, res, db) {
 }
 
 async function handleProfile(req, res, db) {
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     const verified = verifyTelegramInitData(req.query.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const userId = String(verified.user.id);
@@ -154,4 +156,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-            }
+}
