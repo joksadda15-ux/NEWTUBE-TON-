@@ -1,12 +1,13 @@
-// api/withdraw.js — SEASON 2 আপডেট + RACE-CONDITION FIX + HISTORY (received/pending)
+// api/withdraw.js — SEASON 2 UPDATE + RACE-CONDITION FIX + HISTORY (received/pending)
 //
-// গুরুত্বপূর্ণ: balance check আর deduct একটাই atomic findOneAndUpdate-এ।
-// filter-এর মধ্যেই শর্ত বসানো আছে (balance যথেষ্ট, আজ withdraw করা হয়নি, banned না) —
-// MongoDB গ্যারান্টি দেয় শর্ত সত্য না থাকলে update হবেই না, তাই একই ইউজার
-// একসাথে ২-৩টা withdraw request পাঠালেও মাত্র ১টা-ই সফল হতে পারবে।
+// Important: the balance check and deduction happen in a single atomic
+// findOneAndUpdate. The conditions (sufficient balance, no withdrawal today,
+// not banned) are all in the filter — MongoDB guarantees the update won't
+// happen if the condition isn't met, so even if the same user fires off
+// 2-3 withdraw requests at once, only one can succeed.
 //
 //   POST /api/withdraw                body: { initData, method, details, amount }
-//   GET  /api/withdraw?action=history&initData=...   → ইউজারের withdraw history
+//   GET  /api/withdraw?action=history&initData=...   → the user's withdraw history
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import { tgSend } from '../lib/telegram.js';
@@ -19,10 +20,10 @@ import {
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
 
-// ── GET ?action=history — ইউজারের সাম্প্রতিক withdraw request (pending/approved/rejected) ──
+// ── GET ?action=history — the user's recent withdraw requests (pending/approved/rejected) ──
 async function handleHistory(req, res, db) {
-    // ⚠️ GET request-এ কোনো caching layer (CDN/edge) যেন পুরনো/খালি রেসপন্স
-    // কখনো cache করে না রাখে, তার জন্য স্পষ্টভাবে no-store বলে দেওয়া হচ্ছে।
+    // ⚠️ Explicitly no-store so no caching layer (CDN/edge) ever caches a
+    // stale/empty response for this GET request.
     res.setHeader('Cache-Control', 'no-store, max-age=0');
 
     const verified = verifyTelegramInitData(req.query.initData);
@@ -40,11 +41,11 @@ async function handleHistory(req, res, db) {
     return res.status(200).json({ ok: true, history: list });
 }
 
-// ── POST — নতুন withdraw request তৈরি ──
+// ── POST — create a new withdraw request ──
 async function handleCreate(req, res, db) {
-    // ── SECURITY FIX: এখন real money নড়াচড়া করে এই endpoint, তাই
-    // initData verification সবচেয়ে জরুরি এখানেই — client-পাঠানো userId
-    // আর বিশ্বাস করা হয় না।
+    // ── SECURITY FIX: this endpoint moves real money, so initData
+    // verification matters most right here — the client-supplied userId
+    // is no longer trusted.
     const verified = verifyTelegramInitData(req.body?.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const id = String(verified.user.id);
@@ -68,8 +69,8 @@ async function handleCreate(req, res, db) {
     const users = db.collection('users');
     const today = await ensureDailyReset(users, id);
 
-    // soft checks (clear error messages) — এগুলো এখনও একটা read দিয়ে করা হচ্ছে,
-    // কিন্তু আসল balance-deduction নিচে atomic filter দিয়ে protected
+    // soft checks (for clear error messages) — these still use a plain read,
+    // but the actual balance deduction below is protected by an atomic filter
     const user = await users.findOne({ _id: id });
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
@@ -94,13 +95,22 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'address_used_by_other' });
     }
 
+    // ── for the admin notification: when did this user last withdraw? ──
+    const previousWithdraw = await withdrawals.findOne(
+        { userId: id },
+        { sort: { createdAt: -1 }, projection: { createdAt: 1, status: 1 } }
+    );
+    const lastWithdrawText = previousWithdraw
+        ? `${new Date(previousWithdraw.createdAt).toLocaleString()} (${previousWithdraw.status})`
+        : 'First withdraw';
+
     const feeWtc = Math.floor(wtcAmount * (WITHDRAW_FEE_PERCENT / 100));
     const netWtc = wtcAmount - feeWtc;
     const netCurrencyAmount = methodConfig.wtcToCurrency(netWtc);
 
     // ══════════════════════════════════════════════════════════
-    // ATOMIC GATE — এই একটা অপারেশনেই balance/once-per-day শর্ত যাচাই + deduct
-    // হয়, কোনো race window ছাড়াই।
+    // ATOMIC GATE — the balance/once-per-day condition check and the deduction
+    // both happen in this single operation, with no race window.
     // ══════════════════════════════════════════════════════════
     const gate = await users.findOneAndUpdate(
         {
@@ -136,6 +146,8 @@ async function handleCreate(req, res, db) {
             `💰 ${wtcAmount.toLocaleString()} WTC (fee ${feeWtc.toLocaleString()} WTC) → <b>${netCurrencyAmount.toFixed(4)} ${methodConfig.currency}</b>\n` +
             `📤 Method: <b>${methodConfig.label}</b>\n` +
             `📍 Address: <code>${details}</code>\n` +
+            `🕓 Last withdraw: <b>${lastWithdrawText}</b>\n` +
+            `👥 Referrals: <b>${user.referralCount || 0}</b>\n` +
             `📅 ${new Date().toLocaleString()}`,
             { reply_markup: { inline_keyboard: [[
                 { text: '✅ Approve', callback_data: `wd_approve_${result.insertedId}` },
