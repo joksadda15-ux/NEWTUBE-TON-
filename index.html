@@ -12,29 +12,33 @@
      ══════════════════════════════════════════════════════════ -->
 <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
 <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-<script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
+<!-- ⚠️ Monetag (libtl.com) SDK ইচ্ছাকৃতভাবে এখানে স্ট্যাটিকভাবে লোড করা হচ্ছে না।
+     এই SDK পুরো পেজ লোড হওয়ার সাথে সাথেই global click listener বসিয়ে দেয় (aggressive
+     monetization pattern), যার ফলে GigaPub/Adsgram বাটনে ক্লিক করলেও Monetag-এর ad
+     চলে আসতো। এখন এটা lazy-load হয় — শুধু ইউজার Monetag বাটনে ক্লিক করলেই স্ক্রিপ্ট
+     ইনজেক্ট হয়, watchAdNetwork() ফাংশনে দেখুন loadMonetagSDK()। -->
 <script src="https://ad.gigapub.tech/script?id=846"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
     :root {
-        --bg: #09070F;
-        --surface: #14111F;
-        --surface-raised: #1C1830;
-        --surface-pop: #251E3F;
-        --coin: #7A3CFF;
-        --coin-deep: #5A22D6;
-        --coin-soft: rgba(122,60,255,0.16);
-        --accent: #FF3CAC;
-        --accent-soft: rgba(255,60,172,0.16);
-        --signal: #00E5FF;
-        --signal-soft: rgba(0,229,255,0.12);
-        --ink: #FDFDFF;
-        --ink-muted: #A79FD1;
-        --ink-faint: #6B6390;
-        --border: rgba(253,253,255,0.07);
-        --border-strong: rgba(253,253,255,0.14);
+        --bg: #0A130D;
+        --surface: #101B13;
+        --surface-raised: #172417;
+        --surface-pop: #1E2E1D;
+        --coin: #1FCB6B;
+        --coin-deep: #128A4D;
+        --coin-soft: rgba(31,203,107,0.16);
+        --accent: #D4FF3D;
+        --accent-soft: rgba(212,255,61,0.16);
+        --signal: #C6FF00;
+        --signal-soft: rgba(198,255,0,0.12);
+        --ink: #F5FFF7;
+        --ink-muted: #8FAE97;
+        --ink-faint: #55705C;
+        --border: rgba(245,255,247,0.07);
+        --border-strong: rgba(245,255,247,0.14);
         --danger: #FF5C7A;
         --danger-soft: rgba(255,92,122,0.14);
         --success: #3DDC97;
@@ -59,18 +63,18 @@
 
     .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 8px; }
     .brand { display: flex; align-items: center; gap: 8px; }
-    .brand-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(155deg, #A879FF, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -2px 4px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #FFFFFF; }
+    .brand-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(155deg, #7CFFB2, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -2px 4px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #FFFFFF; }
     .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.2px; }
     .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: none; display: flex; align-items: center; justify-content: center; color: var(--ink); position: relative; }
     .icon-btn.has-dot::after { content: ''; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); }
 
     .card { background: linear-gradient(160deg, var(--surface-raised), var(--surface)); border-radius: 16px; padding: 16px 18px; border: 0.5px solid var(--border); box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 10px 24px rgba(0,0,0,0.28); }
     .btn { height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; font-size: 14px; border: none; width: 100%; transition: transform 0.12s ease, box-shadow 0.12s ease; }
-    .btn-primary { background: linear-gradient(160deg, #A879FF, var(--coin) 55%, var(--coin-deep)); color: #FFFFFF; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 22px rgba(122,60,255,0.35); }
-    .btn-primary:active { transform: translateY(2px) scale(0.99); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 3px rgba(0,0,0,0.25), 0 4px 10px rgba(122,60,255,0.25); }
+    .btn-primary { background: linear-gradient(160deg, #7CFFB2, var(--coin) 55%, var(--coin-deep)); color: #FFFFFF; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 22px rgba(31,203,107,0.35); }
+    .btn-primary:active { transform: translateY(2px) scale(0.99); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 3px rgba(0,0,0,0.25), 0 4px 10px rgba(31,203,107,0.25); }
     .btn-outline { background: transparent; border: 0.5px solid var(--border-strong); color: var(--ink); }
     .btn-outline:active { transform: translateY(1px); background: rgba(255,255,255,0.03); }
-    .btn-signal { background: var(--signal); color: #06040D; }
+    .btn-signal { background: var(--signal); color: #050A06; }
     .btn:disabled { opacity: 0.45; }
     .section-pad { padding: 0 20px; }
     .section-title { font-size: 15px; font-weight: 600; }
@@ -83,7 +87,7 @@
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink-faint); width: 56px; background: none; border: none; padding: 4px 0; }
     .nav-item.active { color: var(--coin); }
     .nav-label { font-size: 10px; font-weight: 500; }
-    .nav-earn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(155deg, #A879FF, var(--coin) 55%, var(--coin-deep)); display: flex; align-items: center; justify-content: center; margin-top: -28px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -4px 8px rgba(0,0,0,0.25), 0 8px 20px rgba(122,60,255,0.45); color: #FFFFFF; }
+    .nav-earn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(155deg, #7CFFB2, var(--coin) 55%, var(--coin-deep)); display: flex; align-items: center; justify-content: center; margin-top: -28px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -4px 8px rgba(0,0,0,0.25), 0 8px 20px rgba(31,203,107,0.45); color: #FFFFFF; }
 
     #toast-host { position: fixed; top: 14px; left: 0; right: 0; max-width: 430px; margin: 0 auto; z-index: 200; pointer-events: none; padding: 0 16px; }
     .toast { background: var(--surface-pop); border: 0.5px solid var(--border-strong); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: toast-in 0.25s ease; }
@@ -105,16 +109,16 @@
        ══════════════════════════════════════════════════════════ */
 
     /* ── splash screen ── */
-    #splash { position: fixed; inset: 0; background: radial-gradient(circle at 50% 38%, #1B1030 0%, var(--bg) 68%); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, transform 0.5s ease; }
+    #splash { position: fixed; inset: 0; background: radial-gradient(circle at 50% 38%, #122015 0%, var(--bg) 68%); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, transform 0.5s ease; }
     #splash.out { opacity: 0; transform: scale(1.06); pointer-events: none; }
-    .splash-orbit { position: absolute; width: 208px; height: 208px; border-radius: 50%; border: 1px solid rgba(122,60,255,0.16); animation: splash-orbit-spin 7s linear infinite; z-index: 0; }
-    .splash-orbit::before, .splash-orbit::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--coin); box-shadow: 0 0 10px rgba(122,60,255,0.9); }
+    .splash-orbit { position: absolute; width: 208px; height: 208px; border-radius: 50%; border: 1px solid rgba(31,203,107,0.16); animation: splash-orbit-spin 7s linear infinite; z-index: 0; }
+    .splash-orbit::before, .splash-orbit::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--coin); box-shadow: 0 0 10px rgba(31,203,107,0.9); }
     .splash-orbit::before { top: -3px; left: 50%; margin-left: -3px; }
-    .splash-orbit::after { bottom: -3px; left: 50%; margin-left: -3px; background: var(--signal); box-shadow: 0 0 10px rgba(0,229,255,0.9); }
+    .splash-orbit::after { bottom: -3px; left: 50%; margin-left: -3px; background: var(--signal); box-shadow: 0 0 10px rgba(198,255,0,0.9); }
     @keyframes splash-orbit-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .splash-badge { position: relative; width: 88px; height: 88px; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, #2A1B4D, #0B0714); box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -8px 16px rgba(0,0,0,0.5), 0 20px 44px rgba(0,0,0,0.55); animation: splash-pop 0.7s cubic-bezier(.34,1.56,.64,1); z-index: 1; }
-    .splash-badge-inner { width: 100%; height: 100%; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, rgba(122,60,255,0.18), rgba(122,60,255,0.02) 65%); color: var(--coin); position: relative; overflow: hidden; }
-    .splash-badge-inner .splash-play { filter: drop-shadow(0 0 10px rgba(122,60,255,0.65)); position: relative; z-index: 1; }
+    .splash-badge { position: relative; width: 88px; height: 88px; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, #1A3322, #060D08); box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -8px 16px rgba(0,0,0,0.5), 0 20px 44px rgba(0,0,0,0.55); animation: splash-pop 0.7s cubic-bezier(.34,1.56,.64,1); z-index: 1; }
+    .splash-badge-inner { width: 100%; height: 100%; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, rgba(31,203,107,0.18), rgba(31,203,107,0.02) 65%); color: var(--coin); position: relative; overflow: hidden; }
+    .splash-badge-inner .splash-play { filter: drop-shadow(0 0 10px rgba(31,203,107,0.65)); position: relative; z-index: 1; }
     .splash-badge-sheen { position: absolute; inset: -40% -10%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.14) 50%, transparent 60%); transform: translateX(-120%); animation: splash-sheen-sweep 2.4s ease-in-out 0.4s infinite; }
     @keyframes splash-sheen-sweep { 0% { transform: translateX(-130%); } 45%,100% { transform: translateX(130%); } }
     .splash-badge::before, .splash-badge::after { content: ''; position: absolute; inset: -7px; border-radius: 32px; border: 1.5px solid var(--coin); opacity: 0; animation: splash-ring 2s ease-out infinite; }
@@ -122,7 +126,7 @@
     @keyframes splash-pop { 0% { transform: scale(0) rotate(-25deg); opacity: 0; } 60% { transform: scale(1.15) rotate(4deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
     @keyframes splash-ring { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.55); opacity: 0; } }
     .splash-name { margin-top: 20px; font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.5px; opacity: 0; animation: fade-up 0.6s ease 0.35s forwards; }
-    .splash-name .accent { color: var(--coin); text-shadow: 0 0 16px rgba(122,60,255,0.5); }
+    .splash-name .accent { color: var(--coin); text-shadow: 0 0 16px rgba(31,203,107,0.5); }
     .splash-tagline { margin-top: 6px; font-size: 12px; color: var(--ink-muted); opacity: 0; animation: fade-up 0.6s ease 0.5s forwards; }
     @keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -148,7 +152,7 @@
     #floating-lootbox:active { transform: scale(0.9); }
     @keyframes lootbox-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
     #floating-lootbox.claimable { animation: lootbox-bob 2.4s ease-in-out infinite, lootbox-pulse 1.6s ease-in-out infinite; }
-    @keyframes lootbox-pulse { 0%,100% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 0 rgba(122,60,255,0.5); } 50% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 10px rgba(122,60,255,0); } }
+    @keyframes lootbox-pulse { 0%,100% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 0 rgba(31,203,107,0.5); } 50% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 10px rgba(31,203,107,0); } }
     #lb-coin-icon { transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
     #floating-lootbox.claimable #lb-coin-icon { animation: coin-flip 1.8s ease-in-out infinite; }
     @keyframes coin-flip { 0%,100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.15) rotate(8deg); } }
@@ -189,11 +193,28 @@
     @keyframes jg-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
     .jg-link-card { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 10px; border-radius: 16px; border: 1px solid var(--border-strong); background: linear-gradient(160deg, var(--surface-raised), var(--surface)); text-decoration: none; color: var(--ink); transition: transform 0.12s ease, border-color 0.15s ease; }
     .jg-link-card:active { transform: translateY(2px) scale(0.98); }
-    .jg-link-card.jg-channel { border-color: rgba(122,60,255,0.35); }
-    .jg-link-card.jg-community { border-color: rgba(255,60,172,0.35); }
+    .jg-link-card.jg-channel { border-color: rgba(31,203,107,0.35); }
+    .jg-link-card.jg-community { border-color: rgba(198,255,0,0.35); }
     .jg-link-icon { font-size: 22px; }
     .jg-link-label { font-size: 12px; font-weight: 600; }
-    .jg-check-btn { opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.28s forwards; background: linear-gradient(160deg, var(--accent), var(--coin) 60%, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px rgba(255,60,172,0.3); }
+    .jg-check-btn { opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.28s forwards; background: linear-gradient(160deg, var(--accent), var(--coin) 60%, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px rgba(198,255,0,0.3); }
+
+    /* ── gift-box (admin surprise gift) ── */
+    .gb-glow { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 0; }
+    .gb-glow::before, .gb-glow::after { content: ''; position: absolute; width: 240px; height: 240px; border-radius: 50%; filter: blur(52px); opacity: 0.4; animation: jg-glow-drift 5s ease-in-out infinite; }
+    .gb-glow::before { background: var(--coin); top: -90px; left: -70px; }
+    .gb-glow::after { background: var(--signal); bottom: -100px; right: -70px; animation-delay: 1.2s; }
+    .gb-rays { position: absolute; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+    .gb-rays::before { content: ''; position: absolute; width: 260px; height: 260px; background: conic-gradient(from 0deg, transparent 0deg, var(--signal) 4deg, transparent 10deg, transparent 40deg, var(--coin) 44deg, transparent 50deg, transparent 80deg, var(--signal) 84deg, transparent 90deg, transparent 130deg, var(--coin) 134deg, transparent 140deg, transparent 190deg, var(--signal) 194deg, transparent 200deg, transparent 260deg, var(--coin) 264deg, transparent 270deg, transparent 320deg, var(--signal) 324deg, transparent 330deg); animation: gb-ray-spin 8s linear infinite; }
+    @keyframes gb-ray-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .gb-box-wrap { width: 112px; height: 112px; margin: 6px auto 18px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; }
+    .gb-box { font-size: 60px; animation: gb-bounce 1.6s ease-in-out infinite; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.4)); }
+    @keyframes gb-bounce { 0%,100% { transform: translateY(0) rotate(-3deg); } 25% { transform: translateY(-3px) rotate(2deg); } 50% { transform: translateY(-10px) rotate(-2deg); } 75% { transform: translateY(-3px) rotate(3deg); } }
+    .gb-reason-card { position: relative; z-index: 1; text-align: left; background: linear-gradient(160deg, var(--surface-raised), var(--surface)); border: 1px solid var(--border-strong); border-radius: 14px; padding: 12px 14px; margin-bottom: 18px; opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.15s forwards; }
+    .gb-reason-label { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .gb-reason-text { font-size: 13.5px; line-height: 1.5; }
+    .gb-claim-btn { opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.28s forwards; background: linear-gradient(160deg, var(--signal), var(--coin) 60%, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px var(--coin-soft); }
+    .gb-amount-reveal { font-family: var(--font-display); font-weight: 700; font-size: 40px; text-align: center; margin: 6px 0 4px; color: var(--coin); animation: ob-icon-bounce 0.5s cubic-bezier(.34,1.56,.64,1) both; }
     .ob-dot { height: 6px; border-radius: 4px; transition: width 0.35s ease, background 0.35s ease; }
 
     /* ── toast: icon + smoother spring ── */
@@ -223,16 +244,16 @@
        SPLASH — extra glow + rising sparkle particles (purely
        decorative, layered behind the existing logo/text).
        ══════════════════════════════════════════════════════════ */
-    .splash-glow { position: absolute; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(122,60,255,0.16), transparent 72%); animation: splash-glow-pulse 2.6s ease-in-out infinite; z-index: 0; }
+    .splash-glow { position: absolute; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(31,203,107,0.16), transparent 72%); animation: splash-glow-pulse 2.6s ease-in-out infinite; z-index: 0; }
     @keyframes splash-glow-pulse { 0%,100% { opacity: 0.4; transform: scale(0.92); } 50% { opacity: 0.7; transform: scale(1.1); } }
     .splash-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-    .splash-particles span { position: absolute; bottom: -10px; width: 5px; height: 5px; border-radius: 50%; background: var(--coin); opacity: 0.75; box-shadow: 0 0 8px rgba(122,60,255,0.7); animation: splash-particle-rise 3.4s ease-in infinite; }
+    .splash-particles span { position: absolute; bottom: -10px; width: 5px; height: 5px; border-radius: 50%; background: var(--coin); opacity: 0.75; box-shadow: 0 0 8px rgba(31,203,107,0.7); animation: splash-particle-rise 3.4s ease-in infinite; }
     .splash-particles span:nth-child(1) { left: 14%; animation-delay: 0s; }
-    .splash-particles span:nth-child(2) { left: 30%; animation-delay: 0.5s; background: var(--signal); box-shadow: 0 0 8px rgba(0,229,255,0.7); }
+    .splash-particles span:nth-child(2) { left: 30%; animation-delay: 0.5s; background: var(--signal); box-shadow: 0 0 8px rgba(198,255,0,0.7); }
     .splash-particles span:nth-child(3) { left: 48%; animation-delay: 1.05s; }
-    .splash-particles span:nth-child(4) { left: 64%; animation-delay: 1.65s; background: var(--signal); box-shadow: 0 0 8px rgba(0,229,255,0.7); }
+    .splash-particles span:nth-child(4) { left: 64%; animation-delay: 1.65s; background: var(--signal); box-shadow: 0 0 8px rgba(198,255,0,0.7); }
     .splash-particles span:nth-child(5) { left: 80%; animation-delay: 0.85s; }
-    .splash-particles span:nth-child(6) { left: 22%; animation-delay: 2.15s; background: var(--signal); box-shadow: 0 0 8px rgba(0,229,255,0.7); }
+    .splash-particles span:nth-child(6) { left: 22%; animation-delay: 2.15s; background: var(--signal); box-shadow: 0 0 8px rgba(198,255,0,0.7); }
     @keyframes splash-particle-rise { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 15% { opacity: 0.85; } 100% { transform: translateY(-340px) scale(1.1); opacity: 0; } }
     .splash-name, .splash-tagline, .splash-badge { position: relative; z-index: 1; }
 
@@ -254,14 +275,14 @@
     .congrats-overlay.closing .congrats-card { animation: congrats-card-out 0.28s ease both; }
     @keyframes congrats-card-in { 0% { transform: scale(0.6) translateY(24px); opacity: 0; } 60% { transform: scale(1.06) translateY(0); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
     @keyframes congrats-card-out { to { transform: scale(0.85); opacity: 0; } }
-    .congrats-glow { position: absolute; inset: -34%; border-radius: 50%; background: radial-gradient(circle, rgba(122,60,255,0.35), transparent 70%); animation: congrats-glow-pulse 1.8s ease-in-out infinite; z-index: 0; pointer-events: none; }
+    .congrats-glow { position: absolute; inset: -34%; border-radius: 50%; background: radial-gradient(circle, rgba(31,203,107,0.35), transparent 70%); animation: congrats-glow-pulse 1.8s ease-in-out infinite; z-index: 0; pointer-events: none; }
     @keyframes congrats-glow-pulse { 0%,100% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 0.9; transform: scale(1.1); } }
     .congrats-icon { position: relative; z-index: 1; font-size: 50px; line-height: 1; animation: congrats-icon-bounce 0.8s cubic-bezier(.34,1.56,.64,1) 0.05s both, congrats-icon-wiggle 2.1s ease-in-out 0.85s infinite; }
     @keyframes congrats-icon-bounce { 0% { transform: scale(0) rotate(-18deg); } 60% { transform: scale(1.25) rotate(8deg); } 100% { transform: scale(1) rotate(0); } }
     @keyframes congrats-icon-wiggle { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
     .congrats-title { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: 0.3px; margin-top: 6px; opacity: 0; animation: fade-up 0.5s ease 0.22s forwards; }
     .congrats-sub { position: relative; z-index: 1; font-size: 12px; color: var(--ink-muted); margin-top: 3px; opacity: 0; animation: fade-up 0.5s ease 0.32s forwards; }
-    .congrats-amount { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 27px; color: var(--coin); margin-top: 4px; opacity: 0; text-shadow: 0 0 18px rgba(122,60,255,0.55); animation: congrats-amount-in 0.55s cubic-bezier(.34,1.56,.64,1) 0.42s forwards; }
+    .congrats-amount { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 27px; color: var(--coin); margin-top: 4px; opacity: 0; text-shadow: 0 0 18px rgba(31,203,107,0.55); animation: congrats-amount-in 0.55s cubic-bezier(.34,1.56,.64,1) 0.42s forwards; }
     @keyframes congrats-amount-in { from { opacity: 0; transform: scale(0.6) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .congrats-hint { position: relative; z-index: 1; font-size: 10.5px; color: var(--ink-faint); margin-top: 14px; opacity: 0; animation: fade-up 0.5s ease 0.6s forwards; }
 </style>
@@ -301,7 +322,7 @@ const COMMUNITY_GROUP = 'newtube_commonity';
 const MONETAG_INTERVAL_SECONDS = 600; // periodic non-reward interstitial, video section only
 
 const tg = window.Telegram?.WebApp;
-if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#09070F'); } catch (e) {} }
+if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#0A130D'); } catch (e) {} }
 
 // ⚠️ SECURITY: USER_ID/FIRST_NAME/USERNAME here are for DISPLAY ONLY (cosmetic).
 // They are never sent to the backend as a trusted identity — every API call
@@ -338,33 +359,47 @@ const showAdsgramSpecialAd = () => new Promise((res, rej) => {
     if (window.Adsgram) { window.Adsgram.init({ blockId: "27566" }).show().then(res).catch(rej); }
     else { rej(new Error('sdk_not_loaded')); }
 });
-const showMonetagAd = () => new Promise((res, rej) => {
-    if (typeof show_9442539 === 'function') {
-        // ⚠️ FIX: আগে টাইমআউট ছিল ১৫ সেকেন্ড — rewarded video ad প্রায়ই তার
-        // চেয়ে বেশি সময় নেয় (১৫-৩০+ সেকেন্ড)। ফলে ইউজার পুরো ad দেখে ফেললেও
-        // আমাদের নিজের timeout SDK-এর আসল resolve-এর আগেই promise reject
-        // করে দিতো, তাই reward claim-ই হতো না — যদিও একবার reject হয়ে গেলে
-        // পরে SDK আসল resolve পাঠালেও তার আর কোনো প্রভাব থাকে না (promise
-        // একবারই settle হয়)। এখন টাইমআউট বাড়িয়ে ৯০ সেকেন্ড করা হলো, যাতে
-        // স্বাভাবিক দৈর্ঘ্যের যেকোনো ad শেষ হওয়ার সময় পায় — শুধু আসলেই
-        // stuck/broken SDK কল থেকে বাঁচার জন্যই এই সেফটি-নেট রাখা হয়েছে।
-        const t = setTimeout(() => rej(new Error('timeout')), 90000);
-        show_9442539().then(() => { clearTimeout(t); res(); }).catch((e) => { clearTimeout(t); rej(e); });
-    } else { rej(new Error('sdk_not_loaded')); }
-});
+// ⚠️ Monetag SDK এখন lazy-load হয় — শুধু ইউজার আসলেই Monetag বাটনে ক্লিক করলে
+// script ইনজেক্ট করা হয়, আর কাজ শেষে সরিয়ে ফেলা হয়। এভাবে GigaPub/Adsgram-এ
+// ক্লিক করার সময় Monetag-এর global click-listener পেজে উপস্থিতই থাকে না, তাই
+// অন্য নেটওয়ার্কের ক্লিক আর hijack করতে পারে না।
+let _monetagLoading = null;
+function loadMonetagSDK() {
+    if (typeof show_9442539 === 'function') return Promise.resolve();
+    if (_monetagLoading) return _monetagLoading;
+    _monetagLoading = new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = '//libtl.com/sdk.js';
+        s.setAttribute('data-zone', '9442539');
+        s.setAttribute('data-sdk', 'show_9442539');
+        s.onload = () => res();
+        s.onerror = () => { _monetagLoading = null; rej(new Error('monetag_sdk_load_failed')); };
+        document.head.appendChild(s);
+    });
+    return _monetagLoading;
+}
+function unloadMonetagSDK() {
+    document.querySelectorAll('script[src*="libtl.com"]').forEach(s => s.remove());
+    try { delete window.show_9442539; } catch { window.show_9442539 = undefined; }
+    _monetagLoading = null;
+}
+const showMonetagAd = () => loadMonetagSDK().then(() => new Promise((res, rej) => {
+    if (typeof show_9442539 !== 'function') { rej(new Error('sdk_not_loaded')); return; }
+    // ⚠️ শুধু Monetag-এর জন্যই ৯০ সেকেন্ডের সেফটি-নেট রাখা হয়েছে (ইউজারের
+    // অনুরোধে) — যদি SDK কখনো আটকে যায় (কোনো resolve/reject-ই না দেয়)।
+    const t = setTimeout(() => rej(new Error('timeout')), 90000);
+    show_9442539().then(() => { clearTimeout(t); unloadMonetagSDK(); res(); }).catch((e) => { clearTimeout(t); unloadMonetagSDK(); rej(e); });
+})).catch((e) => { unloadMonetagSDK(); throw e; });
 const showGigaPubAd = () => new Promise((res, rej) => {
     // ⚠️ কড়াভাবে শুধু GigaPub-এর নিজের ফাংশন চেক করা হচ্ছে — অন্য কোনো নেটওয়ার্কের
     // SDK (Monetag ইত্যাদি) এখানে কখনোই fallback হিসেবে কল হয় না। GigaPub-এর
     // স্ক্রিপ্ট এখনো লোড না হয়ে থাকলে সরাসরি 'sdk_not_loaded' error দেওয়া হয়,
     // যাতে ইউজারকে স্পষ্টভাবে "try again" বলা যায় — চুপচাপ অন্য ad চালানো হয় না।
     if (typeof window.showGiga !== 'function') { rej(new Error('sdk_not_loaded')); return; }
-    // ⚠️ FIX: আগে এখানেও ১৫ সেকেন্ডের timeout ছিল — এটাই ছিল GigaPub reward
-    // না পাওয়ার আসল কারণ। GigaPub-এর ভিডিও ad সাধারণত ১৫ সেকেন্ডের বেশি সময়
-    // নেয়, তাই ইউজার পুরো ad দেখে ফিরে এলেও আমাদের timeout ততক্ষণে promise-টা
-    // ইতিমধ্যে reject করে ফেলেছে — GigaPub-এর আসল resolve() পরে এলেও তার আর
-    // কোনো মূল্য থাকে না (promise একবারই settle হয়)। এখন ৯০ সেকেন্ড দেওয়া হলো।
-    const t = setTimeout(() => rej(new Error('timeout')), 90000);
-    window.showGiga("main").then(() => { clearTimeout(t); res(); }).catch((e) => { clearTimeout(t); rej(e); });
+    // ⚠️ কোনো artificial timeout নেই — শুধু GigaPub-এর নিজের promise-ই ঠিক করবে
+    // ad সফল (reward) না ব্যর্থ (try again)। ad যত সময়ই লাগুক, পুরোটা দেখলেই
+    // reward পাবে; মাঝে কেটে দেওয়ার কোনো কৃত্রিম সময়সীমা নেই।
+    window.showGiga("main").then(res).catch(rej);
 });
 
 const AD_SHOW_FUNCTIONS = { adsgramDaily: showAdsgramDailyAd, adsgramSpecial: showAdsgramSpecialAd, monetag: showMonetagAd, giga: showGigaPubAd };
@@ -452,7 +487,7 @@ function triggerBurst(originEl) {
     const rect = originEl ? originEl.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
     const ox = rect.left + rect.width / 2;
     const oy = rect.top + rect.height / 2;
-    const colors = ['#7A3CFF', '#FF3CAC', '#00E5FF', '#FDFDFF'];
+    const colors = ['#1FCB6B', '#C6FF00', '#3DDC97', '#F5FFF7'];
     const particles = Array.from({ length: 26 }, () => {
         const angle = Math.random() * Math.PI * 2;
         const speed = 2.5 + Math.random() * 4.5;
@@ -643,9 +678,14 @@ function renderShell() {
     root.innerHTML = `
         <div class="topbar">
             <div class="brand"><div class="brand-mark">N</div><div class="brand-name">NEWTUBE</div></div>
-            <button class="icon-btn" id="profile-btn" aria-label="Profile">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
-            </button>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <button class="icon-btn" id="history-btn" aria-label="History">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9z"/><path d="M12 7v5l3 3"/><path d="M3 12h4"/></svg>
+                </button>
+                <button class="icon-btn" id="profile-btn" aria-label="Profile">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                </button>
+            </div>
         </div>
         <div id="tab-content"></div>
         <div class="bottomnav">
@@ -656,14 +696,170 @@ function renderShell() {
         </div>`;
     document.querySelectorAll('.nav-item').forEach(btn => { btn.onclick = () => switchTab(btn.dataset.tab); });
     document.getElementById('profile-btn').onclick = openProfileModal;
+    document.getElementById('history-btn').onclick = openHistoryModal;
+}
+
+// ══════════════════════════════════════════════════════════════
+// HISTORY — withdraw request status (received / pending only)
+// ══════════════════════════════════════════════════════════════
+const HISTORY_STATUS_UI = {
+    pending:  { label: 'Pending',  icon: '🕓', color: 'var(--signal)' },
+    approved: { label: 'Received', icon: '✅', color: 'var(--success)' },
+};
+async function openHistoryModal() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+        <div class="overlay">
+            <div class="sheet" style="max-height:78vh; display:flex; flex-direction:column;">
+                <div class="sheet-handle"></div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:18px;">🕓 Withdraw History</div>
+                    <button class="icon-btn" onclick="document.getElementById('modal-root').innerHTML=''" aria-label="Close">✕</button>
+                </div>
+                <div id="history-list" style="overflow-y:auto; flex:1;">
+                    <div class="muted" style="text-align:center; padding:30px 0;">Loading...</div>
+                </div>
+            </div>
+        </div>`;
+
+    try {
+        const r = await apiGet(`withdraw?action=history&initData=${encodeURIComponent(TG_INIT_DATA)}`);
+        const listEl = document.getElementById('history-list');
+        if (!listEl) return; // modal closed before response arrived
+        const items = (r.history || []).filter(h => h.status === 'pending' || h.status === 'approved');
+
+        if (!items.length) {
+            listEl.innerHTML = `<div class="muted" style="text-align:center; padding:30px 0;">এখনো কোনো withdraw request নেই।</div>`;
+            return;
+        }
+
+        listEl.innerHTML = items.map((h, i) => {
+            const st = HISTORY_STATUS_UI[h.status] || { label: h.status, icon: '•', color: 'var(--ink-muted)' };
+            const date = h.createdAt ? new Date(h.createdAt).toLocaleString() : '';
+            return `
+                <div class="card" style="margin-bottom:10px; opacity:0; animation: jg-rise 0.35s ease ${Math.min(i * 0.05, 0.4)}s forwards;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                            <div style="font-weight:700; font-size:15px;">${fmtWTC(h.wtcAmount)} WTC</div>
+                            <div class="muted" style="font-size:12px; margin-top:2px;">≈ ${Number(h.cashAmount || 0).toFixed(4)} ${h.currency || ''} · ${date}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:${st.color}22; color:${st.color}; font-size:12px; font-weight:700; white-space:nowrap;">
+                            ${st.icon} ${st.label}
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+    } catch (e) {
+        const listEl = document.getElementById('history-list');
+        if (listEl) listEl.innerHTML = `<div class="muted" style="text-align:center; padding:30px 0;">Failed to load history.</div>`;
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// GIFT BOX — admin-এর পাঠানো surprise gift, app খুললে চেক হয়
+// ══════════════════════════════════════════════════════════════
+async function checkPendingGift() {
+    try {
+        const r = await apiGet(`gift?action=check&initData=${encodeURIComponent(TG_INIT_DATA)}`);
+        if (r.ok && r.gift) showGiftBox(r.gift);
+    } catch { /* silent — non-critical */ }
+}
+
+function showGiftBox(gift) {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+        <div class="overlay" style="align-items:center;">
+            <div class="sheet ob-slide-in" style="border-radius:22px; text-align:center; padding: 34px 22px 30px; position:relative; overflow:hidden;">
+                <div class="gb-glow"></div>
+                <div class="gb-rays"></div>
+                <div class="gb-box-wrap"><span class="gb-box">🎁</span></div>
+                <div style="font-family:var(--font-display); font-weight:700; font-size:20px; margin-bottom:6px; position:relative; z-index:1;">🎉 Congratulations!</div>
+                <div class="muted" style="font-size:13px; line-height:1.6; margin-bottom:16px; position:relative; z-index:1;">You have received a gift from admin</div>
+                <div class="gb-reason-card">
+                    <div class="gb-reason-label">Reason</div>
+                    <div class="gb-reason-text">${(gift.reason || '').replace(/</g, '&lt;')}</div>
+                </div>
+                <button class="btn gb-claim-btn" id="gb-claim-btn" style="color:#06120A;">🎁 Claim Gift</button>
+            </div>
+        </div>`;
+
+    document.getElementById('gb-claim-btn').onclick = async () => {
+        const btn = document.getElementById('gb-claim-btn');
+        btn.textContent = 'Claiming...'; btn.disabled = true;
+        try {
+            const r = await apiPost('gift', { action: 'claim', giftId: gift.id });
+            if (!r.ok) { btn.textContent = '🎁 Claim Gift'; btn.disabled = false; toast('Gift already claimed or expired.', 'error'); return; }
+
+            // ── reveal amount + confetti, তারপর balance আপডেট ──
+            const sheet = document.querySelector('.sheet');
+            sheet.innerHTML = `
+                <div class="gb-glow"></div>
+                <div style="position:relative; z-index:1; text-align:center; padding:10px 6px;">
+                    <div style="font-size:44px;">🎉</div>
+                    <div class="gb-amount-reveal">+${fmtWTC(r.amount)} WTC</div>
+                    <div class="muted" style="font-size:13px; margin-bottom:20px;">Gift claimed successfully!</div>
+                    <button class="btn btn-primary" id="gb-done-btn">Awesome!</button>
+                </div>`;
+            triggerBurst(sheet);
+            if (state.user) state.user.wtcBalance = (state.user.wtcBalance || 0) + r.amount;
+            document.getElementById('gb-done-btn').onclick = () => {
+                root.innerHTML = '';
+                if (state.activeTab === 'home') renderHome();
+            };
+        } catch {
+            btn.textContent = '🎁 Claim Gift'; btn.disabled = false;
+            toast('Something went wrong, try again.', 'error');
+        }
+    };
 }
 
 function switchTab(tabId) {
+    if (state.activeTab === 'home' && tabId !== 'home' && _tickerInterval) { clearInterval(_tickerInterval); _tickerInterval = null; }
     state.activeTab = tabId;
     document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
     const renderers = { home: renderHome, video: renderVideoTab, earning: renderEarningTab, task: renderTaskTab, refer: renderReferTab };
     renderers[tabId]();
     requestAnimationFrame(() => { document.getElementById('tab-content')?.classList.add('tab-fade'); });
+}
+
+// ══════════════════════════════════════════════════════════════
+// HOME — live "recently withdrawn" ticker (real approved withdraws, username masked)
+// ══════════════════════════════════════════════════════════════
+let _tickerInterval = null;
+async function startWithdrawTicker() {
+    if (_tickerInterval) { clearInterval(_tickerInterval); _tickerInterval = null; }
+    const textEl = document.getElementById('wd-ticker-text');
+    if (!textEl) return;
+
+    let items = [];
+    try {
+        const r = await apiGet('data?type=recentWithdrawals');
+        items = r.items || [];
+    } catch { /* ignore — ticker just won't show */ }
+
+    const liveTextEl = document.getElementById('wd-ticker-text'); // re-check, tab may have switched during fetch
+    if (!liveTextEl) return;
+
+    if (!items.length) {
+        liveTextEl.textContent = '💸 Withdraw করে TON/USDT আপনার ওয়ালেটে নিয়ে যান!';
+        return;
+    }
+
+    let idx = 0;
+    const show = (i) => {
+        const el = document.getElementById('wd-ticker-text');
+        if (!el) { clearInterval(_tickerInterval); _tickerInterval = null; return; }
+        const w = items[i];
+        el.style.opacity = '0';
+        setTimeout(() => {
+            const el2 = document.getElementById('wd-ticker-text');
+            if (!el2) return;
+            el2.textContent = `${w.username} just withdrew ${Number(w.cashAmount).toFixed(2)} ${w.currency} 🎉`;
+            el2.style.opacity = '1';
+        }, 350);
+    };
+    show(idx);
+    _tickerInterval = setInterval(() => { idx = (idx + 1) % items.length; show(idx); }, 3500);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -701,6 +897,22 @@ async function renderHome() {
             </button>
         </div>
 
+        <div class="card anim-in-2" id="wd-ticker" style="margin:12px 20px 0; padding:10px 16px; display:flex; align-items:center; gap:10px; overflow:hidden;">
+            <span style="font-size:15px; flex-shrink:0;">🔥</span>
+            <span id="wd-ticker-text" class="muted" style="font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:opacity 0.35s ease;">Loading recent activity...</span>
+        </div>
+
+        <div class="anim-in-3" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
+            <div class="card" style="padding:13px 15px;">
+                <div class="muted" style="font-size:12px; margin-bottom:4px;">Ads watched today</div>
+                <div style="font-family:var(--font-display); font-weight:500; font-size:18px; color:var(--signal);">${u.adsWatchedToday || 0}</div>
+            </div>
+            <div class="card" style="padding:13px 15px;">
+                <div class="muted" style="font-size:12px; margin-bottom:4px;">Tasks done today</div>
+                <div style="font-family:var(--font-display); font-weight:500; font-size:18px; color:var(--signal);">${u.tasksCompletedToday || 0}</div>
+            </div>
+        </div>
+
         <div class="anim-in-3" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
             <div class="card" style="padding:13px 15px;">
                 <div class="muted" style="font-size:12px; margin-bottom:4px;">Lifetime earned</div>
@@ -729,6 +941,7 @@ async function renderHome() {
 
     document.getElementById('home-withdraw-btn').onclick = openWithdrawModal;
     document.getElementById('home-promo-btn').onclick = openPromoModal;
+    startWithdrawTicker();
 
     // Leaderboard toggle — loads lazily on first expand
     let lbLoaded = false;
@@ -784,9 +997,13 @@ function openProfileModal() {
 // ══════════════════════════════════════════════════════════════
 // WITHDRAW MODAL
 // ══════════════════════════════════════════════════════════════
+// ⚠️ এই দুটো রেট ব্যাকএন্ডের lib/constants.js-এর WTC_PER_USD / WTC_PER_TON-এর
+// সাথে হুবহু মিলিয়ে রাখা — শুধু preview দেখানোর জন্য, আসল হিসাব সবসময় সার্ভারেই হয়।
+const WTC_PER_USD_UI = 20000;          // 20,000 WTC = 1 USD(T)
+const WTC_PER_TON_UI = 20000 / 0.6;    // 20,000 WTC = 0.6 TON
 const WITHDRAW_METHODS_UI = {
-    binance:   { label: 'Binance UID', currency: 'USDT', minWtc: 2000, placeholder: 'Enter your Binance UID' },
-    tonkeeper: { label: 'Tonkeeper Address', currency: 'TON', minWtc: 1200, placeholder: 'UQ... wallet address' },
+    binance:   { label: 'Binance UID', currency: 'USDT', minWtc: 2000, placeholder: 'Enter your Binance UID', rate: WTC_PER_USD_UI },
+    tonkeeper: { label: 'Tonkeeper Address', currency: 'TON', minWtc: 1200, placeholder: 'UQ... wallet address', rate: WTC_PER_TON_UI },
 };
 
 function openWithdrawModal() {
@@ -809,6 +1026,7 @@ function openWithdrawModal() {
                     <input class="field-input" id="wd-details" placeholder="${m.placeholder}">
                     <div class="field-label">Amount (WTC) — minimum ${fmtWTC(m.minWtc)}</div>
                     <input class="field-input" id="wd-amount" type="number" placeholder="${m.minWtc}">
+                    <div id="wd-convert" class="muted" style="font-size:12px; margin-top:6px;">≈ 0 ${m.currency}</div>
                     <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6;">
                         A 5% withdraw fee applies. You need 1 watched ad per 0.01 ${m.currency} today. At least 5 completed tasks are required before your first withdrawal.
                     </div>
@@ -818,6 +1036,11 @@ function openWithdrawModal() {
         document.getElementById('m-binance').onclick = () => { method = 'binance'; render(); };
         document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; render(); };
         document.getElementById('wd-submit').onclick = submitWithdraw;
+        document.getElementById('wd-amount').oninput = (e) => {
+            const wtc = parseFloat(e.target.value) || 0;
+            const converted = wtc / m.rate;
+            document.getElementById('wd-convert').textContent = `≈ ${converted.toFixed(4)} ${m.currency}`;
+        };
     }
 
     async function submitWithdraw() {
@@ -1420,7 +1643,12 @@ async function init() {
     });
 }
 
-function startApp() { renderShell(); switchTab('home'); startJoinWatcher(); }
+function startApp() {
+    renderShell();
+    switchTab('home');
+    startJoinWatcher();
+    setTimeout(checkPendingGift, 900); // splash/home entrance animation-এর পর, যাতে দুটো একসাথে না দেখায়
+}
 
 async function generateDeviceFingerprint() {
     try {
