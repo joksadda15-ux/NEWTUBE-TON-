@@ -156,6 +156,10 @@
     @keyframes lootbox-pulse { 0%,100% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 0 rgba(31,203,107,0.5); } 50% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 10px rgba(31,203,107,0); } }
     #lb-coin-icon { transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
     #floating-lootbox.claimable #lb-coin-icon { animation: coin-flip 1.8s ease-in-out infinite; }
+    .lb-claim-hint { position: fixed; z-index: 51; display: flex; align-items: center; gap: 6px; pointer-events: none; animation: lb-hint-bob 1.4s ease-in-out infinite; }
+    .lb-claim-hint-bubble { background: linear-gradient(160deg, var(--signal), var(--coin) 70%); color: #06120A; font-weight: 700; font-size: 11.5px; padding: 5px 10px; border-radius: 999px; white-space: nowrap; box-shadow: 0 6px 14px rgba(0,0,0,0.35); }
+    .lb-claim-hint-arrow { font-size: 20px; transform: rotate(90deg); filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35)); }
+    @keyframes lb-hint-bob { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-6px); } }
     @keyframes coin-flip { 0%,100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.15) rotate(8deg); } }
     .lb-gain-float { position: fixed; font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--coin); z-index: 51; pointer-events: none; animation: gain-float 1.1s ease-out forwards; }
     @keyframes gain-float { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 20% { opacity: 1; transform: translateY(-8px) scale(1); } 100% { opacity: 0; transform: translateY(-38px) scale(1); } }
@@ -432,6 +436,8 @@ const ERROR_MESSAGES = {
     below_minimum: 'Minimum amount not reached yet.',
     daily_limit_reached: "Today's limit reached — come back tomorrow.",
     daily_watch_limit_reached: 'Daily 5-hour video watch limit reached.',
+    lootbox_claim_required: '🎁 Claim your lootbox before earning more!',
+    session_already_claimed: 'This video session was already claimed.',
     ad_required: 'Please watch an ad first.',
     insufficient_balance: 'Insufficient balance.',
     insufficient_ads: 'Watch more ads before this withdrawal amount.',
@@ -578,7 +584,7 @@ function showOnboarding(onDone) {
     const steps = [
         { icon: '🎬', title: 'Welcome to NEWTUBE', body: 'Earn real crypto by watching videos — completely free, no investment required.', cta: 'Continue' },
         { icon: '▶', title: 'Watch video to earn', body: 'The more videos you watch, the more WTC you collect. Just watch & monetize for free — no investment, ever.', cta: 'Continue' },
-        { icon: '📋', title: 'Terms', body: 'One account per device — using multiple accounts will result in a ban. No investment needed, just watch free videos to earn. A 5% fee applies on withdrawals. Suspicious or bot-like activity may result in your balance being frozen. You must be 13 or older to use this app.', cta: null },
+        { icon: '📋', title: 'Terms', body: 'One account per device — using multiple accounts will result in a ban. No investment needed, just watch free videos to earn. A 10% fee applies on withdrawals. Suspicious or bot-like activity may result in your balance being frozen. You must be 13 or older to use this app.', cta: null },
     ];
 
     function render() {
@@ -1044,7 +1050,7 @@ function openWithdrawModal() {
                     <input class="field-input" id="wd-amount" type="number" placeholder="${m.minWtc}">
                     <div id="wd-convert" class="muted" style="font-size:12px; margin-top:6px;">≈ 0 ${m.currency}</div>
                     <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6;">
-                        A 5% withdraw fee applies. You need 1 watched ad per 0.01 ${m.currency} today. At least 5 completed tasks are required before your first withdrawal.
+                        A 10% withdraw fee applies. You need 1 watched ad per 0.01 ${m.currency} today. At least 5 completed tasks are required before your first withdrawal.
                     </div>
                     <button class="btn btn-primary" style="margin-top:16px;" id="wd-submit">Submit Withdraw</button>
                 </div>
@@ -1190,8 +1196,27 @@ function renderFloatingLootbox() {
     document.getElementById('lb-amount').style.color = claimable ? 'var(--coin)' : 'var(--ink-muted)';
     document.getElementById('lb-progress-ring').style.strokeDashoffset = circumference - (circumference * pct);
     el.classList.toggle('claimable', claimable);
+
+    // ── "please claim!" hint — stays visible next to the lootbox for as long
+    // as it's claimable, since the backend now refuses to credit any more
+    // video WTC until the user actually claims it.
+    let hint = document.getElementById('lb-claim-hint');
+    if (claimable) {
+        if (!hint) {
+            hint = document.createElement('div');
+            hint.id = 'lb-claim-hint';
+            hint.className = 'lb-claim-hint';
+            hint.innerHTML = `<div class="lb-claim-hint-bubble">Claim me!</div><div class="lb-claim-hint-arrow">➜</div>`;
+            document.body.appendChild(hint);
+        }
+        const rect = el.getBoundingClientRect();
+        hint.style.top = `${rect.top + rect.height / 2 - 12}px`;
+        hint.style.left = `${rect.left - 108}px`;
+    } else if (hint) {
+        hint.remove();
+    }
 }
-function removeFloatingLootbox() { document.getElementById('floating-lootbox')?.remove(); }
+function removeFloatingLootbox() { document.getElementById('floating-lootbox')?.remove(); document.getElementById('lb-claim-hint')?.remove(); }
 
 function showLootboxGain(amount) {
     const lb = document.getElementById('floating-lootbox');
@@ -1226,6 +1251,7 @@ async function tryClaimLootbox() {
 async function claimLootboxNow() {
     const r = await apiPost('earn', { action: 'claimLootbox', adWatched: true });
     if (r.ok) {
+        state._lootboxNudgeShown = false;
         toast(`+${fmtWTC(r.pointsAdded)} WTC added to your balance!`, 'success');
         triggerBurst(document.getElementById('floating-lootbox'));
         showCongrats(`+${fmtWTC(r.pointsAdded)} WTC`, '🪙');
@@ -1335,6 +1361,18 @@ async function startVideoSession() {
         const claimable = Math.floor(elapsedSec * (1 / 60));
         if (claimable <= 0) return;
 
+        // ⚠️ NEW: once 25+ WTC is already sitting unclaimed in the lootbox, the
+        // backend won't credit more anyway — skip the call, keep the video
+        // session alive (so it resumes right after they claim), and nudge them
+        // once (not every 30s, to avoid spamming toasts).
+        if ((state.user?.pendingVideoWTC || 0) >= 25) {
+            if (!state._lootboxNudgeShown) {
+                state._lootboxNudgeShown = true;
+                toast('🎁 Your lootbox is full — claim it to keep earning!', 'info');
+            }
+            return;
+        }
+
         const r = await apiPost('earn', { action: 'videoClaim', startTime: state.videoSession.startTime, signature: state.videoSession.signature, claimedPoints: claimable });
         if (r.ok) {
             sessionEarnedTotal += claimable;
@@ -1347,6 +1385,11 @@ async function startVideoSession() {
             showLootboxGain(claimable);
             const fresh = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
             if (fresh.success) state.videoSession = { startTime: fresh.startTime, signature: fresh.signature };
+        } else if (r.error === 'lootbox_claim_required') {
+            if (!state._lootboxNudgeShown) {
+                state._lootboxNudgeShown = true;
+                toast('🎁 Your lootbox is full — claim it to keep earning!', 'info');
+            }
         }
     }, 30000);
 }
