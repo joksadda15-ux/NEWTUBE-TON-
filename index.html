@@ -1278,7 +1278,10 @@ function openVideoPlayer(video) {
                     <div class="card" style="text-align:center;">
                         <div class="muted" style="font-size:12px; margin-bottom:6px;">Earned this session</div>
                         <div style="font-family:var(--font-display); font-weight:700; font-size:24px; color:var(--coin);" id="vp-session-wtc">0 WTC</div>
-                        <div class="muted" style="font-size:11px; margin-top:6px;">60 WTC earned per hour watched</div>
+                        <div class="muted" style="font-size:11px; margin-top:6px;" id="vp-session-sub">60 WTC earned per hour watched</div>
+                    </div>
+                    <div id="vp-lootbox-full-banner" style="display:none; margin-top:10px; padding:10px 14px; border-radius:12px; background:var(--signal-soft); border:1px solid var(--signal); text-align:center; font-size:12.5px; font-weight:600;">
+                        🎁 Lootbox full — go claim it to keep earning!
                     </div>
                 </div>
                 <div class="section-pad" style="margin-top:20px;">
@@ -1327,6 +1330,14 @@ let sessionDisplayWTC = 0; // visual only — increments every 10s for mining fe
 let videoWatchSeconds = 0;
 let lastMonetagInterstitialAt = 0;
 
+function updateLootboxFullUI(isFull) {
+    const banner = document.getElementById('vp-lootbox-full-banner');
+    const sub = document.getElementById('vp-session-sub');
+    if (!banner || !sub) return;
+    banner.style.display = isFull ? 'block' : 'none';
+    sub.textContent = isFull ? 'Paused — claim your lootbox to resume earning' : '60 WTC earned per hour watched';
+}
+
 async function startVideoSession() {
     sessionEarnedTotal = 0;
     sessionDisplayWTC = 0;
@@ -1335,12 +1346,21 @@ async function startVideoSession() {
     const startRes = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
     if (!startRes.success) { toast(errorText(startRes.error), 'error'); return; }
     state.videoSession = { startTime: startRes.startTime, signature: startRes.signature };
+    updateLootboxFullUI((state.user?.pendingVideoWTC || 0) >= 25);
 
     // ── Visual counter: every 10 seconds, adds 0.167 WTC (= 60 WTC/hr / 360 ticks/hr)
     // This is purely for display — it makes the UI feel like a miner ticking up.
     // The real WTC is only credited by the 30-second backend call below.
+    // ⚠️ FIX: this used to keep climbing even after the backend stopped crediting
+    // (once pendingVideoWTC hits the 25 WTC claim threshold), so the video page
+    // could show e.g. "60 WTC" for a full hour watched while the real claimable
+    // amount silently capped out much lower — a confusing "where did my WTC go"
+    // moment when the user went back to actually claim. Now the ticker freezes
+    // (and shows the same lootbox-full banner) the instant the real cap is hit,
+    // so the number on screen is always the number they'll actually get.
     state.videoDisplayInterval = setInterval(() => {
         if (!state.videoSession) return;
+        if ((state.user?.pendingVideoWTC || 0) >= 25) { updateLootboxFullUI(true); return; }
         sessionDisplayWTC = parseFloat((sessionDisplayWTC + 0.167).toFixed(3));
         const out = document.getElementById('vp-session-wtc');
         if (out) out.textContent = `${sessionDisplayWTC.toFixed(1)} WTC`;
@@ -1366,12 +1386,14 @@ async function startVideoSession() {
         // session alive (so it resumes right after they claim), and nudge them
         // once (not every 30s, to avoid spamming toasts).
         if ((state.user?.pendingVideoWTC || 0) >= 25) {
+            updateLootboxFullUI(true);
             if (!state._lootboxNudgeShown) {
                 state._lootboxNudgeShown = true;
                 toast('🎁 Your lootbox is full — claim it to keep earning!', 'info');
             }
             return;
         }
+        updateLootboxFullUI(false);
 
         const r = await apiPost('earn', { action: 'videoClaim', startTime: state.videoSession.startTime, signature: state.videoSession.signature, claimedPoints: claimable });
         if (r.ok) {
@@ -1386,6 +1408,7 @@ async function startVideoSession() {
             const fresh = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
             if (fresh.success) state.videoSession = { startTime: fresh.startTime, signature: fresh.signature };
         } else if (r.error === 'lootbox_claim_required') {
+            updateLootboxFullUI(true);
             if (!state._lootboxNudgeShown) {
                 state._lootboxNudgeShown = true;
                 toast('🎁 Your lootbox is full — claim it to keep earning!', 'info');
