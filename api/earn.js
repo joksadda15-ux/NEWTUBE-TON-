@@ -1,9 +1,9 @@
 // api/earn.js — CONSOLIDATED + SECURITY FIX (Telegram initData verification)
 //
-// সব action-এ আগে client-পাঠানো userId বিশ্বাস করা হতো। এখন প্রতিটা
-// রিকোয়েস্টে verified initData লাগবে, এবং সেখান থেকে বের করা userId-ই
-// আসল ব্যবহার হবে — client কখনো ভিন্ন userId দিয়ে অন্য কারো হয়ে কাজ
-// করতে পারবে না।
+// Previously every action trusted the client-supplied userId. Now every
+// request requires a verified initData, and the userId extracted from it is
+// the only one used — the client can never act as someone else by sending a
+// different userId.
 //
 //   { action: 'videoStart',    initData }
 //   { action: 'videoClaim',    initData, startTime, signature, claimedPoints }
@@ -28,14 +28,18 @@ const SECRET = process.env.VIDEO_SIGNING_SECRET;
 const sign = (userId, startTime) => crypto.createHmac('sha256', SECRET).update(`${userId}:${startTime}`).digest('hex');
 
 // ── videoClaim ──
-// ✅ অডিট করা হয়েছে — এটা secure: `startTime` cryptographically signed (HMAC),
-// client বদলাতে পারবে না। `claimedPoints` client পাঠায় ঠিকই, কিন্তু
-// `award = min(requested, maxEarnable)` — আর maxEarnable বের হয় সার্ভারের
-// নিজের ঘড়ি (Date.now()) আর verified startTime থেকে, client-এর সংখ্যা
-// শুধু upper-bound হিসেবে ব্যবহার হয়, বিশ্বাস করা হয় না। এর ওপর দৈনিক
-// cap (dailyVideoWtcMined atomic $min) একটা দ্বিতীয় স্তরের সুরক্ষা —
-// যতগুলো signature-ই স্টক করে রাখা হোক না কেন, দিনে ৩০০ WTC-র বেশি
-// কখনো pendingVideoWTC-তে যোগ হতে পারবে না।
+// ⚠️ SECURITY FIX: the previous version verified the signature correctly, but
+// never recorded that a given (userId, startTime) session had already been
+// claimed. That meant the *same* signed startTime could be replayed via
+// repeated claimAdReward-style calls — each replay recomputed `award` from
+// the FULL elapsed time since the original startTime (not since the last
+// claim), so spacing out replays over real wall-clock time compounded into
+// far more WTC than a single honest claim would ever yield, letting someone
+// script their way to the daily cap without watching anything. Now each
+// startTime is single-use: it's atomically added to `usedVideoStarts` in the
+// very same update that credits the reward, and the filter rejects any
+// startTime already present in that array — so a replayed session earns
+// nothing the second time around, full stop.
 async function handleVideoClaim(req, res, db, userId) {
     const { startTime, signature, claimedPoints } = req.body;
     if (!startTime || !signature || claimedPoints === undefined) {
@@ -56,24 +60,47 @@ async function handleVideoClaim(req, res, db, userId) {
     const users = db.collection('users');
     await ensureDailyReset(users, userId);
 
-    const userCheck = await users.findOne({ _id: userId }, { projection: { isBanned: 1 } });
+    const userCheck = await users.findOne({ _id: userId }, { projection: { isBanned: 1, pendingVideoWTC: 1 } });
     if (!userCheck) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (userCheck.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
     if (award > DAILY_VIDEO_WTC_MAX) return res.status(400).json({ ok: false, error: 'amount_exceeds_daily_cap' });
 
+    // ⚠️ NEW: once the pending lootbox has reached the claimable minimum, stop
+    // crediting further video WTC until the user actually claims it. Otherwise
+    // WTC just keeps silently piling up in pendingVideoWTC (we've seen users
+    // sit on 60+ WTC unclaimed) — this forces a claim (and its ad) before more
+    // can accumulate, which is also what nudges the "please claim" UI below.
+    if ((userCheck.pendingVideoWTC || 0) >= LOOTBOX_CLAIM_MIN) {
+        return res.status(400).json({ ok: false, error: 'lootbox_claim_required' });
+    }
+
+    const startTimeKey = String(startTime);
     const gate = await users.findOneAndUpdate(
-        { _id: userId, dailyVideoWtcMined: { $lt: DAILY_VIDEO_WTC_MAX } },
+        {
+            _id: userId,
+            dailyVideoWtcMined: { $lt: DAILY_VIDEO_WTC_MAX },
+            usedVideoStarts: { $ne: startTimeKey }, // ⚠️ this exact session hasn't been claimed yet today
+        },
         [
             { $set: { _newDailyMined: { $min: [DAILY_VIDEO_WTC_MAX, { $add: ['$dailyVideoWtcMined', award] }] } } },
             { $set: {
                 pendingVideoWTC: { $add: ['$pendingVideoWTC', { $subtract: ['$_newDailyMined', '$dailyVideoWtcMined'] }] },
                 dailyVideoWtcMined: '$_newDailyMined',
+                // ⚠️ $setUnion here acts like $addToSet inside an aggregation-pipeline
+                // update — atomically records this startTime as spent, in the SAME
+                // operation that grants the reward, so there's no race window between
+                // "check if used" and "mark as used".
+                usedVideoStarts: { $setUnion: [{ $ifNull: ['$usedVideoStarts', []] }, [startTimeKey]] },
             } },
             { $unset: '_newDailyMined' },
         ],
         { returnDocument: 'after' }
     );
-    if (!gate) return res.status(400).json({ ok: false, error: 'daily_watch_limit_reached' });
+    if (!gate) {
+        // Distinguish "already claimed this exact session" from "daily cap reached" for a clearer client error.
+        const already = await users.findOne({ _id: userId, usedVideoStarts: startTimeKey }, { projection: { _id: 1 } });
+        return res.status(400).json({ ok: false, error: already ? 'session_already_claimed' : 'daily_watch_limit_reached' });
+    }
 
     return res.status(200).json({ ok: true, success: true, pendingVideoWTC: gate.pendingVideoWTC || 0, dailyVideoWtcMined: gate.dailyVideoWtcMined });
 }
@@ -138,16 +165,16 @@ async function handleClaimAdReward(req, res, db, userId) {
 }
 
 // ── taskComplete ──
-// ⚠️ SECURITY FIX: আগে task.limit চেক করা হতো একটা সাধারণ read দিয়ে
-// (`task.completionCount >= task.limit`), আর completionCount বাড়ানো হতো
-// সম্পূর্ণ আলাদা, unconditional একটা updateOne দিয়ে — এই দুটোর মাঝখানে
-// race window ছিল। একই সীমিত (limited) টাস্ক অনেক ইউজার ঠিক একই মুহূর্তে
-// সম্পন্ন করলে সবাই "এখনো ফুল হয়নি" দেখে পাস করে যেতে পারতো, ফলে
-// completionCount টাস্কের limit-কে ছাড়িয়ে যেতে পারতো (কম severity,
-// কিন্তু আসল বাগ)। এখন টাস্কের "slot" নেওয়াটাও atomic — নিজের
-// completionCount+limit শর্ত সহ একই findOneAndUpdate-এ চেক+increment হয়,
-// আর ইউজারের ঘরে ক্রেডিট ব্যর্থ হলে (যেমন ডাবল-ক্লিক রেসে) slot-টা
-// রোলব্যাক করে দেওয়া হয়।
+// ⚠️ SECURITY FIX: previously the task.limit check used a plain read
+// (`task.completionCount >= task.limit`), and completionCount was incremented
+// separately with an unconditional updateOne — leaving a race window between
+// the two. If many users completed the same limited task at almost the exact
+// same moment, they could all see "not full yet" and pass, letting
+// completionCount overshoot the task's limit (low severity, but a real bug).
+// Now claiming the task's "slot" is also atomic — the check+increment of the
+// task's own completionCount+limit condition happens in the same
+// findOneAndUpdate, and if crediting the user's record fails afterward (e.g.
+// a double-click race), the slot is rolled back.
 async function handleTaskComplete(req, res, db, userId) {
     const { taskId } = req.body;
     if (!taskId) return res.status(400).json({ ok: false, error: 'missing_fields' });
@@ -171,7 +198,7 @@ async function handleTaskComplete(req, res, db, userId) {
         if (!member) return res.status(200).json({ ok: false, error: 'not_member' });
     }
 
-    // ── STEP 1: টাস্কের "slot" atomically claim করুন (limit চেক + increment একসাথে) ──
+    // ── STEP 1: atomically claim the task's "slot" (limit check + increment together) ──
     const taskGate = await tasks.findOneAndUpdate(
         { _id: taskObjId, $or: [{ limit: { $lte: 0 } }, { limit: { $exists: false } }, { $expr: { $lt: ['$completionCount', '$limit'] } }] },
         { $inc: { completionCount: 1 } },
@@ -181,14 +208,14 @@ async function handleTaskComplete(req, res, db, userId) {
 
     const rewardWtc = task.rewardWtc || task.rewardGold || task.rewardPoints || 250;
 
-    // ── STEP 2: ইউজারকে atomically ক্রেডিট করুন (একই ইউজার ডাবল-ক্লেইম করলে এখানেই ঠেকে যাবে) ──
+    // ── STEP 2: atomically credit the user (a double-claim by the same user is caught right here) ──
     const gate = await users.findOneAndUpdate(
         { _id: userId, completedTasks: { $ne: taskId } },
         { $inc: { wtcBalance: rewardWtc, lifetimeWtcEarned: rewardWtc, tasksCompletedToday: 1 }, $addToSet: { completedTasks: taskId } },
         { returnDocument: 'after' }
     );
     if (!gate) {
-        // ইউজার ক্রেডিট ব্যর্থ হয়েছে (যেমন রেস-এ অলরেডি করা হয়ে গেছে) — টাস্কের slot-টা ফিরিয়ে দিন
+        // Crediting the user failed (e.g. already done in a race) — give the task's slot back
         await tasks.updateOne({ _id: taskObjId }, { $inc: { completionCount: -1 } });
         return res.status(200).json({ ok: false, alreadyDone: true });
     }
