@@ -95,15 +95,6 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'address_used_by_other' });
     }
 
-    // ── for the admin notification: when did this user last withdraw? ──
-    const previousWithdraw = await withdrawals.findOne(
-        { userId: id },
-        { sort: { createdAt: -1 }, projection: { createdAt: 1, status: 1 } }
-    );
-    const lastWithdrawText = previousWithdraw
-        ? `${new Date(previousWithdraw.createdAt).toLocaleString()} (${previousWithdraw.status})`
-        : 'First withdraw';
-
     const feeWtc = Math.floor(wtcAmount * (WITHDRAW_FEE_PERCENT / 100));
     const netWtc = wtcAmount - feeWtc;
     const netCurrencyAmount = methodConfig.wtcToCurrency(netWtc);
@@ -146,8 +137,8 @@ async function handleCreate(req, res, db) {
             `💰 ${wtcAmount.toLocaleString()} WTC (fee ${feeWtc.toLocaleString()} WTC) → <b>${netCurrencyAmount.toFixed(4)} ${methodConfig.currency}</b>\n` +
             `📤 Method: <b>${methodConfig.label}</b>\n` +
             `📍 Address: <code>${details}</code>\n` +
-            `🕓 Last withdraw: <b>${lastWithdrawText}</b>\n` +
-            `👥 Referrals: <b>${user.referralCount || 0}</b>\n` +
+            `📊 Total withdrawals so far: <b>${gate.withdrawalCount || 1}</b>\n` +
+            `👥 Total referrals: <b>${user.referralCount || 0}</b>\n` +
             `📅 ${new Date().toLocaleString()}`,
             { reply_markup: { inline_keyboard: [[
                 { text: '✅ Approve', callback_data: `wd_approve_${result.insertedId}` },
@@ -176,4 +167,4 @@ export default async function handler(req, res) {
         console.error('withdraw error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-}
+        }
