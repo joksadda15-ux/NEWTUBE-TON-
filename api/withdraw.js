@@ -80,6 +80,18 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'need_5_tasks' });
     }
 
+    // ⚠️ NEW: every withdrawal now "consumes" one referral — the user needs at
+    // least (withdrawalCount + 1) total referrals to make their next withdraw.
+    // E.g. 1st withdraw needs 1 referral, 2nd needs 2 total, 3rd needs 3 total, etc.
+    const referralsNeeded = (user.withdrawalCount || 0) + 1;
+    if ((user.referralCount || 0) < referralsNeeded) {
+        return res.status(400).json({
+            ok: false, error: 'referral_required',
+            referralsNeeded, referralsHave: user.referralCount || 0,
+            message: `You need ${referralsNeeded} total referral(s) to make this withdrawal (you have ${user.referralCount || 0}).`,
+        });
+    }
+
     const grossCurrencyAmount = methodConfig.wtcToCurrency(wtcAmount);
     const adsRequired = calcAdsRequired(grossCurrencyAmount);
     const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
@@ -167,4 +179,4 @@ export default async function handler(req, res) {
         console.error('withdraw error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-        }
+}
