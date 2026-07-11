@@ -206,7 +206,7 @@ async function handleTaskComplete(req, res, db, userId) {
     );
     if (!taskGate) return res.status(400).json({ ok: false, error: 'task_full' });
 
-    const rewardWtc = task.rewardWtc || task.rewardGold || task.rewardPoints || 250;
+    const rewardWtc = task.rewardWtc || task.rewardGold || task.rewardPoints || 10; // default fallback if admin left it blank
 
     // ── STEP 2: atomically credit the user (a double-claim by the same user is caught right here) ──
     const gate = await users.findOneAndUpdate(
@@ -286,4 +286,4 @@ export default async function handler(req, res) {
         case 'claimPromo':     return handleClaimPromo(req, res, db, userId);
         default: return res.status(400).json({ ok: false, error: 'unknown_action' });
     }
-}
+            }
