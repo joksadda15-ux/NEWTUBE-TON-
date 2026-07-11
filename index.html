@@ -442,6 +442,7 @@ const ERROR_MESSAGES = {
     insufficient_balance: 'Insufficient balance.',
     insufficient_ads: 'Watch more ads before this withdrawal amount.',
     need_5_tasks: 'Complete at least 5 tasks before your first withdrawal.',
+    referral_required: 'You need at least one new referral to make this withdrawal.',
     already_withdrawn_today: 'You already withdrew today — try again tomorrow.',
     address_used_by_other: 'This address is already used by another account.',
     banned: 'Your account has been suspended.',
@@ -584,7 +585,7 @@ function showOnboarding(onDone) {
     const steps = [
         { icon: '🎬', title: 'Welcome to NEWTUBE', body: 'Earn real crypto by watching videos — completely free, no investment required.', cta: 'Continue' },
         { icon: '▶', title: 'Watch video to earn', body: 'The more videos you watch, the more WTC you collect. Just watch & monetize for free — no investment, ever.', cta: 'Continue' },
-        { icon: '📋', title: 'Terms', body: 'One account per device — using multiple accounts will result in a ban. No investment needed, just watch free videos to earn. A 10% fee applies on withdrawals. Suspicious or bot-like activity may result in your balance being frozen. You must be 13 or older to use this app.', cta: null },
+        { icon: '📋', title: 'Terms', body: 'One account per device — using multiple accounts will result in a ban. No investment needed, just watch free videos to earn. A 20% fee applies on withdrawals. Suspicious or bot-like activity may result in your balance being frozen. You must be 13 or older to use this app.', cta: null },
     ];
 
     function render() {
@@ -1050,7 +1051,7 @@ function openWithdrawModal() {
                     <input class="field-input" id="wd-amount" type="number" placeholder="${m.minWtc}">
                     <div id="wd-convert" class="muted" style="font-size:12px; margin-top:6px;">≈ 0 ${m.currency}</div>
                     <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6;">
-                        A 10% withdraw fee applies. You need 1 watched ad per 0.01 ${m.currency} today. At least 5 completed tasks are required before your first withdrawal.
+                        A 20% withdraw fee applies. You need 1 watched ad per 0.01 ${m.currency} today. At least 5 completed tasks are required before your first withdrawal, and each withdrawal requires a new referral.
                     </div>
                     <button class="btn btn-primary" style="margin-top:16px;" id="wd-submit">Submit Withdraw</button>
                 </div>
@@ -1080,7 +1081,7 @@ function openWithdrawModal() {
             await refreshUser();
             if (state.activeTab === 'home') renderHome();
         } else {
-            toast(errorText(r.error), 'error');
+            toast(r.message || errorText(r.error), 'error');
             btn.textContent = 'Submit Withdraw'; btn.disabled = false;
         }
     }
