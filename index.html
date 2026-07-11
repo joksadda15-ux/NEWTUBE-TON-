@@ -324,7 +324,7 @@ const API_BASE = 'https://newtube-ton.vercel.app/api';
 const MINI_APP_BASE = 'https://t.me/NewTube12_bot/WatchTo_Earn';
 const OFFICIAL_CHANNEL = 'Newtube_Earn';
 const COMMUNITY_GROUP = 'newtube_commonity';
-const MONETAG_INTERVAL_SECONDS = 600; // periodic non-reward interstitial, video section only
+const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video section only (6 min)
 
 const tg = window.Telegram?.WebApp;
 if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#0A130D'); } catch (e) {} }
@@ -370,6 +370,7 @@ const showAdsgramSpecialAd = () => new Promise((res, rej) => {
 // the page when clicking GigaPub/Adsgram, so it can no longer hijack clicks
 // meant for other networks.
 let _monetagLoading = null;
+let _monetagInFlight = 0; // ⚠️ mutex-style counter — see showMonetagAd() below
 function loadMonetagSDK() {
     if (typeof show_9442539 === 'function') return Promise.resolve();
     if (_monetagLoading) return _monetagLoading;
@@ -378,24 +379,49 @@ function loadMonetagSDK() {
         s.src = '//libtl.com/sdk.js';
         s.setAttribute('data-zone', '9442539');
         s.setAttribute('data-sdk', 'show_9442539');
-        s.onload = () => res();
+        s.onload = () => {
+            // ⚠️ FIX: `onload` only means the script finished *downloading* —
+            // Monetag's SDK does its own internal async setup afterwards and
+            // `show_9442539` isn't necessarily defined the instant onload
+            // fires. Calling it too early meant every single Monetag attempt
+            // failed with 'sdk_not_loaded', so no ad ever played and no
+            // reward was ever given. Now we poll briefly (up to 5s) for the
+            // function to actually exist before resolving.
+            const startedAt = Date.now();
+            const poll = () => {
+                if (typeof show_9442539 === 'function') { res(); return; }
+                if (Date.now() - startedAt > 5000) { _monetagLoading = null; rej(new Error('monetag_sdk_init_timeout')); return; }
+                setTimeout(poll, 100);
+            };
+            poll();
+        };
         s.onerror = () => { _monetagLoading = null; rej(new Error('monetag_sdk_load_failed')); };
         document.head.appendChild(s);
     });
     return _monetagLoading;
 }
 function unloadMonetagSDK() {
+    // ⚠️ FIX: the passive video-section interstitial and the rewarded Earning-tab
+    // button used to share this exact same SDK instance with no coordination —
+    // if both fired close together, one's cleanup could rip the script out from
+    // under the other mid-call. `_monetagInFlight` tracks how many callers are
+    // currently using the SDK; only the last one out actually unloads it.
+    if (_monetagInFlight > 0) return;
     document.querySelectorAll('script[src*="libtl.com"]').forEach(s => s.remove());
     try { delete window.show_9442539; } catch { window.show_9442539 = undefined; }
     _monetagLoading = null;
 }
-const showMonetagAd = () => loadMonetagSDK().then(() => new Promise((res, rej) => {
-    if (typeof show_9442539 !== 'function') { rej(new Error('sdk_not_loaded')); return; }
-    // ⚠️ A 90-second safety-net is kept only for Monetag (per the user's
-    // request) — in case the SDK ever gets stuck (never resolves or rejects).
-    const t = setTimeout(() => rej(new Error('timeout')), 90000);
-    show_9442539().then(() => { clearTimeout(t); unloadMonetagSDK(); res(); }).catch((e) => { clearTimeout(t); unloadMonetagSDK(); rej(e); });
-})).catch((e) => { unloadMonetagSDK(); throw e; });
+const showMonetagAd = () => {
+    _monetagInFlight++;
+    const release = () => { _monetagInFlight = Math.max(0, _monetagInFlight - 1); };
+    return loadMonetagSDK().then(() => new Promise((res, rej) => {
+        if (typeof show_9442539 !== 'function') { rej(new Error('sdk_not_loaded')); return; }
+        // ⚠️ A 90-second safety-net is kept only for Monetag (per the user's
+        // request) — in case the SDK ever gets stuck (never resolves or rejects).
+        const t = setTimeout(() => rej(new Error('timeout')), 90000);
+        show_9442539().then(() => { clearTimeout(t); res(); }).catch((e) => { clearTimeout(t); rej(e); });
+    })).finally(() => { release(); unloadMonetagSDK(); });
+};
 const showGigaPubAd = () => new Promise((res, rej) => {
     // ⚠️ Strictly only checks GigaPub's own function — no other network's
     // SDK (Monetag, etc.) is ever called here as a fallback. If GigaPub's
