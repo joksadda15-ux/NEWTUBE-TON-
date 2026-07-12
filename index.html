@@ -228,6 +228,11 @@
     .an-progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--coin), var(--accent)); transition: width 0.4s ease; }
     .an-watch-btn { width: auto; flex-shrink: 0; padding: 0 15px; height: 36px; font-size: 12.5px; display: flex; align-items: center; gap: 6px; background: linear-gradient(160deg, var(--coin), var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px var(--coin-soft); }
     .an-watch-btn.an-watch-done { background: transparent; border: 1px solid var(--border-strong); color: var(--ink-faint); box-shadow: none; }
+
+    /* ── segmented sub-nav (Tasks/Faucet, Ads/Articles — separate pages within a tab) ── */
+    .subnav { display: flex; gap: 6px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 13px; padding: 4px; margin-bottom: 16px; }
+    .subnav-btn { flex: 1; border: none; background: transparent; color: var(--ink-muted); font-size: 13px; font-weight: 600; padding: 9px 0; border-radius: 10px; transition: background 0.15s ease, color 0.15s ease; }
+    .subnav-btn.active { background: linear-gradient(160deg, var(--coin), var(--coin-deep)); color: #fff; box-shadow: 0 4px 12px var(--coin-soft); }
     .ob-dot { height: 6px; border-radius: 4px; transition: width 0.35s ease, background 0.35s ease; }
 
     /* ── toast: icon + smoother spring ── */
@@ -1474,61 +1479,69 @@ const AD_NETWORKS_UI = [
 
 function renderEarningTab() {
     removeFloatingLootbox();
+    if (!state.earnSubTab) state.earnSubTab = 'ads';
     const root = document.getElementById('tab-content');
     const u = state.user || {};
     root.innerHTML = `
         <div class="section-pad" style="margin-top:18px;">
             <div class="section-title" style="margin-bottom:4px;">Watch ads to earn</div>
-            <div class="muted" style="font-size:12px; margin-bottom:16px;">Each network has its own daily limit — watch them all for maximum earnings.</div>
-            <div style="display:flex; flex-direction:column; gap:10px;" id="ad-network-list"></div>
-            <div id="article-section" style="display:none;">
-                <div class="section-title" style="margin:22px 0 14px;">📰 Articles</div>
-                <div class="muted" style="font-size:12px; margin:-10px 0 14px;">Read an article, come back, claim your WTC.</div>
-                <div style="display:flex; flex-direction:column; gap:10px;" id="article-list"></div>
+            <div class="muted" style="font-size:12px; margin-bottom:14px;">Each network has its own daily limit — watch them all for maximum earnings.</div>
+            <div class="subnav">
+                <button class="subnav-btn ${state.earnSubTab === 'ads' ? 'active' : ''}" data-subtab="ads">📺 Ads</button>
+                <button class="subnav-btn ${state.earnSubTab === 'articles' ? 'active' : ''}" data-subtab="articles">📰 Articles</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;" id="earn-page-list">
+                <div class="muted" style="text-align:center; padding:20px 0;">Loading...</div>
             </div>
         </div>`;
 
-    const list = document.getElementById('ad-network-list');
-    list.innerHTML = AD_NETWORKS_UI.map((n, i) => {
-        const count = u[n.counterField] || 0;
-        const maxed = count >= n.limit;
-        const pct = Math.min(100, Math.round((count / n.limit) * 100));
-        return `
-        <div class="card an-card" style="opacity:0; animation: jg-rise 0.4s cubic-bezier(.22,.9,.32,1) ${Math.min(i * 0.07, 0.3)}s forwards;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <div class="an-icon">${n.icon}</div>
-                <div style="flex:1; min-width:0;">
-                    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px;">
-                        <div style="font-weight:600; font-size:14px;">${n.label}</div>
-                        <div style="font-size:11.5px; color:var(--coin); font-weight:600; white-space:nowrap;">+${n.reward} WTC</div>
+    root.querySelectorAll('.subnav-btn[data-subtab]').forEach(btn => {
+        btn.onclick = () => { state.earnSubTab = btn.dataset.subtab; renderEarningTab(); };
+    });
+
+    if (state.earnSubTab === 'ads') {
+        const list = document.getElementById('earn-page-list');
+        list.innerHTML = AD_NETWORKS_UI.map((n, i) => {
+            const count = u[n.counterField] || 0;
+            const maxed = count >= n.limit;
+            const pct = Math.min(100, Math.round((count / n.limit) * 100));
+            return `
+            <div class="card an-card" style="opacity:0; animation: jg-rise 0.4s cubic-bezier(.22,.9,.32,1) ${Math.min(i * 0.07, 0.3)}s forwards;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="an-icon">${n.icon}</div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px;">
+                            <div style="font-weight:600; font-size:14px;">${n.label}</div>
+                            <div style="font-size:11.5px; color:var(--coin); font-weight:600; white-space:nowrap;">+${n.reward} WTC</div>
+                        </div>
+                        <div class="an-progress-track"><div class="an-progress-fill" style="width:${pct}%; ${maxed ? 'background:var(--ink-faint);' : ''}"></div></div>
+                        <div class="muted" style="font-size:11px; margin-top:3px;">${count}/${n.limit} today</div>
                     </div>
-                    <div class="an-progress-track"><div class="an-progress-fill" style="width:${pct}%; ${maxed ? 'background:var(--ink-faint);' : ''}"></div></div>
-                    <div class="muted" style="font-size:11px; margin-top:3px;">${count}/${n.limit} today</div>
+                    <button class="btn an-watch-btn ${maxed ? 'an-watch-done' : ''}" data-network="${n.id}" ${maxed ? 'disabled' : ''}>
+                        ${maxed ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
+                        ${maxed ? 'Done' : 'Watch'}
+                    </button>
                 </div>
-                <button class="btn an-watch-btn ${maxed ? 'an-watch-done' : ''}" data-network="${n.id}" ${maxed ? 'disabled' : ''}>
-                    ${maxed ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
-                    ${maxed ? 'Done' : 'Watch'}
-                </button>
-            </div>
-        </div>`;
-    }).join('');
-    list.querySelectorAll('button[data-network]').forEach(btn => { btn.onclick = () => watchAdNetwork(btn.dataset.network); });
+            </div>`;
+        }).join('');
+        list.querySelectorAll('button[data-network]').forEach(btn => { btn.onclick = () => watchAdNetwork(btn.dataset.network); });
+        return;
+    }
 
-    // ── Articles — reuses the same task system (category: 'article'), just
-    // shown here in the Earning tab instead of the Task tab. Reading + claim
-    // flow is identical to a regular task; the only special behavior is that
-    // completeTask() fires a passive ad afterward for article claims (see
-    // "🎁 second revenue stream" note there).
+    // ── Articles page — reuses the same task system (category: 'article').
+    // Reading + claim flow is identical to a regular task; the only special
+    // behavior is that completeTask() fires a passive ad afterward for
+    // article claims (see "🎁 second revenue stream" note there).
     (async () => {
         const r = await apiGet('data?type=tasks');
+        const listEl = document.getElementById('earn-page-list');
+        if (!listEl) return; // sub-tab may have changed while this was loading
         const done = new Set(state.user?.completedTasks || []);
         const articles = (r.ok ? r.tasks : []).filter(t => t.category === 'article' && !done.has(t._id));
-        if (!articles.length) return;
         state.tasks = [...(state.tasks || []).filter(t => t.category !== 'article'), ...articles];
-        document.getElementById('article-section').style.display = '';
-        const articleList = document.getElementById('article-list');
-        articleList.innerHTML = articles.map(t => taskCardHtml(t)).join('');
-        articleList.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
+        if (!articles.length) { listEl.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">No articles available yet.</div>`; return; }
+        listEl.innerHTML = articles.map(t => taskCardHtml(t)).join('');
+        listEl.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
     })();
 }
 
@@ -1563,42 +1576,42 @@ async function creditAdReward(network) {
 // ══════════════════════════════════════════════════════════════
 async function renderTaskTab() {
     removeFloatingLootbox();
+    if (!state.taskSubTab) state.taskSubTab = 'tasks';
     const root = document.getElementById('tab-content');
     root.innerHTML = `
         <div class="section-pad" style="margin-top:18px;">
             <div class="section-title" style="margin-bottom:14px;">Complete tasks, earn WTC</div>
-            <div style="display:flex; flex-direction:column; gap:10px;" id="task-list">
-                <div class="muted" style="text-align:center; padding:20px 0;">Loading...</div>
+            <div class="subnav">
+                <button class="subnav-btn ${state.taskSubTab === 'tasks' ? 'active' : ''}" data-subtab="tasks">📋 Tasks</button>
+                <button class="subnav-btn ${state.taskSubTab === 'faucet' ? 'active' : ''}" data-subtab="faucet">🚰 Faucet</button>
             </div>
-            <div id="faucet-section" style="display:none;">
-                <div class="section-title" style="margin:22px 0 14px;">🚰 Faucet Sites</div>
-                <div class="muted" style="font-size:12px; margin:-10px 0 14px;">Free crypto faucets — visit, claim there too, then come back for your WTC.</div>
-                <div style="display:flex; flex-direction:column; gap:10px;" id="faucet-list"></div>
+            <div style="display:flex; flex-direction:column; gap:10px;" id="task-page-list">
+                <div class="muted" style="text-align:center; padding:20px 0;">Loading...</div>
             </div>
         </div>`;
 
+    root.querySelectorAll('.subnav-btn[data-subtab]').forEach(btn => {
+        btn.onclick = () => { state.taskSubTab = btn.dataset.subtab; renderTaskTab(); };
+    });
+
     const r = await apiGet('data?type=tasks');
     state.tasks = r.ok ? r.tasks : [];
-    const list = document.getElementById('task-list');
     const done = new Set(state.user?.completedTasks || []);
+    const listEl = document.getElementById('task-page-list');
+    if (!listEl) return; // sub-tab may have changed while this was loading
+
+    const isFaucetPage = state.taskSubTab === 'faucet';
     // ⚠️ A completed task is no longer shown in the list — after it vanishes
     // with an animation this is the intended behavior, so it's filtered out
     // right here.
-    const visibleTasks = state.tasks.filter(t => !done.has(t._id) && t.category !== 'faucet');
-    const visibleFaucets = state.tasks.filter(t => !done.has(t._id) && t.category === 'faucet');
+    const items = state.tasks.filter(t => !done.has(t._id) && (t.category === 'faucet') === isFaucetPage);
 
-    if (!visibleTasks.length) { list.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">${state.tasks.some(t => t.category !== 'faucet') ? 'All tasks completed! 🎉' : 'No tasks available yet.'}</div>`; }
-    else {
-        list.innerHTML = visibleTasks.map(t => taskCardHtml(t)).join('');
+    if (!items.length) {
+        listEl.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">${isFaucetPage ? 'No faucet sites available yet.' : 'No tasks available yet.'}</div>`;
+        return;
     }
-    list.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
-
-    if (visibleFaucets.length) {
-        document.getElementById('faucet-section').style.display = '';
-        const faucetList = document.getElementById('faucet-list');
-        faucetList.innerHTML = visibleFaucets.map(t => taskCardHtml(t)).join('');
-        faucetList.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
-    }
+    listEl.innerHTML = items.map(t => taskCardHtml(t)).join('');
+    listEl.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
 }
 
 function taskCardHtml(t) {
