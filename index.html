@@ -12,12 +12,16 @@
      ══════════════════════════════════════════════════════════ -->
 <script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
 <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-<!-- ⚠️ The Monetag (libtl.com) SDK is intentionally NOT statically loaded here.
-     This SDK attaches a global click listener as soon as the page loads (an
-     aggressive monetization pattern), which caused Monetag's ad to fire even
-     when clicking the GigaPub/Adsgram button. Now it's lazy-loaded — the
-     script is only injected when the user actually clicks the Monetag
-     button, see loadMonetagSDK() inside watchAdNetwork(). -->
+<!-- ⚠️ Monetag (libtl.com) is loaded statically again (back to how it
+     originally was). It was switched to lazy-load earlier to stop its
+     global click-listener from firing on GigaPub/Adsgram clicks — but in
+     practice, forcing a full cold script reload on every single watch
+     attempt (load → use → immediately remove) gave Monetag's ad server no
+     time to warm up / prefetch inventory, causing frequent genuine "ad not
+     available" no-fill errors and far fewer impressions than Adsgram. That
+     reliability loss outweighs the click-hijacking risk, so it's back to
+     loading once, staying loaded for the whole session. -->
+<script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
 <script src="https://ad.gigapub.tech/script?id=846"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,7 +66,12 @@
     .hidden { display: none !important; }
     img { max-width: 100%; display: block; }
 
-    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 8px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 8px; position: relative; overflow: hidden; }
+    .topbar::before, .topbar::after { content: ''; position: absolute; border-radius: 50%; pointer-events: none; z-index: -1; }
+    .topbar::before { width: 130px; height: 130px; background: radial-gradient(circle, var(--coin-soft), transparent 70%); top: -70px; left: -30px; }
+    .topbar::after { width: 90px; height: 90px; background: radial-gradient(circle, var(--accent-soft), transparent 70%); top: -40px; right: 10%; }
+    .topbar-ring { position: absolute; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--border-strong); top: 10px; right: 78px; pointer-events: none; z-index: -1; opacity: 0.6; }
+    .topbar-ring::before { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--signal); top: -3px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 6px var(--signal); }
     .brand { display: flex; align-items: center; gap: 8px; }
     .brand-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(155deg, #7FB4FF, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -2px 4px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #FFFFFF; }
     .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.2px; }
@@ -78,7 +87,8 @@
     .btn-signal { background: var(--signal); color: #04070D; }
     .btn:disabled { opacity: 0.45; }
     .section-pad { padding: 0 20px; }
-    .section-title { font-size: 15px; font-weight: 600; }
+    .section-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .section-title::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: linear-gradient(135deg, var(--coin), var(--accent)); flex-shrink: 0; box-shadow: 0 0 6px var(--coin-soft); }
     .muted { color: var(--ink-muted); }
     .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
     .pill-signal { background: var(--signal-soft); color: var(--signal); }
@@ -233,6 +243,15 @@
     .subnav { display: flex; gap: 6px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 13px; padding: 4px; margin-bottom: 16px; }
     .subnav-btn { flex: 1; border: none; background: transparent; color: var(--ink-muted); font-size: 13px; font-weight: 600; padding: 9px 0; border-radius: 10px; transition: background 0.15s ease, color 0.15s ease; }
     .subnav-btn.active { background: linear-gradient(160deg, var(--coin), var(--coin-deep)); color: #fff; box-shadow: 0 4px 12px var(--coin-soft); }
+
+    /* ── big decorative task/faucet/article cards ── */
+    .task-card-big { display: flex; align-items: center; gap: 14px; padding: 16px; }
+    .tc-icon { width: 52px; height: 52px; flex-shrink: 0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: linear-gradient(155deg, var(--coin-soft), var(--accent-soft)); border: 1px solid var(--border); }
+    .tc-title { font-weight: 600; font-size: 14.5px; line-height: 1.35; margin-bottom: 10px; }
+    .tc-go-btn { width: auto; height: 34px; padding: 0 16px; font-size: 12.5px; display: inline-flex; gap: 6px; background: linear-gradient(160deg, var(--coin), var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px var(--coin-soft); }
+    .tc-reward-badge { flex-shrink: 0; text-align: center; padding: 10px 12px; border-radius: 14px; background: linear-gradient(160deg, var(--surface-pop), var(--surface-raised)); border: 1px solid var(--border-strong); }
+    .tc-reward-amount { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--coin); line-height: 1; }
+    .tc-reward-label { font-size: 9.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
     .ob-dot { height: 6px; border-radius: 4px; transition: width 0.35s ease, background 0.35s ease; }
 
     /* ── toast: icon + smoother spring ── */
@@ -247,7 +266,7 @@
     @keyframes skel-shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     /* ── Task complete → vanish animation ── */
-    .task-card { transition: none; }
+    .task-card-big { transition: none; }
     .task-vanish {
         animation: task-vanish 0.46s cubic-bezier(.4,0,.6,1) forwards;
         pointer-events: none;
@@ -377,64 +396,32 @@ const showAdsgramSpecialAd = () => new Promise((res, rej) => {
     if (window.Adsgram) { window.Adsgram.init({ blockId: "27566" }).show().then(res).catch(rej); }
     else { rej(new Error('sdk_not_loaded')); }
 });
-// ⚠️ The Monetag SDK is now lazy-loaded — the script is only injected when
-// the user actually clicks the Monetag button, and it's removed again once
-// done. This way Monetag's global click-listener simply isn't present on
-// the page when clicking GigaPub/Adsgram, so it can no longer hijack clicks
-// meant for other networks.
-let _monetagLoading = null;
-let _monetagInFlight = 0; // ⚠️ mutex-style counter — see showMonetagAd() below
-function loadMonetagSDK() {
+// ⚠️ Monetag is loaded statically now (see <head>) — no more load/unload per
+// click. This keeps the SDK warm across the whole session, which fixed a
+// wave of "ad not available" no-fill errors that started once we switched to
+// lazy-loading. The one thing we still do defensively: since the script tag
+// might not have finished its own async init by the exact moment a user
+// clicks (rare, but possible right after the page just opened), briefly poll
+// for `show_9442539` to exist rather than failing instantly.
+function waitForMonetagSDK(timeoutMs = 5000) {
     if (typeof show_9442539 === 'function') return Promise.resolve();
-    if (_monetagLoading) return _monetagLoading;
-    _monetagLoading = new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = '//libtl.com/sdk.js';
-        s.setAttribute('data-zone', '9442539');
-        s.setAttribute('data-sdk', 'show_9442539');
-        s.onload = () => {
-            // ⚠️ FIX: `onload` only means the script finished *downloading* —
-            // Monetag's SDK does its own internal async setup afterwards and
-            // `show_9442539` isn't necessarily defined the instant onload
-            // fires. Calling it too early meant every single Monetag attempt
-            // failed with 'sdk_not_loaded', so no ad ever played and no
-            // reward was ever given. Now we poll briefly (up to 5s) for the
-            // function to actually exist before resolving.
-            const startedAt = Date.now();
-            const poll = () => {
-                if (typeof show_9442539 === 'function') { res(); return; }
-                if (Date.now() - startedAt > 5000) { _monetagLoading = null; rej(new Error('monetag_sdk_init_timeout')); return; }
-                setTimeout(poll, 100);
-            };
-            poll();
+    return new Promise((res, rej) => {
+        const startedAt = Date.now();
+        const poll = () => {
+            if (typeof show_9442539 === 'function') { res(); return; }
+            if (Date.now() - startedAt > timeoutMs) { rej(new Error('monetag_sdk_init_timeout')); return; }
+            setTimeout(poll, 100);
         };
-        s.onerror = () => { _monetagLoading = null; rej(new Error('monetag_sdk_load_failed')); };
-        document.head.appendChild(s);
+        poll();
     });
-    return _monetagLoading;
 }
-function unloadMonetagSDK() {
-    // ⚠️ FIX: the passive video-section interstitial and the rewarded Earning-tab
-    // button used to share this exact same SDK instance with no coordination —
-    // if both fired close together, one's cleanup could rip the script out from
-    // under the other mid-call. `_monetagInFlight` tracks how many callers are
-    // currently using the SDK; only the last one out actually unloads it.
-    if (_monetagInFlight > 0) return;
-    document.querySelectorAll('script[src*="libtl.com"]').forEach(s => s.remove());
-    try { delete window.show_9442539; } catch { window.show_9442539 = undefined; }
-    _monetagLoading = null;
-}
-const showMonetagAd = () => {
-    _monetagInFlight++;
-    const release = () => { _monetagInFlight = Math.max(0, _monetagInFlight - 1); };
-    return loadMonetagSDK().then(() => new Promise((res, rej) => {
-        if (typeof show_9442539 !== 'function') { rej(new Error('sdk_not_loaded')); return; }
-        // ⚠️ A 90-second safety-net is kept only for Monetag (per the user's
-        // request) — in case the SDK ever gets stuck (never resolves or rejects).
-        const t = setTimeout(() => rej(new Error('timeout')), 90000);
-        show_9442539().then(() => { clearTimeout(t); res(); }).catch((e) => { clearTimeout(t); rej(e); });
-    })).finally(() => { release(); unloadMonetagSDK(); });
-};
+const showMonetagAd = () => waitForMonetagSDK().then(() => new Promise((res, rej) => {
+    if (typeof show_9442539 !== 'function') { rej(new Error('sdk_not_loaded')); return; }
+    // ⚠️ A 90-second safety-net is kept only for Monetag (per the user's
+    // request) — in case the SDK ever gets stuck (never resolves or rejects).
+    const t = setTimeout(() => rej(new Error('timeout')), 90000);
+    show_9442539().then(() => { clearTimeout(t); res(); }).catch((e) => { clearTimeout(t); rej(e); });
+}));
 const showGigaPubAd = () => new Promise((res, rej) => {
     // ⚠️ Strictly only checks GigaPub's own function — no other network's
     // SDK (Monetag, etc.) is ever called here as a fallback. If GigaPub's
@@ -727,6 +714,7 @@ function renderShell() {
     const root = document.getElementById('app-root');
     root.innerHTML = `
         <div class="topbar">
+            <div class="topbar-ring"></div>
             <div class="brand"><div class="brand-mark">N</div><div class="brand-name">NEWTUBE</div></div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <button class="icon-btn" id="history-btn" aria-label="History">
@@ -1617,16 +1605,23 @@ async function renderTaskTab() {
 function taskCardHtml(t) {
     const verified = t.category === 'channel';
     const isFaucet = t.category === 'faucet';
+    const isArticle = t.category === 'article';
+    const icon = verified ? '📢' : isFaucet ? '🚰' : isArticle ? '📰' : '🌐';
+    const badgeText = verified ? '✓ Verified' : isFaucet ? 'Faucet' : isArticle ? 'Article' : 'Link';
     return `
-    <div class="card task-card" data-task-card="${t._id}" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+    <div class="card task-card-big" data-task-card="${t._id}">
+        <div class="tc-icon">${icon}</div>
         <div style="flex:1; min-width:0;">
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
-                <span class="pill ${verified ? 'pill-signal' : 'pill-coin'}">${verified ? '✓ Verified' : isFaucet ? '🚰 Faucet' : 'Link'}</span>
-            </div>
-            <div style="font-weight:500; font-size:14px;">${t.title}</div>
-            <div class="muted" style="font-size:12px; margin-top:2px;">+${t.rewardWtc || 0} WTC</div>
+            <span class="pill ${verified ? 'pill-signal' : 'pill-coin'}" style="margin-bottom:6px;">${badgeText}</span>
+            <div class="tc-title">${t.title}</div>
+            <button class="btn btn-primary tc-go-btn" data-task="${t._id}" data-url="${t.url || ''}" data-category="${t.category || 'partner'}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Start
+            </button>
         </div>
-        <button class="btn btn-primary" style="width:auto; padding:0 16px;" data-task="${t._id}" data-url="${t.url || ''}" data-category="${t.category || 'partner'}">Go</button>
+        <div class="tc-reward-badge">
+            <div class="tc-reward-amount">+${t.rewardWtc || 0}</div>
+            <div class="tc-reward-label">WTC</div>
+        </div>
     </div>`;
 }
 
@@ -1743,7 +1738,7 @@ function renderReferTab() {
             <div class="card" style="text-align:center; padding:24px 18px;">
                 <div style="font-size:32px; margin-bottom:8px;">👥</div>
                 <div style="font-weight:600; font-size:16px; margin-bottom:4px;">Refer friends, earn WTC</div>
-                <div class="muted" style="font-size:13px; margin-bottom:18px;">Each friend who completes all 3 steps earns you up to 166 WTC total.</div>
+                <div class="muted" style="font-size:13px; margin-bottom:18px;">Each friend who completes all 3 steps earns you up to 220 WTC total.</div>
                 <div style="background:var(--surface-raised); border-radius:12px; padding:12px; font-size:12px; word-break:break-all; margin-bottom:12px;">${link}</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                     <button class="btn btn-primary" id="refer-share">Share</button>
@@ -1776,7 +1771,7 @@ function renderReferTab() {
                 </div>
                 <div style="display:flex; align-items:center; gap:12px; padding:8px 0;">
                     <div style="width:30px; height:30px; border-radius:50%; background:var(--coin-soft); color:var(--coin); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">3</div>
-                    <div style="flex:1; font-size:13px;">Friend watches 20 ads</div>
+                    <div style="flex:1; font-size:13px;">Friend watches 25 ads</div>
                     <div style="font-family:var(--font-display); color:var(--coin); font-size:13px;">+130</div>
                 </div>
             </div>
