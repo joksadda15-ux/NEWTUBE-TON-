@@ -80,17 +80,13 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'need_5_tasks' });
     }
 
-    // ⚠️ NEW: every withdrawal now "consumes" one referral — the user needs at
-    // least (withdrawalCount + 1) total referrals to make their next withdraw.
-    // E.g. 1st withdraw needs 1 referral, 2nd needs 2 total, 3rd needs 3 total, etc.
-    const referralsNeeded = (user.withdrawalCount || 0) + 1;
-    if ((user.referralCount || 0) < referralsNeeded) {
-        return res.status(400).json({
-            ok: false, error: 'referral_required',
-            referralsNeeded, referralsHave: user.referralCount || 0,
-            message: `You need ${referralsNeeded} total referral(s) to make this withdrawal (you have ${user.referralCount || 0}).`,
-        });
-    }
+    // ⚠️ REMOVED: the "1 new referral per withdrawal" requirement. With
+    // reward rates already lowered, stacking a referral requirement on top
+    // made it too hard for genuine solo earners (no friends to invite) to
+    // ever withdraw what they'd honestly earned — that's the kind of
+    // friction that erodes trust, not builds it. Referral rewards (220 WTC
+    // per completed friend) are already a strong enough incentive on their
+    // own without gating withdrawal on it.
 
     const grossCurrencyAmount = methodConfig.wtcToCurrency(wtcAmount);
     const adsRequired = calcAdsRequired(grossCurrencyAmount);
