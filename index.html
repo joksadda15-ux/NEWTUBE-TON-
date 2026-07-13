@@ -47,6 +47,22 @@
         --danger: #FF5C7A;
         --danger-soft: rgba(255,92,122,0.14);
         --success: #22C55E;
+        /* ── functional colors — different features get their own matching color
+           instead of everything being one blue tint ── */
+        --money: #22C55E;        /* withdraw / cash-out related */
+        --money-soft: rgba(34,197,94,0.16);
+        --video-hue: #F0459B;    /* video / lootbox section */
+        --video-soft: rgba(240,69,155,0.16);
+        --task-hue: #F5A623;     /* regular tasks */
+        --task-soft: rgba(245,166,35,0.16);
+        --faucet-hue: #14B8A6;   /* faucet sites */
+        --faucet-soft: rgba(20,184,166,0.16);
+        --article-hue: #A78BFA; /* articles */
+        --article-soft: rgba(167,139,250,0.16);
+        --gift-hue: #FFB020;     /* admin gifts */
+        --gift-soft: rgba(255,176,32,0.16);
+        --refer-hue: #EC4899;    /* referrals */
+        --refer-soft: rgba(236,72,153,0.16);
         --font-display: 'Space Grotesk', sans-serif;
         --font-body: 'Plus Jakarta Sans', sans-serif;
     }
@@ -217,10 +233,10 @@
     /* ── gift-box (admin surprise gift) ── */
     .gb-glow { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 0; }
     .gb-glow::before, .gb-glow::after { content: ''; position: absolute; width: 240px; height: 240px; border-radius: 50%; filter: blur(52px); opacity: 0.4; animation: jg-glow-drift 5s ease-in-out infinite; }
-    .gb-glow::before { background: var(--coin); top: -90px; left: -70px; }
-    .gb-glow::after { background: var(--signal); bottom: -100px; right: -70px; animation-delay: 1.2s; }
+    .gb-glow::before { background: var(--gift-hue); top: -90px; left: -70px; }
+    .gb-glow::after { background: var(--accent); bottom: -100px; right: -70px; animation-delay: 1.2s; }
     .gb-rays { position: absolute; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
-    .gb-rays::before { content: ''; position: absolute; width: 260px; height: 260px; background: conic-gradient(from 0deg, transparent 0deg, var(--signal) 4deg, transparent 10deg, transparent 40deg, var(--coin) 44deg, transparent 50deg, transparent 80deg, var(--signal) 84deg, transparent 90deg, transparent 130deg, var(--coin) 134deg, transparent 140deg, transparent 190deg, var(--signal) 194deg, transparent 200deg, transparent 260deg, var(--coin) 264deg, transparent 270deg, transparent 320deg, var(--signal) 324deg, transparent 330deg); animation: gb-ray-spin 8s linear infinite; }
+    .gb-rays::before { content: ''; position: absolute; width: 260px; height: 260px; background: conic-gradient(from 0deg, transparent 0deg, var(--gift-hue) 4deg, transparent 10deg, transparent 40deg, var(--accent) 44deg, transparent 50deg, transparent 80deg, var(--gift-hue) 84deg, transparent 90deg, transparent 130deg, var(--accent) 134deg, transparent 140deg, transparent 190deg, var(--gift-hue) 194deg, transparent 200deg, transparent 260deg, var(--accent) 264deg, transparent 270deg, transparent 320deg, var(--gift-hue) 324deg, transparent 330deg); animation: gb-ray-spin 8s linear infinite; }
     @keyframes gb-ray-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     .gb-box-wrap { width: 112px; height: 112px; margin: 6px auto 18px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; }
     .gb-box { font-size: 60px; animation: gb-bounce 1.6s ease-in-out infinite; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.4)); }
@@ -228,8 +244,8 @@
     .gb-reason-card { position: relative; z-index: 1; text-align: left; background: linear-gradient(160deg, var(--surface-raised), var(--surface)); border: 1px solid var(--border-strong); border-radius: 14px; padding: 12px 14px; margin-bottom: 18px; opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.15s forwards; }
     .gb-reason-label { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
     .gb-reason-text { font-size: 13.5px; line-height: 1.5; }
-    .gb-claim-btn { opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.28s forwards; background: linear-gradient(160deg, var(--signal), var(--coin) 60%, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px var(--coin-soft); }
-    .gb-amount-reveal { font-family: var(--font-display); font-weight: 700; font-size: 40px; text-align: center; margin: 6px 0 4px; color: var(--coin); animation: ob-icon-bounce 0.5s cubic-bezier(.34,1.56,.64,1) both; }
+    .gb-claim-btn { opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.28s forwards; background: linear-gradient(160deg, var(--gift-hue), #E08900 60%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px var(--gift-soft); }
+    .gb-amount-reveal { font-family: var(--font-display); font-weight: 700; font-size: 40px; text-align: center; margin: 6px 0 4px; color: var(--gift-hue); animation: ob-icon-bounce 0.5s cubic-bezier(.34,1.56,.64,1) both; }
 
     /* ── ad-network cards (Earning tab) ── */
     .an-card { transition: border-color 0.2s ease; }
@@ -938,7 +954,7 @@ async function renderHome() {
         </div>
 
         <div class="anim-in-2" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
-            <button class="btn btn-primary" id="home-withdraw-btn">
+            <button class="btn" id="home-withdraw-btn" style="background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
             </button>
             <button class="btn btn-outline" id="home-promo-btn">
@@ -1080,9 +1096,9 @@ function openWithdrawModal() {
                     <input class="field-input" id="wd-amount" type="number" placeholder="${m.minWtc}">
                     <div id="wd-convert" class="muted" style="font-size:12px; margin-top:6px;">≈ 0 ${m.currency}</div>
                     <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6;">
-                        A 25% withdraw fee applies. You need 1 watched ad per 0.01 ${m.currency} today. At least 5 completed tasks are required before your first withdrawal, and each withdrawal requires a new referral.
+                        A 25% withdraw fee applies. You need 1 watched ad per 0.01 ${m.currency} today. At least 5 completed tasks are required before your first withdrawal.
                     </div>
-                    <button class="btn btn-primary" style="margin-top:16px;" id="wd-submit">Submit Withdraw</button>
+                    <button class="btn" style="margin-top:16px; background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);" id="wd-submit">Submit Withdraw</button>
                 </div>
             </div>`;
         document.getElementById('m-binance').onclick = () => { method = 'binance'; render(); };
@@ -1208,7 +1224,7 @@ function renderFloatingLootbox() {
         el.innerHTML = `
             <svg width="64" height="64" viewBox="0 0 64 64" style="position:absolute; inset:0; transform:rotate(-90deg);">
                 <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border-strong)" stroke-width="4"></circle>
-                <circle id="lb-progress-ring" cx="32" cy="32" r="28" fill="none" stroke="var(--coin)" stroke-width="4" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" style="transition: stroke-dashoffset 0.5s ease;"></circle>
+                <circle id="lb-progress-ring" cx="32" cy="32" r="28" fill="none" stroke="var(--video-hue)" stroke-width="4" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" style="transition: stroke-dashoffset 0.5s ease;"></circle>
             </svg>
             <div style="display:flex; flex-direction:column; align-items:center; position:relative; z-index:1;">
                 <div style="font-size:15px;" id="lb-coin-icon">🪙</div>
@@ -1223,7 +1239,7 @@ function renderFloatingLootbox() {
     const circumference = 176; // 2 * PI * 28, rounded
 
     document.getElementById('lb-amount').textContent = fmtWTC(pending);
-    document.getElementById('lb-amount').style.color = claimable ? 'var(--coin)' : 'var(--ink-muted)';
+    document.getElementById('lb-amount').style.color = claimable ? 'var(--video-hue)' : 'var(--ink-muted)';
     document.getElementById('lb-progress-ring').style.strokeDashoffset = circumference - (circumference * pct);
     el.classList.toggle('claimable', claimable);
 
@@ -1608,18 +1624,21 @@ function taskCardHtml(t) {
     const isArticle = t.category === 'article';
     const icon = verified ? '📢' : isFaucet ? '🚰' : isArticle ? '📰' : '🌐';
     const badgeText = verified ? '✓ Verified' : isFaucet ? 'Faucet' : isArticle ? 'Article' : 'Link';
+    // ── each task type gets its own matching color instead of one blue tint everywhere ──
+    const hue = isFaucet ? 'var(--faucet-hue)' : isArticle ? 'var(--article-hue)' : verified ? 'var(--signal)' : 'var(--task-hue)';
+    const hueSoft = isFaucet ? 'var(--faucet-soft)' : isArticle ? 'var(--article-soft)' : verified ? 'var(--signal-soft)' : 'var(--task-soft)';
     return `
     <div class="card task-card-big" data-task-card="${t._id}">
-        <div class="tc-icon">${icon}</div>
+        <div class="tc-icon" style="background:${hueSoft}; border-color:${hueSoft};">${icon}</div>
         <div style="flex:1; min-width:0;">
-            <span class="pill ${verified ? 'pill-signal' : 'pill-coin'}" style="margin-bottom:6px;">${badgeText}</span>
+            <span class="pill" style="background:${hueSoft}; color:${hue}; margin-bottom:6px;">${badgeText}</span>
             <div class="tc-title">${t.title}</div>
-            <button class="btn btn-primary tc-go-btn" data-task="${t._id}" data-url="${t.url || ''}" data-category="${t.category || 'partner'}">
+            <button class="btn tc-go-btn" style="background:${hue}; box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px ${hueSoft};" data-task="${t._id}" data-url="${t.url || ''}" data-category="${t.category || 'partner'}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Start
             </button>
         </div>
         <div class="tc-reward-badge">
-            <div class="tc-reward-amount">+${t.rewardWtc || 0}</div>
+            <div class="tc-reward-amount" style="color:${hue};">+${t.rewardWtc || 0}</div>
             <div class="tc-reward-label">WTC</div>
         </div>
     </div>`;
@@ -1736,7 +1755,7 @@ function renderReferTab() {
     root.innerHTML = `
         <div class="section-pad" style="margin-top:18px;">
             <div class="card" style="text-align:center; padding:24px 18px;">
-                <div style="font-size:32px; margin-bottom:8px;">👥</div>
+                <div style="width:56px; height:56px; margin:0 auto 10px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; background:linear-gradient(155deg, var(--refer-soft), var(--refer-soft)); border:1px solid var(--refer-soft);">👥</div>
                 <div style="font-weight:600; font-size:16px; margin-bottom:4px;">Refer friends, earn WTC</div>
                 <div class="muted" style="font-size:13px; margin-bottom:18px;">Each friend who completes all 3 steps earns you up to 220 WTC total.</div>
                 <div style="background:var(--surface-raised); border-radius:12px; padding:12px; font-size:12px; word-break:break-all; margin-bottom:12px;">${link}</div>
@@ -1760,17 +1779,17 @@ function renderReferTab() {
             <div class="section-title" style="margin:22px 0 12px;">How rewards work</div>
             <div class="card">
                 <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);">
-                    <div style="width:30px; height:30px; border-radius:50%; background:var(--coin-soft); color:var(--coin); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">1</div>
+                    <div style="width:30px; height:30px; border-radius:50%; background:var(--refer-soft); color:var(--refer-hue); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">1</div>
                     <div style="flex:1; font-size:13px;">Friend joins channel + community and verifies</div>
                     <div style="font-family:var(--font-display); color:var(--coin); font-size:13px;">+30</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--border);">
-                    <div style="width:30px; height:30px; border-radius:50%; background:var(--coin-soft); color:var(--coin); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">2</div>
+                    <div style="width:30px; height:30px; border-radius:50%; background:var(--refer-soft); color:var(--refer-hue); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">2</div>
                     <div style="flex:1; font-size:13px;">Friend completes 10 tasks</div>
                     <div style="font-family:var(--font-display); color:var(--coin); font-size:13px;">+60</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px; padding:8px 0;">
-                    <div style="width:30px; height:30px; border-radius:50%; background:var(--coin-soft); color:var(--coin); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">3</div>
+                    <div style="width:30px; height:30px; border-radius:50%; background:var(--refer-soft); color:var(--refer-hue); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px;">3</div>
                     <div style="flex:1; font-size:13px;">Friend watches 25 ads</div>
                     <div style="font-family:var(--font-display); color:var(--coin); font-size:13px;">+130</div>
                 </div>
