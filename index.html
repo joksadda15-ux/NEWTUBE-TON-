@@ -260,6 +260,12 @@
     .subnav-btn { flex: 1; border: none; background: transparent; color: var(--ink-muted); font-size: 13px; font-weight: 600; padding: 9px 0; border-radius: 10px; transition: background 0.15s ease, color 0.15s ease; }
     .subnav-btn.active { background: linear-gradient(160deg, var(--coin), var(--coin-deep)); color: #fff; box-shadow: 0 4px 12px var(--coin-soft); }
 
+    /* ── withdraw tier selector ── */
+    .wd-tier-btn { width: 100%; text-align: left; background: var(--surface-raised); border: 1.5px solid var(--border); border-radius: 13px; padding: 12px 14px; color: var(--ink); transition: border-color 0.15s ease, transform 0.1s ease; }
+    .wd-tier-btn:active:not([disabled]) { transform: scale(0.98); }
+    .wd-tier-btn[disabled] { opacity: 0.5; }
+    .wd-tier-btn.wd-tier-selected { border-color: var(--money); background: linear-gradient(160deg, var(--money-soft), var(--surface-raised)); }
+
     /* ── big decorative task/faucet/article cards ── */
     .task-card-big { display: flex; align-items: center; gap: 14px; padding: 16px; }
     .tc-icon { width: 52px; height: 52px; flex-shrink: 0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: linear-gradient(155deg, var(--coin-soft), var(--accent-soft)); border: 1px solid var(--border); }
@@ -484,7 +490,9 @@ const ERROR_MESSAGES = {
     insufficient_balance: 'Insufficient balance.',
     insufficient_ads: 'Watch more ads before this withdrawal amount.',
     need_5_tasks: 'Complete at least 5 tasks before your first withdrawal.',
-    referral_required: 'You need at least one new referral to make this withdrawal.',
+    referral_required: 'This tier needs more referrals — check the tier list.',
+    tier_monthly_limit_reached: "You've used all claims for this tier this month.",
+    invalid_tier: 'Please select a valid tier.',
     already_withdrawn_today: 'You already withdrew today — try again tomorrow.',
     address_used_by_other: 'This address is already used by another account.',
     banned: 'Your account has been suspended.',
@@ -1060,28 +1068,26 @@ function openProfileModal() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// WITHDRAW MODAL
+// WITHDRAW MODAL — tiered cash-out system (tap a $ tier instead of typing
+// an amount). Tier eligibility (referral threshold, monthly claims left)
+// comes live from the server via GET withdraw?action=tiers.
 // ══════════════════════════════════════════════════════════════
-// ⚠️ These two rates are kept exactly in sync with WTC_PER_USD / WTC_PER_TON in
-// the backend's lib/constants.js — used only to show a preview; the actual
-// calculation always happens server-side.
-const WTC_PER_USD_UI = 20000;          // 20,000 WTC = 1 USD(T)
-// ⚠️ Tonkeeper is now only used as a wallet ADDRESS — the actual payout sent
-// there is USDT (USDT-on-TON), not native TON coin. Both methods pay USDT now.
 const WITHDRAW_METHODS_UI = {
-    binance:   { label: 'Binance UID', currency: 'USDT', minWtc: 2500, placeholder: 'Enter your Binance UID', rate: WTC_PER_USD_UI },
-    tonkeeper: { label: 'Tonkeeper Address', currency: 'USDT', minWtc: 2000, placeholder: 'UQ... wallet address', rate: WTC_PER_USD_UI },
+    binance:   { label: 'Binance UID', currency: 'USDT', placeholder: 'Enter your Binance UID' },
+    tonkeeper: { label: 'Tonkeeper Address', currency: 'USDT', placeholder: 'UQ... wallet address' },
 };
 
 function openWithdrawModal() {
     let method = 'binance';
+    let selectedTierId = null;
+    let tiers = [];
     const u = state.user || {};
 
     function render() {
         const m = WITHDRAW_METHODS_UI[method];
         document.getElementById('modal-root').innerHTML = `
             <div class="overlay" onclick="if(event.target===this)this.remove()">
-                <div class="sheet anim-in">
+                <div class="sheet anim-in" style="max-height:82vh; display:flex; flex-direction:column;">
                     <div class="sheet-handle"></div>
                     <div style="font-weight:600; font-size:16px; margin-bottom:4px;">Withdraw</div>
                     <div class="muted" style="font-size:13px; margin-bottom:16px;">Balance: ${fmtWTC(u.wtcBalance)} WTC</div>
@@ -1092,33 +1098,78 @@ function openWithdrawModal() {
                     <div class="field-label">${m.label}</div>
                     <input class="field-input" id="wd-details" placeholder="${m.placeholder}">
                     ${method === 'tonkeeper' ? `<div class="muted" style="font-size:11.5px; margin-top:5px;">💡 Paste your TON wallet address — you'll receive <b>USDT</b> (USDT-on-TON) at this address, not native TON.</div>` : ''}
-                    <div class="field-label">Amount (WTC) — minimum ${fmtWTC(m.minWtc)}</div>
-                    <input class="field-input" id="wd-amount" type="number" placeholder="${m.minWtc}">
-                    <div id="wd-convert" class="muted" style="font-size:12px; margin-top:6px;">≈ 0 ${m.currency}</div>
-                    <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6;">
-                        A 25% withdraw fee applies. You need 1 watched ad per 0.01 ${m.currency} today. At least 5 completed tasks are required before your first withdrawal.
+
+                    <div class="field-label">Choose a cash-out amount</div>
+                    <div style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; margin-top:4px;" id="wd-tier-list">
+                        <div class="muted" style="text-align:center; padding:16px 0;">Loading tiers...</div>
                     </div>
-                    <button class="btn" style="margin-top:16px; background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);" id="wd-submit">Submit Withdraw</button>
+
+                    <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6;">
+                        A 25% withdraw fee applies. You need 1 watched ad per 0.01 USD today. At least 5 completed tasks are required before your first withdrawal.
+                    </div>
+                    <button class="btn" style="margin-top:16px; background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);" id="wd-submit" disabled>Select a tier first</button>
                 </div>
             </div>`;
         document.getElementById('m-binance').onclick = () => { method = 'binance'; render(); };
         document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; render(); };
         document.getElementById('wd-submit').onclick = submitWithdraw;
-        document.getElementById('wd-amount').oninput = (e) => {
-            const wtc = parseFloat(e.target.value) || 0;
-            const converted = wtc / m.rate;
-            document.getElementById('wd-convert').textContent = `≈ ${converted.toFixed(4)} ${m.currency}`;
-        };
+        loadTiers();
+    }
+
+    async function loadTiers() {
+        const r = await apiGet(`withdraw?action=tiers&initData=${encodeURIComponent(TG_INIT_DATA)}`);
+        const listEl = document.getElementById('wd-tier-list');
+        if (!listEl) return; // modal closed/method switched before this resolved
+        if (!r.ok) { listEl.innerHTML = `<div class="muted" style="text-align:center; padding:16px 0;">Couldn't load tiers, try again.</div>`; return; }
+        tiers = r.tiers;
+        renderTierList();
+    }
+
+    function renderTierList() {
+        const listEl = document.getElementById('wd-tier-list');
+        if (!listEl) return;
+        listEl.innerHTML = tiers.map(t => {
+            const balanceOk = (state.user?.wtcBalance || 0) >= t.wtc;
+            const locked = !t.referralsMet;
+            const exhausted = t.monthlyLimitReached;
+            const disabled = locked || exhausted || !balanceOk;
+            const selected = selectedTierId === t.id;
+            let statusLine;
+            if (locked) statusLine = `🔒 Need ${t.referralsRequired} referrals (you have ${t.referralsHave})`;
+            else if (exhausted) statusLine = `⏳ Used up this month — resets next month`;
+            else if (!balanceOk) statusLine = `Need ${fmtWTC(t.wtc)} WTC (${t.claimsLeft}/${t.monthlyLimit} claims left)`;
+            else statusLine = `✅ ${t.claimsLeft}/${t.monthlyLimit} claims left this month`;
+            return `
+            <button class="wd-tier-btn ${selected ? 'wd-tier-selected' : ''}" data-tier="${t.id}" ${disabled ? 'disabled' : ''}>
+                <div style="display:flex; align-items:baseline; justify-content:space-between;">
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:17px;">$${t.usd}</div>
+                    <div class="muted" style="font-size:11px;">${fmtWTC(t.wtc)} WTC · get ~$${t.netUsd.toFixed(3)}</div>
+                </div>
+                <div style="font-size:11.5px; margin-top:4px; color:${disabled ? 'var(--ink-faint)' : 'var(--ink-muted)'};">${statusLine}</div>
+            </button>`;
+        }).join('');
+        listEl.querySelectorAll('.wd-tier-btn:not([disabled])').forEach(btn => {
+            btn.onclick = () => { selectedTierId = btn.dataset.tier; renderTierList(); updateSubmitBtn(); };
+        });
+        updateSubmitBtn();
+    }
+
+    function updateSubmitBtn() {
+        const btn = document.getElementById('wd-submit');
+        if (!btn) return;
+        const tier = tiers.find(t => t.id === selectedTierId);
+        if (!tier) { btn.disabled = true; btn.textContent = 'Select a tier first'; return; }
+        btn.disabled = false;
+        btn.textContent = `Withdraw $${tier.usd} (get ~$${tier.netUsd.toFixed(3)})`;
     }
 
     async function submitWithdraw() {
         const details = document.getElementById('wd-details').value.trim();
-        const amount = parseInt(document.getElementById('wd-amount').value);
         if (!details) return toast('Please enter your address/UID.', 'error');
-        if (!amount || isNaN(amount)) return toast('Please enter a valid amount.', 'error');
+        if (!selectedTierId) return toast('Please select a tier.', 'error');
         const btn = document.getElementById('wd-submit');
         btn.textContent = 'Submitting...'; btn.disabled = true;
-        const r = await apiPost('withdraw', { method, details, amount });
+        const r = await apiPost('withdraw', { method, details, tierId: selectedTierId });
         if (r.ok) {
             toast('Withdraw request submitted — you\'ll be paid once approved.', 'success');
             triggerBurst(btn);
@@ -1127,7 +1178,8 @@ function openWithdrawModal() {
             if (state.activeTab === 'home') renderHome();
         } else {
             toast(r.message || errorText(r.error), 'error');
-            btn.textContent = 'Submit Withdraw'; btn.disabled = false;
+            updateSubmitBtn();
+            btn.disabled = false;
         }
     }
     render();
