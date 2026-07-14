@@ -572,7 +572,8 @@ const ERROR_MESSAGES = {
     insufficient_ads: 'Watch more ads before this withdrawal amount.',
     need_5_tasks: 'Complete at least 5 tasks before your first withdrawal.',
     referral_required: 'This tier needs more referrals — check the tier list.',
-    tier_monthly_limit_reached: "You've used all claims for this tier this month.",
+    tier_monthly_limit_reached: "You've used all claims for this tier — resets every 6 months.",
+    address_locked: 'Your withdraw address is locked — check the note in the withdraw sheet.',
     invalid_tier: 'Please select a valid tier.',
     already_withdrawn_today: 'You already withdrew today — try again tomorrow.',
     address_used_by_other: 'This address is already used by another account.',
@@ -1042,12 +1043,15 @@ async function renderHome() {
             <div style="margin-top:6px; font-size:13px; color:var(--signal); font-weight:500;">≈ $${wtcToUsd(u.wtcBalance)} USD</div>
         </div>
 
-        <div class="anim-in-2" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
-            <button class="btn" id="home-withdraw-btn" style="background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
+        <div class="anim-in-2" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:14px 20px 0;">
+            <button class="btn" id="home-withdraw-btn" style="background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft); font-size:12.5px; padding:0 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
             </button>
-            <button class="btn btn-outline" id="home-promo-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Promo code
+            <button class="btn" id="home-convert-btn" style="background:linear-gradient(160deg, var(--accent), #0891B2); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--accent-soft); font-size:12.5px; padding:0 4px; color:#052029;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg> Convert
+            </button>
+            <button class="btn btn-outline" id="home-promo-btn" style="font-size:12.5px; padding:0 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Promo
             </button>
         </div>
 
@@ -1162,10 +1166,12 @@ function openWithdrawModal() {
     let method = 'binance';
     let selectedTierId = null;
     let tiers = [];
+    let addressLock = null; // ⚠️ NEW — populated after loadTiers(); { method, address, daysLeft } or null
     const u = state.user || {};
 
     function render() {
         const m = WITHDRAW_METHODS_UI[method];
+        const locked = !!addressLock;
         document.getElementById('modal-root').innerHTML = `
             <div class="overlay" onclick="if(event.target===this)this.remove()">
                 <div class="sheet anim-in" style="max-height:86vh; display:flex; flex-direction:column; position:relative; overflow:hidden;">
@@ -1176,12 +1182,13 @@ function openWithdrawModal() {
                         <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">${fmtWTC(u.wtcBalance)} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">WTC</span></div>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; position:relative; z-index:1;">
-                        <button class="btn ${method==='binance'?'btn-primary':'btn-outline'}" id="m-binance">Binance</button>
-                        <button class="btn ${method==='tonkeeper'?'btn-primary':'btn-outline'}" id="m-tonkeeper">Tonkeeper</button>
+                        <button class="btn ${method==='binance'?'btn-primary':'btn-outline'}" id="m-binance" ${locked ? 'disabled' : ''}>Binance</button>
+                        <button class="btn ${method==='tonkeeper'?'btn-primary':'btn-outline'}" id="m-tonkeeper" ${locked ? 'disabled' : ''}>Tonkeeper</button>
                     </div>
                     <div class="field-label" style="position:relative; z-index:1;">${m.label}</div>
-                    <input class="field-input" id="wd-details" placeholder="${m.placeholder}" style="position:relative; z-index:1;">
-                    ${method === 'tonkeeper' ? `<div class="muted" style="font-size:11.5px; margin-top:5px; position:relative; z-index:1;">💡 Paste your TON wallet address — you'll receive <b>USDT</b> (USDT-on-TON) at this address, not native TON.</div>` : ''}
+                    <input class="field-input" id="wd-details" placeholder="${m.placeholder}" style="position:relative; z-index:1;" ${locked ? 'readonly' : ''}>
+                    ${method === 'tonkeeper' && !locked ? `<div class="muted" style="font-size:11.5px; margin-top:5px; position:relative; z-index:1;">💡 Paste your TON wallet address — you'll receive <b>USDT</b> (USDT-on-TON) at this address, not native TON.</div>` : ''}
+                    ${locked ? `<div class="muted" style="font-size:11.5px; margin-top:6px; position:relative; z-index:1; color:var(--task-hue);">🔒 Your withdraw address is locked for <b>${addressLock.daysLeft} more day(s)</b> — you can only withdraw to this same address until then.</div>` : ''}
 
                     <div class="section-title" style="margin:16px 0 10px; position:relative; z-index:1;">Choose a cash-out amount</div>
                     <div style="overflow-y:auto; flex:1; position:relative; z-index:1;">
@@ -1191,7 +1198,7 @@ function openWithdrawModal() {
                     </div>
 
                     <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6; position:relative; z-index:1;">
-                        A 25% withdraw fee applies. You need 1 watched ad per 0.01 USD today. At least 5 completed tasks are required before your first withdrawal.
+                        A 25% withdraw fee applies. You need 1 watched ad per 0.01 USD today. At least 5 completed tasks are required before your first withdrawal. Your payout address locks for 30 days after your first withdrawal.
                     </div>
                     <button class="btn" style="margin-top:16px; position:relative; z-index:1; background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);" id="wd-submit" disabled>Select a tier first</button>
                 </div>
@@ -1199,6 +1206,8 @@ function openWithdrawModal() {
         document.getElementById('m-binance').onclick = () => { method = 'binance'; render(); };
         document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; render(); };
         document.getElementById('wd-submit').onclick = submitWithdraw;
+        // ⚠️ if already locked, pre-fill the address field to match and keep it read-only
+        if (locked) { const df = document.getElementById('wd-details'); if (df) df.value = addressLock.address; }
         loadTiers();
     }
 
@@ -1208,6 +1217,16 @@ function openWithdrawModal() {
         if (!listEl) return; // modal closed/method switched before this resolved
         if (!r.ok) { listEl.innerHTML = `<div class="muted" style="text-align:center; padding:16px 0;">Couldn't load tiers, try again.</div>`; return; }
         tiers = r.tiers;
+        // ⚠️ NEW — if the server says the address is locked and our local UI hadn't
+        // reflected that yet (e.g. modal just opened), sync method + re-render once
+        // so the fields lock/pre-fill correctly.
+        if (r.addressLock && !addressLock) {
+            addressLock = r.addressLock;
+            method = addressLock.method;
+            render();
+            return; // render() calls loadTiers() again — that second pass falls through below
+        }
+        addressLock = r.addressLock || null;
         renderTierList();
     }
 
@@ -1222,9 +1241,9 @@ function openWithdrawModal() {
             const selected = selectedTierId === t.id;
             let statusLine;
             if (locked) statusLine = `🔒 Need ${t.referralsRequired} referrals (you have ${t.referralsHave})`;
-            else if (exhausted) statusLine = `⏳ Used up this month — resets next month`;
+            else if (exhausted) statusLine = `⏳ Used up — resets every 6 months`;
             else if (!balanceOk) statusLine = `Need ${fmtWTC(t.wtc)} WTC (${t.claimsLeft}/${t.monthlyLimit} claims left)`;
-            else statusLine = `✅ ${t.claimsLeft}/${t.monthlyLimit} claims left this month`;
+            else statusLine = `✅ ${t.claimsLeft}/${t.monthlyLimit} claims left this period`;
             return `
             <button class="wd-tier-btn ${selected ? 'wd-tier-selected' : ''}" data-tier="${t.id}" ${disabled ? 'disabled' : ''}>
                 ${selected ? '<div class="wd-tier-check">✓</div>' : ''}
