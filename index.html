@@ -421,7 +421,7 @@
             const op = (Math.random() * 0.6 + 0.3).toFixed(2);
             shadows.push(`${x}px ${y}px 0 rgba(255,255,255,${op})`);
         }
-        return { shadows: shadows.join(','), size };
+        return { shadows: shadows.join(',') };
     }
     const far = document.getElementById('star-layer-far');
     const near = document.getElementById('star-layer-near');
