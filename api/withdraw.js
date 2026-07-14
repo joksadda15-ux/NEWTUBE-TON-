@@ -1,20 +1,27 @@
-// api/withdraw.js — TIERED WITHDRAW SYSTEM
+// api/withdraw.js — TIERED WITHDRAW SYSTEM + ADDRESS LOCK
 //
-// ⚠️ MAJOR CHANGE: withdrawals are no longer a free-text WTC amount — the
-// user picks one of the fixed $ tiers in WITHDRAW_TIERS (lib/constants.js).
-// Each tier has its own monthly claim limit (resets at the start of each
-// calendar month, Bangladesh time) and a lifetime referral-count threshold
-// to unlock it (referrals are never "spent" — once you have enough, the
-// tier stays unlocked). Ad-watch and task-completion requirements are
-// unchanged from before.
+// ⚠️ Withdrawals are a fixed $ tier (WITHDRAW_TIERS in lib/constants.js),
+// not a free-text WTC amount. Each tier has its own claim limit that now
+// resets every 6 MONTHS (Bangladesh time, via currentHalfYearBD()) instead
+// of every calendar month, and a lifetime referral-count threshold to
+// unlock it (referrals are never "spent" — once you have enough, the tier
+// stays unlocked). Ad-watch and task-completion requirements are unchanged.
 //
-// The balance check + deduction + tier-counter increment all happen in a
-// single atomic findOneAndUpdate, same race-condition-safe pattern as
-// before — a user firing off multiple requests at once can't double-spend
-// or blow past a tier's monthly limit.
+// ⚠️ NEW — 30-day address lock: the first method+address a user withdraws
+// to becomes their fixed payout destination for WITHDRAW_ADDRESS_LOCK_DAYS
+// (30) days. Any withdraw attempt with a DIFFERENT method or address during
+// that window is rejected with a clear "locked until" message. Once the
+// lock expires, the next withdrawal sets a fresh lock to whatever
+// method+address is used at that time. This stops an account (or a
+// compromised one) from rapidly cycling payouts across many wallets.
+//
+// The balance check + deduction + tier-counter increment + address-lock
+// set/refresh all happen in a single atomic findOneAndUpdate — a user
+// firing off multiple requests at once can't double-spend, blow past a
+// tier's limit, or slip past the lock in a race window.
 //
 //   GET  /api/withdraw?action=history&initData=...   → the user's withdraw history
-//   GET  /api/withdraw?action=tiers&initData=...      → tier list + this user's eligibility for each
+//   GET  /api/withdraw?action=tiers&initData=...      → tier list + this user's eligibility for each + address-lock status
 //   POST /api/withdraw   body: { initData, method, details, tierId }
 
 import { connectToDatabase } from '../lib/mongodb.js';
@@ -22,22 +29,41 @@ import { tgSend } from '../lib/telegram.js';
 import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
-    WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS,
-    FIRST_WITHDRAW_MIN_TASKS, calcAdsRequired, todayBD, currentMonthBD, WTC_PER_USD,
+    WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS, WITHDRAW_ADDRESS_LOCK_DAYS,
+    FIRST_WITHDRAW_MIN_TASKS, calcAdsRequired, todayBD, currentHalfYearBD, WTC_PER_USD,
 } from '../lib/constants.js';
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
+const LOCK_MS = WITHDRAW_ADDRESS_LOCK_DAYS * 24 * 60 * 60 * 1000;
 
-// Ensures the per-tier monthly claim counters are reset if the calendar
-// month has rolled over since the user's last withdrawal. Returns the
-// (possibly freshly-reset) tier-count map and the current month key.
-async function ensureTierMonthReset(users, userId, user) {
-    const month = currentMonthBD();
-    if (user.withdrawTierMonth === month) {
-        return { counts: user.withdrawTierCounts || {}, month };
+// Ensures the per-tier claim counters are reset if the 6-month period has
+// rolled over since the user's last withdrawal. Returns the (possibly
+// freshly-reset) tier-count map and the current period key.
+// ⚠️ field name kept as "withdrawTierMonth" even though it now holds a
+// half-year key (e.g. "2026-H2") — renaming the field isn't necessary
+// (it's just an opaque string compared for equality) and keeps this diff
+// minimal. Anyone with an old "MM/YYYY"-style value will simply get a
+// one-time automatic reset on their next withdrawal, which is harmless.
+async function ensureTierPeriodReset(users, userId, user) {
+    const period = currentHalfYearBD();
+    if (user.withdrawTierMonth === period) {
+        return { counts: user.withdrawTierCounts || {}, period };
     }
-    await users.updateOne({ _id: userId }, { $set: { withdrawTierCounts: {}, withdrawTierMonth: month } });
-    return { counts: {}, month };
+    await users.updateOne({ _id: userId }, { $set: { withdrawTierCounts: {}, withdrawTierMonth: period } });
+    return { counts: {}, period };
+}
+
+// Address-lock status for a user — null if not currently locked (either
+// never withdrawn, or the lock has expired).
+function getAddressLockStatus(user) {
+    if (!user.addressLockedAt) return null;
+    const elapsed = Date.now() - new Date(user.addressLockedAt).getTime();
+    if (elapsed >= LOCK_MS) return null; // expired
+    return {
+        method: user.lockedWithdrawMethod,
+        address: user.lockedWithdrawAddress,
+        daysLeft: Math.max(1, Math.ceil((LOCK_MS - elapsed) / (24 * 60 * 60 * 1000))),
+    };
 }
 
 function tierEligibility(tier, referralCount, claimsUsedThisMonth) {
@@ -56,7 +82,7 @@ function tierEligibility(tier, referralCount, claimsUsedThisMonth) {
     };
 }
 
-// ── GET ?action=tiers — tier list + this user's eligibility for each ──
+// ── GET ?action=tiers — tier list + this user's eligibility for each + address-lock status ──
 async function handleTiers(req, res, db) {
     res.setHeader('Cache-Control', 'no-store, max-age=0');
     const verified = verifyTelegramInitData(req.query.initData);
@@ -67,9 +93,10 @@ async function handleTiers(req, res, db) {
     const user = await users.findOne({ _id: id });
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
 
-    const { counts } = await ensureTierMonthReset(users, id, user);
+    const { counts } = await ensureTierPeriodReset(users, id, user);
     const tiers = WITHDRAW_TIERS.map(t => tierEligibility(t, user.referralCount || 0, counts[t.id] || 0));
-    return res.status(200).json({ ok: true, tiers, wtcBalance: user.wtcBalance || 0 });
+    const addressLock = getAddressLockStatus(user);
+    return res.status(200).json({ ok: true, tiers, wtcBalance: user.wtcBalance || 0, addressLock });
 }
 
 // ── GET ?action=history — the user's recent withdraw requests (pending/approved/rejected) ──
@@ -123,8 +150,18 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'need_5_tasks' });
     }
 
-    // ── tier eligibility: lifetime referral threshold (not consumed) + monthly claim limit ──
-    const { counts: tierCounts, month: tierMonth } = await ensureTierMonthReset(users, id, user);
+    // ── ⚠️ NEW: 30-day address lock ──
+    const lockStatus = getAddressLockStatus(user);
+    if (lockStatus && (lockStatus.method !== method || lockStatus.address !== details)) {
+        return res.status(400).json({
+            ok: false, error: 'address_locked',
+            lockedMethod: lockStatus.method, lockedAddress: lockStatus.address, daysLeft: lockStatus.daysLeft,
+            message: `Your withdraw address is locked to ${WITHDRAW_METHODS[lockStatus.method]?.label || lockStatus.method} (${lockStatus.address}) for ${lockStatus.daysLeft} more day(s).`,
+        });
+    }
+
+    // ── tier eligibility: lifetime referral threshold (not consumed) + claim limit ──
+    const { counts: tierCounts, period: tierPeriod } = await ensureTierPeriodReset(users, id, user);
     if ((user.referralCount || 0) < tier.referralsRequired) {
         return res.status(400).json({
             ok: false, error: 'referral_required',
@@ -136,7 +173,7 @@ async function handleCreate(req, res, db) {
     if (claimsUsed >= tier.monthlyLimit) {
         return res.status(400).json({
             ok: false, error: 'tier_monthly_limit_reached',
-            message: `You've used all ${tier.monthlyLimit} claim(s) for this tier this month. It resets next month.`,
+            message: `You've used all ${tier.monthlyLimit} claim(s) for this tier this period. It resets every 6 months.`,
         });
     }
 
@@ -162,26 +199,39 @@ async function handleCreate(req, res, db) {
     const netCurrencyAmount = methodConfig.wtcToCurrency(netWtc);
 
     // ══════════════════════════════════════════════════════════
-    // ATOMIC GATE — balance check, once-per-day check, and the tier's
-    // monthly-limit check all re-verified + applied in one operation, with
-    // no race window between "check" and "deduct".
+    // ATOMIC GATE — balance check, once-per-day check, the tier's claim-limit
+    // check, and the address-lock condition are all re-verified + applied in
+    // one operation, with no race window between "check" and "deduct".
     // ══════════════════════════════════════════════════════════
     const tierCountField = `withdrawTierCounts.${tier.id}`;
+    const lockFilter = lockStatus
+        // already locked to this exact method+address — just proceed, don't touch the lock fields
+        ? { lockedWithdrawMethod: method, lockedWithdrawAddress: details }
+        // no active lock (first withdrawal, or previous lock expired) — filter just needs the
+        // user doc to still not have an active lock at write time (re-checked via addressLockedAt)
+        : { $or: [{ addressLockedAt: { $exists: false } }, { addressLockedAt: { $lt: new Date(Date.now() - LOCK_MS) } }] };
+
     const gate = await users.findOneAndUpdate(
         {
             _id: id,
             isBanned: { $ne: true },
             wtcBalance: { $gte: wtcAmount },
             lastWithdrawDate: { $ne: today },
-            withdrawTierMonth: tierMonth,
+            withdrawTierMonth: tierPeriod,
             $or: [
                 { [tierCountField]: { $exists: false } },
                 { [tierCountField]: { $lt: tier.monthlyLimit } },
             ],
+            ...lockFilter,
         },
         {
             $inc: { wtcBalance: -wtcAmount, withdrawalCount: 1, [tierCountField]: 1 },
-            $set: { lastWithdrawDate: today },
+            $set: {
+                lastWithdrawDate: today,
+                // only (re)sets the lock when there wasn't already an active one — once locked,
+                // it stays pointed at the same method+address until it naturally expires
+                ...(!lockStatus ? { lockedWithdrawMethod: method, lockedWithdrawAddress: details, addressLockedAt: new Date() } : {}),
+            },
         },
         { returnDocument: 'after' }
     );
@@ -203,10 +253,10 @@ async function handleCreate(req, res, db) {
         tgSend(ADMIN_ID,
             `💸 <b>Withdrawal Request</b>\n\n` +
             `👤 <code>${id}</code> (@${user.telegramUsername || '?'})\n` +
-            `🎯 Tier: <b>$${tier.usd}</b> (${claimsUsed + 1}/${tier.monthlyLimit} this month)\n` +
+            `🎯 Tier: <b>$${tier.usd}</b> (${claimsUsed + 1}/${tier.monthlyLimit} this period)\n` +
             `💰 ${wtcAmount.toLocaleString()} WTC (fee ${feeWtc.toLocaleString()} WTC) → <b>${netCurrencyAmount.toFixed(4)} ${methodConfig.currency}</b>\n` +
             `📤 Method: <b>${methodConfig.label}</b>\n` +
-            `📍 Address: <code>${details}</code>\n` +
+            `📍 Address: <code>${details}</code>${lockStatus ? '' : ' 🔒 (newly locked for 30 days)'}\n` +
             `📊 Total withdrawals so far: <b>${gate.withdrawalCount || 1}</b>\n` +
             `👥 Total referrals: <b>${user.referralCount || 0}</b>\n` +
             `📅 ${new Date().toLocaleString()}`,
@@ -238,4 +288,4 @@ export default async function handler(req, res) {
         console.error('withdraw error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-        }
+            }
