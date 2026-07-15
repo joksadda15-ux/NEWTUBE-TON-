@@ -1040,15 +1040,22 @@ async function renderHome() {
                 <span id="home-balance-num" style="font-family:var(--font-display); font-weight:700; font-size:38px; line-height:1;">${fmtWTC(prevBalance)}</span>
                 <span style="font-family:var(--font-display); font-weight:500; font-size:16px; color:var(--coin); padding-bottom:5px;">WTC</span>
             </div>
-            <div style="margin-top:6px; font-size:13px; color:var(--signal); font-weight:500;">≈ $${wtcToUsd(u.wtcBalance)} USD</div>
+            <div style="margin-top:6px; font-size:13px; color:var(--signal); font-weight:500;">≈ $${wtcToUsd(u.wtcBalance)} USD if converted</div>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+                <span class="muted" style="font-size:12px;">💰 Ready to withdraw</span>
+                <span style="font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--money);">$${(u.usdtBalance || 0).toFixed(2)} <span style="font-size:11px; color:var(--ink-muted); font-weight:500;">USDT</span></span>
+            </div>
         </div>
 
-        <div class="anim-in-2" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
-            <button class="btn" id="home-withdraw-btn" style="background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
+        <div class="anim-in-2" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:14px 20px 0;">
+            <button class="btn" id="home-withdraw-btn" style="background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft); font-size:12.5px; padding:0 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
             </button>
-            <button class="btn btn-outline" id="home-promo-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Promo code
+            <button class="btn" id="home-convert-btn" style="background:linear-gradient(160deg, var(--accent), #0891B2); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--accent-soft); font-size:12.5px; padding:0 4px; color:#052029;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg> Convert
+            </button>
+            <button class="btn btn-outline" id="home-promo-btn" style="font-size:12.5px; padding:0 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Promo
             </button>
         </div>
 
@@ -1095,6 +1102,7 @@ async function renderHome() {
     window.__lastShownBalance = u.wtcBalance || 0;
 
     document.getElementById('home-withdraw-btn').onclick = openWithdrawModal;
+    document.getElementById('home-convert-btn').onclick = openConvertModal;
     document.getElementById('home-promo-btn').onclick = openPromoModal;
     startWithdrawTicker();
 
@@ -1159,6 +1167,85 @@ const WITHDRAW_METHODS_UI = {
     tonkeeper: { label: 'Tonkeeper Address', currency: 'USDT', placeholder: 'UQ... wallet address' },
 };
 
+// ══════════════════════════════════════════════════════════════
+// CONVERT MODAL — WTC → USDT balance. The 25% fee is taken HERE, not at
+// withdraw time (see api/withdraw.js, action:'convert').
+// ══════════════════════════════════════════════════════════════
+const CONVERT_MIN_WTC = 500;
+const CONVERT_FEE_PERCENT = 25;
+const CONVERT_RATE = 20000; // WTC per USD — mirrors lib/constants.js WTC_PER_USD
+
+function openConvertModal() {
+    const u = state.user || {};
+    document.getElementById('modal-root').innerHTML = `
+        <div class="overlay" onclick="if(event.target===this)this.remove()">
+            <div class="sheet anim-in" style="position:relative; overflow:hidden;">
+                <div class="jg-glow" style="opacity:0.5;"></div>
+                <div class="sheet-handle" style="position:relative; z-index:1;"></div>
+                <div style="position:relative; z-index:1;">
+                    <div class="section-title" style="margin-bottom:4px;">Convert WTC → USDT</div>
+                    <div class="muted" style="font-size:12px; margin-bottom:16px;">A 25% fee applies here, at conversion — withdrawing afterward is fee-free.</div>
+
+                    <div class="card" style="text-align:center; padding:14px; margin-bottom:14px;">
+                        <div class="muted" style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">WTC balance</div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:24px; margin-top:4px; color:var(--coin);">${fmtWTC(u.wtcBalance)} <span style="font-size:13px; color:var(--ink-muted); font-weight:500;">WTC</span></div>
+                    </div>
+
+                    <div class="field-label">Amount to convert — minimum ${fmtWTC(CONVERT_MIN_WTC)} WTC</div>
+                    <input class="field-input" id="cv-amount" type="number" placeholder="${CONVERT_MIN_WTC}">
+
+                    <div class="card" style="margin-top:12px; padding:14px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;">
+                            <span class="muted">Gross value</span><span id="cv-gross">$0.0000</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;">
+                            <span class="muted">Fee (25%)</span><span id="cv-fee" style="color:var(--danger);">-$0.0000</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:700; padding-top:8px; border-top:1px solid var(--border);">
+                            <span>You'll receive</span><span id="cv-net" style="color:var(--money);">$0.0000</span>
+                        </div>
+                    </div>
+
+                    <button class="btn" style="margin-top:16px; background:linear-gradient(160deg, var(--accent), #0891B2); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--accent-soft); color:#052029;" id="cv-submit" disabled>Enter an amount</button>
+                </div>
+            </div>
+        </div>`;
+
+    const amountEl = document.getElementById('cv-amount');
+    const submitBtn = document.getElementById('cv-submit');
+
+    amountEl.oninput = () => {
+        const wtc = parseFloat(amountEl.value) || 0;
+        const gross = wtc / CONVERT_RATE;
+        const fee = gross * (CONVERT_FEE_PERCENT / 100);
+        const net = gross - fee;
+        document.getElementById('cv-gross').textContent = `$${gross.toFixed(4)}`;
+        document.getElementById('cv-fee').textContent = `-$${fee.toFixed(4)}`;
+        document.getElementById('cv-net').textContent = `$${net.toFixed(4)}`;
+
+        if (wtc < CONVERT_MIN_WTC) { submitBtn.disabled = true; submitBtn.textContent = `Minimum ${CONVERT_MIN_WTC} WTC`; }
+        else if (wtc > (u.wtcBalance || 0)) { submitBtn.disabled = true; submitBtn.textContent = `Insufficient WTC balance`; }
+        else { submitBtn.disabled = false; submitBtn.textContent = `Convert ${fmtWTC(wtc)} WTC`; }
+    };
+
+    submitBtn.onclick = async () => {
+        const wtcAmount = Math.floor(parseFloat(amountEl.value) || 0);
+        if (wtcAmount < CONVERT_MIN_WTC) return toast(`Minimum ${CONVERT_MIN_WTC} WTC required.`, 'error');
+        submitBtn.disabled = true; submitBtn.textContent = 'Converting...';
+        const r = await apiPost('withdraw', { action: 'convert', wtcAmount });
+        if (r.ok) {
+            toast(`Converted! +$${r.netUsd.toFixed(4)} added to your withdrawable balance.`, 'success');
+            triggerBurst(submitBtn);
+            setTimeout(() => { document.getElementById('modal-root').innerHTML = ''; }, 250);
+            await refreshUser();
+            if (state.activeTab === 'home') renderHome();
+        } else {
+            toast(r.message || errorText(r.error), 'error');
+            amountEl.oninput();
+        }
+    };
+}
+
 function openWithdrawModal() {
     let method = 'binance';
     let selectedTierId = null;
@@ -1175,8 +1262,9 @@ function openWithdrawModal() {
                     <div class="jg-glow" style="opacity:0.5;"></div>
                     <div class="sheet-handle" style="position:relative; z-index:1;"></div>
                     <div class="card" style="position:relative; z-index:1; text-align:center; padding:18px; margin-bottom:14px; border-color:var(--money-soft);">
-                        <div class="muted" style="font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">Available balance</div>
-                        <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">${fmtWTC(u.wtcBalance)} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">WTC</span></div>
+                        <div class="muted" style="font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">Withdrawable balance</div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">$${(state.user?.usdtBalance || 0).toFixed(2)} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">USDT</span></div>
+                        <div class="muted" style="font-size:11.5px; margin-top:6px;">Need more? <a href="#" id="wd-go-convert" style="color:var(--accent); font-weight:600;">Convert WTC first →</a></div>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; position:relative; z-index:1;">
                         <button class="btn ${method==='binance'?'btn-primary':'btn-outline'}" id="m-binance" ${locked ? 'disabled' : ''}>Binance</button>
@@ -1195,11 +1283,12 @@ function openWithdrawModal() {
                     </div>
 
                     <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6; position:relative; z-index:1;">
-                        A 25% withdraw fee applies. You need 1 watched ad per 0.01 USD today. At least 5 completed tasks are required before your first withdrawal. Your payout address locks for 30 days after your first withdrawal.
+                        No fee here — the 25% fee is already taken when you convert WTC to USDT. You need 1 watched ad per 0.01 USD today. At least 5 completed tasks are required before your first withdrawal. Your payout address locks for 30 days after your first withdrawal.
                     </div>
                     <button class="btn" style="margin-top:16px; position:relative; z-index:1; background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);" id="wd-submit" disabled>Select a tier first</button>
                 </div>
             </div>`;
+        document.getElementById('wd-go-convert').onclick = (e) => { e.preventDefault(); openConvertModal(); };
         document.getElementById('m-binance').onclick = () => { method = 'binance'; render(); };
         document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; render(); };
         document.getElementById('wd-submit').onclick = submitWithdraw;
@@ -1231,21 +1320,20 @@ function openWithdrawModal() {
         const listEl = document.getElementById('wd-tier-list');
         if (!listEl) return;
         listEl.innerHTML = tiers.map(t => {
-            const balanceOk = (state.user?.wtcBalance || 0) >= t.wtc;
             const locked = !t.referralsMet;
             const exhausted = t.monthlyLimitReached;
-            const disabled = locked || exhausted || !balanceOk;
+            const disabled = locked || exhausted || !t.balanceOk;
             const selected = selectedTierId === t.id;
             let statusLine;
             if (locked) statusLine = `🔒 Need ${t.referralsRequired} referrals (you have ${t.referralsHave})`;
             else if (exhausted) statusLine = `⏳ Used up — resets every 6 months`;
-            else if (!balanceOk) statusLine = `Need ${fmtWTC(t.wtc)} WTC (${t.claimsLeft}/${t.monthlyLimit} claims left)`;
+            else if (!t.balanceOk) statusLine = `Need $${t.usd} converted (${t.claimsLeft}/${t.monthlyLimit} claims left)`;
             else statusLine = `✅ ${t.claimsLeft}/${t.monthlyLimit} claims left this period`;
             return `
             <button class="wd-tier-btn ${selected ? 'wd-tier-selected' : ''}" data-tier="${t.id}" ${disabled ? 'disabled' : ''}>
                 ${selected ? '<div class="wd-tier-check">✓</div>' : ''}
                 <div class="wd-tier-usd">$${t.usd}</div>
-                <div class="wd-tier-wtc">${fmtWTC(t.wtc)} WTC · get ~$${t.netUsd.toFixed(3)}</div>
+                <div class="wd-tier-wtc">No fee here — you receive the full $${t.usd}</div>
                 <div class="wd-tier-status" style="color:${disabled ? 'var(--ink-faint)' : 'var(--ink-muted)'};">${statusLine}</div>
             </button>`;
         }).join('');
@@ -1261,7 +1349,7 @@ function openWithdrawModal() {
         const tier = tiers.find(t => t.id === selectedTierId);
         if (!tier) { btn.disabled = true; btn.textContent = 'Select a tier first'; return; }
         btn.disabled = false;
-        btn.textContent = `Withdraw $${tier.usd} (get ~$${tier.netUsd.toFixed(3)})`;
+        btn.textContent = `Withdraw $${tier.usd}`;
     }
 
     async function submitWithdraw() {
