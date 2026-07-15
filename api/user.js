@@ -1,10 +1,10 @@
 // api/user.js — CONSOLIDATED + SECURITY FIX (Telegram initData verification)
 //
-// বড় পরিবর্তন: আগে client যা userId পাঠাতো তাই বিশ্বাস করা হতো — কেউ
-// browser DevTools থেকে সরাসরি API কল করে অন্য কারো userId বসিয়ে দিতে পারতো।
-// এখন প্রতিটা রিকোয়েস্টে Telegram-এর `initData` (signed string) লাগবে,
-// যেটা সার্ভার cryptographically verify করে — bot token ছাড়া কেউ এটা
-// বানাতে পারবে না, তাই userId স্পুফ করা সম্ভব না।
+// Key change: previously the client-supplied userId was trusted as-is — anyone
+// could open browser DevTools, call the API directly, and pass someone else's
+// userId. Now every request requires Telegram's `initData` (a signed string)
+// which the server verifies cryptographically — nobody can forge it without
+// the bot token, so userId can no longer be spoofed.
 //
 //   POST /api/user   body: { action: 'init', initData, fingerprint }
 //   GET  /api/user?action=checkJoin&initData=...
@@ -26,7 +26,7 @@ async function handleInit(req, res, db) {
     const userId = String(verified.user.id);
     const firstName = verified.user.first_name;
     const username = verified.user.username;
-    const referrerCode = verified.startParam; // ✅ verified initData থেকেই আসছে, client আলাদা করে পাঠাতে পারবে না
+    const referrerCode = verified.startParam; // ✅ comes from verified initData — client can't send a different one separately
     const { fingerprint } = req.body;
 
     const users = db.collection('users');
@@ -38,6 +38,7 @@ async function handleInit(req, res, db) {
         firstName: firstName || 'User',
         telegramUsername: username || 'N/A',
         wtcBalance: 0,
+        usdtBalance: 0, // ⚠️ NEW — converted balance, ready to withdraw (see api/withdraw.js convert action)
         lifetimeWtcEarned: 0,
         pendingVideoWTC: 0,
         referralCount: 0,
@@ -122,14 +123,15 @@ async function handleProfile(req, res, db) {
 
     const users = db.collection('users');
 
-    // ⚠️ BUG FIX: profile fetch করার আগে daily reset নিশ্চিত করা হচ্ছে।
-    // আগে এই কলটা ছিল না — শুধু earn.js-এ (অর্থাৎ ইউজার সত্যিই একটা ad
-    // ক্লেইম করলে) reset ঘটতো। ফলে app খোলার সাথে সাথে যে profile আসতো
-    // তাতে গতকালের পুরনো counter (যেমন gigaCountToday: 20) থেকেই যেত,
-    // frontend সেটা দেখে বাটন "Done"/disabled করে দিতো, আর ইউজার ক্লিকই
-    // করতে পারতো না — ফলে backend-এর reset কখনো ট্রিগার হওয়ার সুযোগই
-    // পেতো না (deadlock)। এখন profile লোড হওয়ার সময়েই reset নিশ্চিত হয়,
-    // তাই নতুন দিনে UI সবসময় সঠিক (0) count নিয়ে খোলে।
+    // ⚠️ BUG FIX: daily reset is now ensured before the profile is fetched.
+    // Previously this call was missing here — reset only happened inside
+    // earn.js (i.e. only when the user actually claimed an ad). So the
+    // profile returned right when the app opened still had yesterday's
+    // stale counters (e.g. gigaCountToday: 20), the frontend saw that and
+    // disabled the button ("Done"), and the user couldn't click at all —
+    // meaning the backend's reset never got a chance to trigger (deadlock).
+    // Now reset is guaranteed at profile-load time, so the UI always opens
+    // with correct (0) counts on a new day.
     await ensureDailyReset(users, userId);
 
     const user = await users.findOne({ _id: userId });
@@ -156,4 +158,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-}
+            }
