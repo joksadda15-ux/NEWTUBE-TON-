@@ -1,35 +1,26 @@
-// api/withdraw.js — TIERED WITHDRAW SYSTEM + ADDRESS LOCK
+// api/withdraw.js — CONVERT-FIRST FLOW + TIERED WITHDRAW + ADDRESS LOCK
 //
-// ⚠️ Withdrawals are a fixed $ tier (WITHDRAW_TIERS in lib/constants.js),
-// not a free-text WTC amount. Each tier has its own claim limit that now
-// resets every 6 MONTHS (Bangladesh time, via currentHalfYearBD()) instead
-// of every calendar month, and a lifetime referral-count threshold to
-// unlock it (referrals are never "spent" — once you have enough, the tier
-// stays unlocked). Ad-watch and task-completion requirements are unchanged.
+// ⚠️ MAJOR CHANGE: withdrawals no longer deduct WTC (or a fee) directly.
+// Users must first CONVERT WTC into a USDT balance — that's where the 25%
+// fee is now taken (see handleConvert). Withdrawals then spend from that
+// already-fee-deducted `usdtBalance` with NO additional fee at this step.
+// (A withdraw-time fee can be added back later if ever needed — not now.)
 //
-// ⚠️ NEW — 30-day address lock: the first method+address a user withdraws
-// to becomes their fixed payout destination for WITHDRAW_ADDRESS_LOCK_DAYS
-// (30) days. Any withdraw attempt with a DIFFERENT method or address during
-// that window is rejected with a clear "locked until" message. Once the
-// lock expires, the next withdrawal sets a fresh lock to whatever
-// method+address is used at that time. This stops an account (or a
-// compromised one) from rapidly cycling payouts across many wallets.
+// Tier claim limits reset every 6 MONTHS (Bangladesh time, currentHalfYearBD())
+// instead of every calendar month. A 30-day address lock still applies: the
+// first method+address a user withdraws to becomes fixed for that long.
 //
-// The balance check + deduction + tier-counter increment + address-lock
-// set/refresh all happen in a single atomic findOneAndUpdate — a user
-// firing off multiple requests at once can't double-spend, blow past a
-// tier's limit, or slip past the lock in a race window.
-//
-//   GET  /api/withdraw?action=history&initData=...   → the user's withdraw history
-//   GET  /api/withdraw?action=tiers&initData=...      → tier list + this user's eligibility for each + address-lock status
-//   POST /api/withdraw   body: { initData, method, details, tierId }
+//   GET  /api/withdraw?action=history&initData=...
+//   GET  /api/withdraw?action=tiers&initData=...              → tier list + eligibility (now against usdtBalance) + address-lock status
+//   POST /api/withdraw   body: { initData, action:'convert', wtcAmount }
+//   POST /api/withdraw   body: { initData, action:'create',  method, details, tierId }   (action defaults to 'create' if omitted)
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import { tgSend } from '../lib/telegram.js';
 import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
-    WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS, WITHDRAW_ADDRESS_LOCK_DAYS,
+    WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS, WITHDRAW_ADDRESS_LOCK_DAYS, MIN_CONVERT_WTC,
     FIRST_WITHDRAW_MIN_TASKS, calcAdsRequired, todayBD, currentHalfYearBD, WTC_PER_USD,
 } from '../lib/constants.js';
 
@@ -39,11 +30,6 @@ const LOCK_MS = WITHDRAW_ADDRESS_LOCK_DAYS * 24 * 60 * 60 * 1000;
 // Ensures the per-tier claim counters are reset if the 6-month period has
 // rolled over since the user's last withdrawal. Returns the (possibly
 // freshly-reset) tier-count map and the current period key.
-// ⚠️ field name kept as "withdrawTierMonth" even though it now holds a
-// half-year key (e.g. "2026-H2") — renaming the field isn't necessary
-// (it's just an opaque string compared for equality) and keeps this diff
-// minimal. Anyone with an old "MM/YYYY"-style value will simply get a
-// one-time automatic reset on their next withdrawal, which is harmless.
 async function ensureTierPeriodReset(users, userId, user) {
     const period = currentHalfYearBD();
     if (user.withdrawTierMonth === period) {
@@ -66,12 +52,13 @@ function getAddressLockStatus(user) {
     };
 }
 
-function tierEligibility(tier, referralCount, claimsUsedThisMonth) {
+// ⚠️ NEW semantics: `usd` is deducted straight from usdtBalance, no fee
+// here (fee already happened at convert time) — so "net" is just `usd`.
+function tierEligibility(tier, referralCount, claimsUsedThisMonth, usdtBalance) {
     return {
         id: tier.id,
         usd: tier.usd,
-        wtc: Math.round(tier.usd * WTC_PER_USD),
-        netUsd: tier.usd * (1 - WITHDRAW_FEE_PERCENT / 100),
+        netUsd: tier.usd, // kept for frontend compatibility — no fee at this step anymore
         monthlyLimit: tier.monthlyLimit,
         claimsUsed: claimsUsedThisMonth,
         claimsLeft: Math.max(0, tier.monthlyLimit - claimsUsedThisMonth),
@@ -79,10 +66,11 @@ function tierEligibility(tier, referralCount, claimsUsedThisMonth) {
         referralsHave: referralCount,
         referralsMet: referralCount >= tier.referralsRequired,
         monthlyLimitReached: claimsUsedThisMonth >= tier.monthlyLimit,
+        balanceOk: usdtBalance >= tier.usd,
     };
 }
 
-// ── GET ?action=tiers — tier list + this user's eligibility for each + address-lock status ──
+// ── GET ?action=tiers ──
 async function handleTiers(req, res, db) {
     res.setHeader('Cache-Control', 'no-store, max-age=0');
     const verified = verifyTelegramInitData(req.query.initData);
@@ -94,12 +82,16 @@ async function handleTiers(req, res, db) {
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
 
     const { counts } = await ensureTierPeriodReset(users, id, user);
-    const tiers = WITHDRAW_TIERS.map(t => tierEligibility(t, user.referralCount || 0, counts[t.id] || 0));
+    const usdtBalance = user.usdtBalance || 0;
+    const tiers = WITHDRAW_TIERS.map(t => tierEligibility(t, user.referralCount || 0, counts[t.id] || 0, usdtBalance));
     const addressLock = getAddressLockStatus(user);
-    return res.status(200).json({ ok: true, tiers, wtcBalance: user.wtcBalance || 0, addressLock });
+    return res.status(200).json({
+        ok: true, tiers, usdtBalance, wtcBalance: user.wtcBalance || 0, addressLock,
+        minConvertWtc: MIN_CONVERT_WTC, convertFeePercent: WITHDRAW_FEE_PERCENT,
+    });
 }
 
-// ── GET ?action=history — the user's recent withdraw requests (pending/approved/rejected) ──
+// ── GET ?action=history ──
 async function handleHistory(req, res, db) {
     res.setHeader('Cache-Control', 'no-store, max-age=0');
     const verified = verifyTelegramInitData(req.query.initData);
@@ -117,10 +109,45 @@ async function handleHistory(req, res, db) {
     return res.status(200).json({ ok: true, history: list });
 }
 
-// ── POST — create a new withdraw request ──
+// ── POST action:'convert' — WTC → usdtBalance, fee taken HERE ──
+async function handleConvert(req, res, db) {
+    const verified = verifyTelegramInitData(req.body?.initData);
+    if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
+    const id = String(verified.user.id);
+
+    const wtcAmount = Math.floor(Number(req.body?.wtcAmount));
+    if (!wtcAmount || isNaN(wtcAmount) || wtcAmount <= 0) {
+        return res.status(400).json({ ok: false, error: 'invalid_amount' });
+    }
+    if (wtcAmount < MIN_CONVERT_WTC) {
+        return res.status(400).json({ ok: false, error: 'below_minimum', message: `Minimum ${MIN_CONVERT_WTC.toLocaleString()} WTC required to convert.` });
+    }
+
+    const users = db.collection('users');
+    const user = await users.findOne({ _id: id }, { projection: { isBanned: 1, wtcBalance: 1 } });
+    if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
+    if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
+
+    const grossUsd = wtcAmount / WTC_PER_USD;
+    const feeUsd = grossUsd * (WITHDRAW_FEE_PERCENT / 100);
+    const netUsd = grossUsd - feeUsd;
+
+    // ── ATOMIC — balance check + deduct WTC + credit usdtBalance, one operation ──
+    const gate = await users.findOneAndUpdate(
+        { _id: id, isBanned: { $ne: true }, wtcBalance: { $gte: wtcAmount } },
+        { $inc: { wtcBalance: -wtcAmount, usdtBalance: netUsd } },
+        { returnDocument: 'after' }
+    );
+    if (!gate) return res.status(409).json({ ok: false, error: 'insufficient_balance' });
+
+    return res.status(200).json({
+        ok: true, wtcConverted: wtcAmount, feeUsd, netUsd,
+        newWtcBalance: gate.wtcBalance, newUsdtBalance: gate.usdtBalance,
+    });
+}
+
+// ── POST action:'create' (default) — spend usdtBalance against a tier ──
 async function handleCreate(req, res, db) {
-    // ── SECURITY: this endpoint moves real money, so initData verification
-    // matters most right here — the client-supplied userId is never trusted.
     const verified = verifyTelegramInitData(req.body?.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const id = String(verified.user.id);
@@ -139,8 +166,6 @@ async function handleCreate(req, res, db) {
     const users = db.collection('users');
     const today = await ensureDailyReset(users, id);
 
-    // soft checks (for clear error messages) — the actual atomic deduction
-    // below is still protected against races regardless of these reads
     const user = await users.findOne({ _id: id });
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
@@ -150,7 +175,7 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'need_5_tasks' });
     }
 
-    // ── ⚠️ NEW: 30-day address lock ──
+    // ── 30-day address lock ──
     const lockStatus = getAddressLockStatus(user);
     if (lockStatus && (lockStatus.method !== method || lockStatus.address !== details)) {
         return res.status(400).json({
@@ -160,7 +185,7 @@ async function handleCreate(req, res, db) {
         });
     }
 
-    // ── tier eligibility: lifetime referral threshold (not consumed) + claim limit ──
+    // ── tier eligibility: lifetime referral threshold + claim limit ──
     const { counts: tierCounts, period: tierPeriod } = await ensureTierPeriodReset(users, id, user);
     if ((user.referralCount || 0) < tier.referralsRequired) {
         return res.status(400).json({
@@ -177,10 +202,13 @@ async function handleCreate(req, res, db) {
         });
     }
 
-    const wtcAmount = Math.round(tier.usd * WTC_PER_USD);
+    // ⚠️ NEW: no more WTC/fee math here — ads-required is based directly on
+    // the tier's USD value, and the balance check below is against usdtBalance.
+    if ((user.usdtBalance || 0) < tier.usd) {
+        return res.status(400).json({ ok: false, error: 'insufficient_balance', message: `You need $${tier.usd} in your converted balance. Convert more WTC first.` });
+    }
 
-    const grossCurrencyAmount = methodConfig.wtcToCurrency(wtcAmount);
-    const adsRequired = calcAdsRequired(grossCurrencyAmount);
+    const adsRequired = calcAdsRequired(tier.usd);
     const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
     if (adsToday < adsRequired) {
         return res.status(400).json({ ok: false, error: 'insufficient_ads', adsRequired, adsToday });
@@ -194,28 +222,20 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'address_used_by_other' });
     }
 
-    const feeWtc = Math.floor(wtcAmount * (WITHDRAW_FEE_PERCENT / 100));
-    const netWtc = wtcAmount - feeWtc;
-    const netCurrencyAmount = methodConfig.wtcToCurrency(netWtc);
-
     // ══════════════════════════════════════════════════════════
-    // ATOMIC GATE — balance check, once-per-day check, the tier's claim-limit
-    // check, and the address-lock condition are all re-verified + applied in
-    // one operation, with no race window between "check" and "deduct".
+    // ATOMIC GATE — usdtBalance check, once-per-day check, tier's claim-limit
+    // check, and the address-lock condition all re-verified + applied here.
     // ══════════════════════════════════════════════════════════
     const tierCountField = `withdrawTierCounts.${tier.id}`;
     const lockFilter = lockStatus
-        // already locked to this exact method+address — just proceed, don't touch the lock fields
         ? { lockedWithdrawMethod: method, lockedWithdrawAddress: details }
-        // no active lock (first withdrawal, or previous lock expired) — filter just needs the
-        // user doc to still not have an active lock at write time (re-checked via addressLockedAt)
         : { $or: [{ addressLockedAt: { $exists: false } }, { addressLockedAt: { $lt: new Date(Date.now() - LOCK_MS) } }] };
 
     const gate = await users.findOneAndUpdate(
         {
             _id: id,
             isBanned: { $ne: true },
-            wtcBalance: { $gte: wtcAmount },
+            usdtBalance: { $gte: tier.usd },
             lastWithdrawDate: { $ne: today },
             withdrawTierMonth: tierPeriod,
             $or: [
@@ -225,11 +245,9 @@ async function handleCreate(req, res, db) {
             ...lockFilter,
         },
         {
-            $inc: { wtcBalance: -wtcAmount, withdrawalCount: 1, [tierCountField]: 1 },
+            $inc: { usdtBalance: -tier.usd, withdrawalCount: 1, [tierCountField]: 1 },
             $set: {
                 lastWithdrawDate: today,
-                // only (re)sets the lock when there wasn't already an active one — once locked,
-                // it stays pointed at the same method+address until it naturally expires
                 ...(!lockStatus ? { lockedWithdrawMethod: method, lockedWithdrawAddress: details, addressLockedAt: new Date() } : {}),
             },
         },
@@ -240,12 +258,16 @@ async function handleCreate(req, res, db) {
         return res.status(409).json({ ok: false, error: 'conflict_retry' });
     }
 
+    // ⚠️ These wtcAmount/feeWtc fields are kept purely for display/compatibility
+    // with the admin bot's existing message templates — no WTC is actually
+    // deducted here anymore (that already happened at convert time). feeWtc is
+    // 0 because the fee was already taken during conversion, not now.
     const result = await withdrawals.insertOne({
         userId: id,
         username: user.telegramUsername || 'N/A',
-        method, details, tierId: tier.id, wtcAmount, feeWtc,
-        feePercent: WITHDRAW_FEE_PERCENT, netWtc,
-        cashAmount: netCurrencyAmount, currency: methodConfig.currency,
+        method, details, tierId: tier.id,
+        wtcAmount: Math.round(tier.usd * WTC_PER_USD), feeWtc: 0, netWtc: Math.round(tier.usd * WTC_PER_USD),
+        cashAmount: tier.usd, currency: methodConfig.currency,
         adsRequired, status: 'pending', createdAt: new Date(),
     });
 
@@ -254,7 +276,7 @@ async function handleCreate(req, res, db) {
             `💸 <b>Withdrawal Request</b>\n\n` +
             `👤 <code>${id}</code> (@${user.telegramUsername || '?'})\n` +
             `🎯 Tier: <b>$${tier.usd}</b> (${claimsUsed + 1}/${tier.monthlyLimit} this period)\n` +
-            `💰 ${wtcAmount.toLocaleString()} WTC (fee ${feeWtc.toLocaleString()} WTC) → <b>${netCurrencyAmount.toFixed(4)} ${methodConfig.currency}</b>\n` +
+            `💰 <b>${tier.usd.toFixed(2)} ${methodConfig.currency}</b> (already fee-deducted at convert time — no fee here)\n` +
             `📤 Method: <b>${methodConfig.label}</b>\n` +
             `📍 Address: <code>${details}</code>${lockStatus ? '' : ' 🔒 (newly locked for 30 days)'}\n` +
             `📊 Total withdrawals so far: <b>${gate.withdrawalCount || 1}</b>\n` +
@@ -267,7 +289,7 @@ async function handleCreate(req, res, db) {
         ).catch((e) => console.error('admin notify failed:', e));
     }
 
-    return res.status(200).json({ ok: true, withdrawalId: result.insertedId, netCurrencyAmount, feeWtc });
+    return res.status(200).json({ ok: true, withdrawalId: result.insertedId, netCurrencyAmount: tier.usd, feeWtc: 0 });
 }
 
 export default async function handler(req, res) {
@@ -281,11 +303,16 @@ export default async function handler(req, res) {
             return res.status(400).json({ ok: false, error: 'unknown_action' });
         }
 
-        if (req.method === 'POST') return handleCreate(req, res, db);
+        if (req.method === 'POST') {
+            const action = req.body?.action || 'create';
+            if (action === 'convert') return handleConvert(req, res, db);
+            if (action === 'create') return handleCreate(req, res, db);
+            return res.status(400).json({ ok: false, error: 'unknown_action' });
+        }
 
         return res.status(405).json({ ok: false, error: 'method_not_allowed' });
     } catch (err) {
         console.error('withdraw error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-            }
+        }
