@@ -5,6 +5,13 @@
 // the only one used — the client can never act as someone else by sending a
 // different userId.
 //
+// ⚠️ NEW (this update): every WTC-crediting action now also checks
+// REWARD_ELIGIBLE_FILTER — a multi-account-flagged user earns NOTHING new
+// until they verify channel+community membership. This is NOT retroactive
+// (no held/pending balance to release later) — reward simply stays blocked
+// until verified, then unblocks going forward. Progress/counters still
+// advance normally EXCEPT completedTasks (see handleTaskComplete for why).
+//
 //   { action: 'videoStart',    initData }
 //   { action: 'videoClaim',    initData, startTime, signature, claimedPoints }
 //   { action: 'claimLootbox',  initData, adWatched }
@@ -27,6 +34,11 @@ import {
 const SECRET = process.env.VIDEO_SIGNING_SECRET;
 const sign = (userId, startTime) => crypto.createHmac('sha256', SECRET).update(`${userId}:${startTime}`).digest('hex');
 
+// ⚠️ NEW — multi-account-flagged accounts earn no NEW WTC until channel +
+// community verified. Used as an extra $and condition inside every reward
+// handler's atomic findOneAndUpdate filter.
+const REWARD_ELIGIBLE_FILTER = { $or: [{ multiAccountFlag: { $ne: true } }, { channelVerified: true }] };
+
 // ── videoClaim ──
 // ⚠️ SECURITY FIX: the previous version verified the signature correctly, but
 // never recorded that a given (userId, startTime) session had already been
@@ -40,6 +52,11 @@ const sign = (userId, startTime) => crypto.createHmac('sha256', SECRET).update(`
 // very same update that credits the reward, and the filter rejects any
 // startTime already present in that array — so a replayed session earns
 // nothing the second time around, full stop.
+//
+// ⚠️ NOTE: no REWARD_ELIGIBLE_FILTER here on purpose — videoClaim only moves
+// WTC into `pendingVideoWTC` (not yet real balance), the actual credit
+// happens at claimLootbox, which IS gated. Blocking here too would just
+// silently stall the pending-accrual UI with no benefit.
 async function handleVideoClaim(req, res, db, userId) {
     const { startTime, signature, claimedPoints } = req.body;
     if (!startTime || !signature || claimedPoints === undefined) {
@@ -105,14 +122,16 @@ async function handleVideoClaim(req, res, db, userId) {
     return res.status(200).json({ ok: true, success: true, pendingVideoWTC: gate.pendingVideoWTC || 0, dailyVideoWtcMined: gate.dailyVideoWtcMined });
 }
 
-// ── claimLootbox ──
+// ── claimLootbox ── ⚠️ NOW GATED by REWARD_ELIGIBLE_FILTER — this is where
+// pendingVideoWTC actually becomes real wtcBalance, so it's the correct
+// choke point for the video-earning path.
 async function handleClaimLootbox(req, res, db, userId) {
     const { adWatched } = req.body;
     if (!adWatched) return res.status(400).json({ ok: false, error: 'ad_required' });
 
     const users = db.collection('users');
     const gate = await users.findOneAndUpdate(
-        { _id: userId, isBanned: { $ne: true }, pendingVideoWTC: { $gte: LOOTBOX_CLAIM_MIN } },
+        { _id: userId, isBanned: { $ne: true }, pendingVideoWTC: { $gte: LOOTBOX_CLAIM_MIN }, ...REWARD_ELIGIBLE_FILTER },
         [
             { $set: {
                 wtcBalance: { $add: ['$wtcBalance', '$pendingVideoWTC'] },
@@ -124,16 +143,20 @@ async function handleClaimLootbox(req, res, db, userId) {
     );
 
     if (!gate) {
-        const exists = await users.findOne({ _id: userId }, { projection: { isBanned: 1 } });
+        const exists = await users.findOne({ _id: userId }, { projection: { isBanned: 1, multiAccountFlag: 1, channelVerified: 1, pendingVideoWTC: 1 } });
         if (!exists) return res.status(404).json({ ok: false, error: 'user_not_found' });
         if (exists.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
+        // ⚠️ NEW — distinguish "flagged & unverified" from a plain below-minimum case
+        if (exists.multiAccountFlag && !exists.channelVerified) {
+            return res.status(403).json({ ok: false, error: 'account_under_review' });
+        }
         return res.status(400).json({ ok: false, error: 'below_minimum', message: `Minimum ${LOOTBOX_CLAIM_MIN} WTC required.` });
     }
 
     return res.status(200).json({ ok: true, pointsAdded: gate.pendingVideoWTC || 0 });
 }
 
-// ── claimAdReward ──
+// ── claimAdReward ── ⚠️ NOW GATED
 const COUNTER_FIELD = {
     adsgramDaily: 'adsgramDailyCountToday', adsgramSpecial: 'adsgramSpecialCountToday',
     monetag: 'monetagCountToday', giga: 'gigaCountToday',
@@ -148,15 +171,18 @@ async function handleClaimAdReward(req, res, db, userId) {
     await ensureDailyReset(users, userId);
 
     const gate = await users.findOneAndUpdate(
-        { _id: userId, isBanned: { $ne: true }, [counterField]: { $lt: config.dailyLimit } },
+        { _id: userId, isBanned: { $ne: true }, [counterField]: { $lt: config.dailyLimit }, ...REWARD_ELIGIBLE_FILTER },
         { $inc: { wtcBalance: config.reward, lifetimeWtcEarned: config.reward, lifetimeAdsWatched: 1, adsWatchedToday: 1, [counterField]: 1 } },
         { returnDocument: 'after' }
     );
 
     if (!gate) {
-        const exists = await users.findOne({ _id: userId }, { projection: { isBanned: 1 } });
+        const exists = await users.findOne({ _id: userId }, { projection: { isBanned: 1, multiAccountFlag: 1, channelVerified: 1 } });
         if (!exists) return res.status(404).json({ ok: false, error: 'user_not_found' });
         if (exists.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
+        if (exists.multiAccountFlag && !exists.channelVerified) {
+            return res.status(403).json({ ok: false, error: 'account_under_review' });
+        }
         return res.status(400).json({ ok: false, error: 'daily_limit_reached' });
     }
 
@@ -164,8 +190,8 @@ async function handleClaimAdReward(req, res, db, userId) {
     return res.status(200).json({ ok: true, reward: config.reward, countToday: gate[counterField], dailyLimit: config.dailyLimit });
 }
 
-// ── taskComplete ──
-// ⚠️ SECURITY FIX: previously the task.limit check used a plain read
+// ── taskComplete ── ⚠️ NOW GATED (STEP 2 only — see comment below on why STEP 1's slot-claim stays ungated)
+// ⚠️ SECURITY FIX (pre-existing): previously the task.limit check used a plain read
 // (`task.completionCount >= task.limit`), and completionCount was incremented
 // separately with an unconditional updateOne — leaving a race window between
 // the two. If many users completed the same limited task at almost the exact
@@ -174,7 +200,8 @@ async function handleClaimAdReward(req, res, db, userId) {
 // Now claiming the task's "slot" is also atomic — the check+increment of the
 // task's own completionCount+limit condition happens in the same
 // findOneAndUpdate, and if crediting the user's record fails afterward (e.g.
-// a double-click race), the slot is rolled back.
+// a double-click race, OR the new multi-account review gate), the slot is
+// rolled back.
 async function handleTaskComplete(req, res, db, userId) {
     const { taskId } = req.body;
     if (!taskId) return res.status(400).json({ ok: false, error: 'missing_fields' });
@@ -199,6 +226,10 @@ async function handleTaskComplete(req, res, db, userId) {
     }
 
     // ── STEP 1: atomically claim the task's "slot" (limit check + increment together) ──
+    // ⚠️ Intentionally NOT gated by REWARD_ELIGIBLE_FILTER — this is a shared,
+    // limited-quota resource across ALL users, not this user's own reward. A
+    // flagged user's failed claim below correctly gives this slot back (see
+    // STEP 2), so legit users' quota is never actually consumed by them.
     const taskGate = await tasks.findOneAndUpdate(
         { _id: taskObjId, $or: [{ limit: { $lte: 0 } }, { limit: { $exists: false } }, { $expr: { $lt: ['$completionCount', '$limit'] } }] },
         { $inc: { completionCount: 1 } },
@@ -209,14 +240,28 @@ async function handleTaskComplete(req, res, db, userId) {
     const rewardWtc = task.rewardWtc || task.rewardGold || task.rewardPoints || 10; // default fallback if admin left it blank
 
     // ── STEP 2: atomically credit the user (a double-claim by the same user is caught right here) ──
+    // ⚠️ NEW: also requires REWARD_ELIGIBLE_FILTER. NOTE — this means a
+    // flagged+unverified user's `completedTasks` / `tasksCompletedToday` do
+    // NOT advance either (the whole credit, including the array push, is one
+    // atomic op that's blocked together). This is an intentional trade-off:
+    // letting completedTasks grow without a reward would mean re-verifying
+    // later gives no way to "catch up" on missed rewards for tasks already
+    // marked done, and would also let a flagged account silently consume
+    // task slots node-wide for zero benefit to anyone. Blocking the whole
+    // credit keeps the task re-doable once verified.
     const gate = await users.findOneAndUpdate(
-        { _id: userId, completedTasks: { $ne: taskId } },
+        { _id: userId, completedTasks: { $ne: taskId }, ...REWARD_ELIGIBLE_FILTER },
         { $inc: { wtcBalance: rewardWtc, lifetimeWtcEarned: rewardWtc, tasksCompletedToday: 1 }, $addToSet: { completedTasks: taskId } },
         { returnDocument: 'after' }
     );
     if (!gate) {
-        // Crediting the user failed (e.g. already done in a race) — give the task's slot back
+        // Crediting the user failed (e.g. already done in a race, OR blocked by
+        // the multi-account review gate) — give the task's slot back either way.
         await tasks.updateOne({ _id: taskObjId }, { $inc: { completionCount: -1 } });
+        const exists = await users.findOne({ _id: userId }, { projection: { completedTasks: 1, multiAccountFlag: 1, channelVerified: 1 } });
+        if (exists?.multiAccountFlag && !exists.channelVerified && !(exists.completedTasks || []).includes(taskId)) {
+            return res.status(403).json({ ok: false, error: 'account_under_review' });
+        }
         return res.status(200).json({ ok: false, alreadyDone: true });
     }
 
@@ -224,7 +269,7 @@ async function handleTaskComplete(req, res, db, userId) {
     return res.status(200).json({ ok: true, rewardWtc });
 }
 
-// ── claimPromo ──
+// ── claimPromo ── ⚠️ NOW GATED
 async function handleClaimPromo(req, res, db, userId) {
     const { code } = req.body;
     if (!code) return res.status(400).json({ ok: false, error: 'missing_fields' });
@@ -252,8 +297,22 @@ async function handleClaimPromo(req, res, db, userId) {
         return res.status(400).json({ ok: false, error: 'fully_used' });
     }
 
+    // ⚠️ NEW: the promo code itself is already marked used above (promoGate)
+    // even if the credit below is blocked by REWARD_ELIGIBLE_FILTER —
+    // otherwise a flagged user could keep retrying the same code after
+    // verifying, defeating the code's single-use-per-user limit. Trade-off:
+    // a flagged user "burns" a promo code with zero reward if they redeem it
+    // while still unverified. Accepted, since promo codes are typically
+    // low-value and this closes an easy retry-abuse path.
     const reward = promo.reward || 0;
-    await users.updateOne({ _id: userId }, { $inc: { wtcBalance: reward, lifetimeWtcEarned: reward } });
+    const creditResult = await users.updateOne(
+        { _id: userId, ...REWARD_ELIGIBLE_FILTER },
+        { $inc: { wtcBalance: reward, lifetimeWtcEarned: reward } }
+    );
+    if (creditResult.matchedCount === 0) {
+        return res.status(403).json({ ok: false, error: 'account_under_review' });
+    }
+
     return res.status(200).json({ ok: true, reward });
 }
 
@@ -286,4 +345,4 @@ export default async function handler(req, res) {
         case 'claimPromo':     return handleClaimPromo(req, res, db, userId);
         default: return res.status(400).json({ ok: false, error: 'unknown_action' });
     }
-            }
+                                                                                             }
