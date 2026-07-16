@@ -4,14 +4,21 @@
 // Users must first CONVERT WTC into a USDT balance — that's where the 25%
 // fee is now taken (see handleConvert). Withdrawals then spend from that
 // already-fee-deducted `usdtBalance` with NO additional fee at this step.
-// (A withdraw-time fee can be added back later if ever needed — not now.)
 //
-// Tier claim limits reset every 6 MONTHS (Bangladesh time, currentHalfYearBD())
-// instead of every calendar month. A 30-day address lock still applies: the
-// first method+address a user withdraws to becomes fixed for that long.
+// Tier claim limits reset every 6 MONTHS (Bangladesh time, currentHalfYearBD()).
+// A 30-day address lock still applies: the first method+address a user
+// withdraws to becomes fixed for that long.
+//
+// ⚠️ NEW (this update): every withdraw request — regardless of tier size —
+// now requires:
+//   - WITHDRAW_ADS_REQUIRED (15) ads watched TODAY (Bangladesh calendar day)
+//   - FIRST_WITHDRAW_MIN_TASKS (10) tasks completed LIFETIME
+// These replace the old per-tier calcAdsRequired(tier.usd) scaling and the
+// "only checked on the very first withdraw" task gate. Referral requirements
+// (per-tier, in WITHDRAW_TIERS) are UNCHANGED.
 //
 //   GET  /api/withdraw?action=history&initData=...
-//   GET  /api/withdraw?action=tiers&initData=...              → tier list + eligibility (now against usdtBalance) + address-lock status
+//   GET  /api/withdraw?action=tiers&initData=...              → tier list + eligibility + global ads/task requirement status + address-lock status
 //   POST /api/withdraw   body: { initData, action:'convert', wtcAmount }
 //   POST /api/withdraw   body: { initData, action:'create',  method, details, tierId }   (action defaults to 'create' if omitted)
 
@@ -21,7 +28,7 @@ import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS, WITHDRAW_ADDRESS_LOCK_DAYS, MIN_CONVERT_WTC,
-    FIRST_WITHDRAW_MIN_TASKS, calcAdsRequired, todayBD, currentHalfYearBD, WTC_PER_USD,
+    FIRST_WITHDRAW_MIN_TASKS, WITHDRAW_ADS_REQUIRED, todayBD, currentHalfYearBD, WTC_PER_USD,
 } from '../lib/constants.js';
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
@@ -52,13 +59,13 @@ function getAddressLockStatus(user) {
     };
 }
 
-// ⚠️ NEW semantics: `usd` is deducted straight from usdtBalance, no fee
-// here (fee already happened at convert time) — so "net" is just `usd`.
+// `usd` is deducted straight from usdtBalance, no fee here (fee already
+// happened at convert time) — so "net" is just `usd`.
 function tierEligibility(tier, referralCount, claimsUsedThisMonth, usdtBalance) {
     return {
         id: tier.id,
         usd: tier.usd,
-        netUsd: tier.usd, // kept for frontend compatibility — no fee at this step anymore
+        netUsd: tier.usd, // kept for frontend compatibility — no fee at this step
         monthlyLimit: tier.monthlyLimit,
         claimsUsed: claimsUsedThisMonth,
         claimsLeft: Math.max(0, tier.monthlyLimit - claimsUsedThisMonth),
@@ -78,6 +85,10 @@ async function handleTiers(req, res, db) {
     const id = String(verified.user.id);
 
     const users = db.collection('users');
+    // ⚠️ NEW: reset applied here too (previously only handleCreate called
+    // this), so adsWatchedToday shown in the "tiers" GET response can't be
+    // stale from a previous calendar day.
+    const today = await ensureDailyReset(users, id);
     const user = await users.findOne({ _id: id });
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
 
@@ -85,8 +96,24 @@ async function handleTiers(req, res, db) {
     const usdtBalance = user.usdtBalance || 0;
     const tiers = WITHDRAW_TIERS.map(t => tierEligibility(t, user.referralCount || 0, counts[t.id] || 0, usdtBalance));
     const addressLock = getAddressLockStatus(user);
+
+    // ⚠️ NEW — global (tier-independent) requirement status, for the
+    // multi-step withdraw wizard's "Requirements" screen (ads progress bar,
+    // lifetime task progress bar — matches the reference screenshot's UI).
+    const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
+    const tasksHave = (user.completedTasks || []).length;
+    const withdrawRequirements = {
+        adsRequired: WITHDRAW_ADS_REQUIRED,
+        adsWatchedToday: adsToday,
+        adsMet: adsToday >= WITHDRAW_ADS_REQUIRED,
+        tasksRequired: FIRST_WITHDRAW_MIN_TASKS,
+        tasksHave,
+        tasksMet: tasksHave >= FIRST_WITHDRAW_MIN_TASKS,
+    };
+
     return res.status(200).json({
         ok: true, tiers, usdtBalance, wtcBalance: user.wtcBalance || 0, addressLock,
+        withdrawRequirements,
         minConvertWtc: MIN_CONVERT_WTC, convertFeePercent: WITHDRAW_FEE_PERCENT,
     });
 }
@@ -170,9 +197,18 @@ async function handleCreate(req, res, db) {
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
 
-    const isFirstWithdraw = (user.withdrawalCount || 0) === 0;
-    if (isFirstWithdraw && (user.completedTasks?.length || 0) < FIRST_WITHDRAW_MIN_TASKS) {
-        return res.status(400).json({ ok: false, error: 'need_5_tasks' });
+    // ⚠️ CHANGED: was "only on the very first withdraw, need 5" — now a
+    // LIFETIME gate re-checked on every request, threshold 10. Since
+    // completedTasks only grows, once a user crosses 10 this always passes —
+    // functionally still a "one-time" wall, just re-verified each time
+    // instead of gated behind a withdrawalCount===0 flag.
+    const tasksHave = (user.completedTasks || []).length;
+    if (tasksHave < FIRST_WITHDRAW_MIN_TASKS) {
+        return res.status(400).json({
+            ok: false, error: 'need_5_tasks', // ⚠️ error code name kept as-is for frontend errorText() compatibility — semantics updated, code string unchanged
+            tasksRequired: FIRST_WITHDRAW_MIN_TASKS, tasksHave,
+            message: `Complete at least ${FIRST_WITHDRAW_MIN_TASKS} tasks before withdrawing (you have ${tasksHave}).`,
+        });
     }
 
     // ── 30-day address lock ──
@@ -185,7 +221,7 @@ async function handleCreate(req, res, db) {
         });
     }
 
-    // ── tier eligibility: lifetime referral threshold + claim limit ──
+    // ── tier eligibility: lifetime referral threshold + claim limit (UNCHANGED logic; monthlyLimit values updated in constants.js) ──
     const { counts: tierCounts, period: tierPeriod } = await ensureTierPeriodReset(users, id, user);
     if ((user.referralCount || 0) < tier.referralsRequired) {
         return res.status(400).json({
@@ -202,16 +238,15 @@ async function handleCreate(req, res, db) {
         });
     }
 
-    // ⚠️ NEW: no more WTC/fee math here — ads-required is based directly on
-    // the tier's USD value, and the balance check below is against usdtBalance.
     if ((user.usdtBalance || 0) < tier.usd) {
         return res.status(400).json({ ok: false, error: 'insufficient_balance', message: `You need $${tier.usd} in your converted balance. Convert more WTC first.` });
     }
 
-    const adsRequired = calcAdsRequired(tier.usd);
+    // ⚠️ CHANGED: fixed WITHDRAW_ADS_REQUIRED (15) instead of
+    // calcAdsRequired(tier.usd) — same requirement regardless of tier size.
     const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
-    if (adsToday < adsRequired) {
-        return res.status(400).json({ ok: false, error: 'insufficient_ads', adsRequired, adsToday });
+    if (adsToday < WITHDRAW_ADS_REQUIRED) {
+        return res.status(400).json({ ok: false, error: 'insufficient_ads', adsRequired: WITHDRAW_ADS_REQUIRED, adsToday });
     }
 
     const withdrawals = db.collection('withdrawals');
@@ -225,6 +260,14 @@ async function handleCreate(req, res, db) {
     // ══════════════════════════════════════════════════════════
     // ATOMIC GATE — usdtBalance check, once-per-day check, tier's claim-limit
     // check, and the address-lock condition all re-verified + applied here.
+    //
+    // ⚠️ NEW: lastResetDate + adsWatchedToday are now ALSO part of this
+    // atomic filter (previously the ads check above was a plain read with no
+    // atomic re-verification). Without this, a request landing right at the
+    // Bangladesh midnight boundary could pass the non-atomic ads check above
+    // and then have adsWatchedToday reset to 0 by a concurrent/later request
+    // before this update runs — letting a withdrawal through with 0 ads
+    // watched today. Now that gap is closed.
     // ══════════════════════════════════════════════════════════
     const tierCountField = `withdrawTierCounts.${tier.id}`;
     const lockFilter = lockStatus
@@ -237,6 +280,8 @@ async function handleCreate(req, res, db) {
             isBanned: { $ne: true },
             usdtBalance: { $gte: tier.usd },
             lastWithdrawDate: { $ne: today },
+            lastResetDate: today,                              // ⚠️ NEW
+            adsWatchedToday: { $gte: WITHDRAW_ADS_REQUIRED },   // ⚠️ NEW
             withdrawTierMonth: tierPeriod,
             $or: [
                 { [tierCountField]: { $exists: false } },
@@ -258,17 +303,14 @@ async function handleCreate(req, res, db) {
         return res.status(409).json({ ok: false, error: 'conflict_retry' });
     }
 
-    // ⚠️ These wtcAmount/feeWtc fields are kept purely for display/compatibility
-    // with the admin bot's existing message templates — no WTC is actually
-    // deducted here anymore (that already happened at convert time). feeWtc is
-    // 0 because the fee was already taken during conversion, not now.
     const result = await withdrawals.insertOne({
         userId: id,
         username: user.telegramUsername || 'N/A',
         method, details, tierId: tier.id,
         wtcAmount: Math.round(tier.usd * WTC_PER_USD), feeWtc: 0, netWtc: Math.round(tier.usd * WTC_PER_USD),
         cashAmount: tier.usd, currency: methodConfig.currency,
-        adsRequired, status: 'pending', createdAt: new Date(),
+        adsRequired: WITHDRAW_ADS_REQUIRED, // ⚠️ CHANGED — fixed value, not tier-dependent anymore
+        status: 'pending', createdAt: new Date(),
     });
 
     if (ADMIN_ID) {
