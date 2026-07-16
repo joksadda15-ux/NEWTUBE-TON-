@@ -460,6 +460,12 @@ const MINI_APP_BASE = 'https://t.me/NewTube12_bot/WatchTo_Earn';
 const OFFICIAL_CHANNEL = 'Newtube_Earn';
 const COMMUNITY_GROUP = 'newtube_commonity';
 const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video section only (6 min)
+// ⚠️ NEW — mirrors lib/constants.js WITHDRAW_ADS_REQUIRED / FIRST_WITHDRAW_MIN_TASKS.
+// Frontend-only copies for instant UI rendering (progress bars, requirement
+// text) — the server is still the source of truth via withdraw?action=tiers'
+// `withdrawRequirements` field; these are just the display fallback/labels.
+const WITHDRAW_ADS_REQUIRED = 15;
+const WITHDRAW_TASKS_REQUIRED = 10;
 
 const tg = window.Telegram?.WebApp;
 if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#070B14'); } catch (e) {} }
@@ -569,8 +575,8 @@ const ERROR_MESSAGES = {
     session_already_claimed: 'This video session was already claimed.',
     ad_required: 'Please watch an ad first.',
     insufficient_balance: 'Insufficient balance.',
-    insufficient_ads: 'Watch more ads before this withdrawal amount.',
-    need_5_tasks: 'Complete at least 5 tasks before your first withdrawal.',
+    insufficient_ads: `Watch ${WITHDRAW_ADS_REQUIRED} ads today before withdrawing.`,
+    need_5_tasks: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks before withdrawing.`,
     referral_required: 'This tier needs more referrals — check the tier list.',
     tier_monthly_limit_reached: "You've used all claims for this tier — resets every 6 months.",
     address_locked: 'Your withdraw address is locked — check the note in the withdraw sheet.',
@@ -588,6 +594,7 @@ const ERROR_MESSAGES = {
     server_error: 'Server error, please try again shortly.',
     video_secret_missing: 'Video earning is temporarily unavailable — please try again later.',
     unauthorized: 'Session expired — please reopen the app from Telegram.',
+    account_under_review: 'Your account is under review — join the channel & community to unlock earning.',
     sdk_not_loaded: 'Ad failed to load — please try again.',
     timeout: 'Ad timed out — please try again.',
 };
@@ -1246,14 +1253,91 @@ function openConvertModal() {
     };
 }
 
+// ══════════════════════════════════════════════════════════════
+// WITHDRAW MODAL — now a 2-STEP WIZARD:
+//   Step 1 "requirements" — global gate: 15 ads watched today + 10 tasks
+//           completed lifetime (fetched from withdraw?action=tiers'
+//           `withdrawRequirements` field, same call the tier list already
+//           needed — no extra endpoint).
+//   Step 2 "form"         — unchanged tier + method/address picker, only
+//           reachable once step 1's requirements are met.
+// ══════════════════════════════════════════════════════════════
 function openWithdrawModal() {
+    let step = 'requirements';
     let method = 'binance';
     let selectedTierId = null;
     let tiers = [];
-    let addressLock = null; // ⚠️ NEW — populated after loadTiers(); { method, address, daysLeft } or null
-    const u = state.user || {};
+    let addressLock = null; // { method, address, daysLeft } or null
+    let requirements = null; // { adsRequired, adsWatchedToday, adsMet, tasksRequired, tasksHave, tasksMet }
+    let loadFailed = false;
 
-    function render() {
+    // ── STEP 1 — requirements gate ──
+    function renderRequirements() {
+        const r = requirements;
+        const adsPct = r ? Math.min(100, Math.round((r.adsWatchedToday / r.adsRequired) * 100)) : 0;
+        const tasksPct = r ? Math.min(100, Math.round((r.tasksHave / r.tasksRequired) * 100)) : 0;
+        const allMet = !!(r && r.adsMet && r.tasksMet);
+
+        function reqCard(label, have, need, pct, met, hue, hint) {
+            return `
+            <div class="card" style="padding:14px; margin-bottom:10px; border-color:${met ? 'rgba(34,197,94,0.35)' : 'var(--border)'};">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600;">
+                        <span style="width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:11px; ${met ? 'background:var(--success); color:#04140A;' : 'border:1.5px solid var(--border-strong);'}">${met ? '✓' : ''}</span>
+                        ${label}
+                    </div>
+                    <span style="font-size:12.5px; font-weight:600; color:${met ? 'var(--success)' : 'var(--ink-muted)'};">${have}/${need}</span>
+                </div>
+                <div style="height:6px; border-radius:4px; background:var(--surface); overflow:hidden;">
+                    <div style="height:100%; width:${pct}%; background:${met ? 'var(--success)' : hue}; border-radius:4px; transition:width 0.3s ease;"></div>
+                </div>
+                ${!met && hint ? `<div class="muted" style="font-size:11.5px; margin-top:8px;">${hint}</div>` : ''}
+            </div>`;
+        }
+
+        document.getElementById('modal-root').innerHTML = `
+            <div class="overlay" onclick="if(event.target===this)this.remove()">
+                <div class="sheet anim-in" style="position:relative; overflow:hidden;">
+                    <div class="jg-glow" style="opacity:0.5;"></div>
+                    <div class="sheet-handle" style="position:relative; z-index:1;"></div>
+                    <div style="position:relative; z-index:1;">
+                        <div class="section-title" style="margin-bottom:4px;">Withdraw — Requirements</div>
+                        <div class="muted" style="font-size:12px; margin-bottom:16px;">Complete both before choosing an amount.</div>
+
+                        ${!r ? `
+                            <div class="muted" style="text-align:center; padding:28px 0;">${loadFailed ? "Couldn't load — try again." : 'Loading...'}</div>
+                        ` : `
+                            ${reqCard(`Complete ${r.tasksRequired} tasks (lifetime)`, r.tasksHave, r.tasksRequired, tasksPct, r.tasksMet, 'var(--task-hue)', `Head to the Tasks tab — ${Math.max(0, r.tasksRequired - r.tasksHave)} more to go.`)}
+                            ${reqCard(`Watch ${r.adsRequired} ads (today)`, r.adsWatchedToday, r.adsRequired, adsPct, r.adsMet, 'var(--video-hue)', `Head to the Earn tab — ${Math.max(0, r.adsRequired - r.adsWatchedToday)} more ads today.`)}
+                        `}
+
+                        <button class="btn" id="wd-req-next" style="margin-top:6px; background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);" ${allMet ? '' : 'disabled'}>${!r ? (loadFailed ? 'Retry' : 'Loading...') : (allMet ? '→ Next' : 'Complete requirements above')}</button>
+                    </div>
+                </div>
+            </div>`;
+
+        const nextBtn = document.getElementById('wd-req-next');
+        if (!nextBtn) return;
+        if (loadFailed) { nextBtn.onclick = () => { loadFailed = false; renderRequirements(); loadRequirements(); }; return; }
+        if (allMet) nextBtn.onclick = () => { step = 'form'; renderForm(); };
+    }
+
+    async function loadRequirements() {
+        const r = await apiGet(`withdraw?action=tiers&initData=${encodeURIComponent(TG_INIT_DATA)}`);
+        if (!r.ok) {
+            loadFailed = true;
+            if (step === 'requirements') renderRequirements();
+            return;
+        }
+        tiers = r.tiers;
+        addressLock = r.addressLock || null;
+        requirements = r.withdrawRequirements || { adsRequired: WITHDRAW_ADS_REQUIRED, adsWatchedToday: 0, adsMet: false, tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: 0, tasksMet: false };
+        if (addressLock) method = addressLock.method;
+        if (step === 'requirements') renderRequirements();
+    }
+
+    // ── STEP 2 — tier + method/address (same UI as before, minus the network call — tiers/addressLock already loaded in step 1) ──
+    function renderForm() {
         const m = WITHDRAW_METHODS_UI[method];
         const locked = !!addressLock;
         document.getElementById('modal-root').innerHTML = `
@@ -1261,6 +1345,7 @@ function openWithdrawModal() {
                 <div class="sheet anim-in" style="max-height:86vh; display:flex; flex-direction:column; position:relative; overflow:hidden;">
                     <div class="jg-glow" style="opacity:0.5;"></div>
                     <div class="sheet-handle" style="position:relative; z-index:1;"></div>
+                    <button id="wd-back" style="position:relative; z-index:1; background:none; border:none; color:var(--ink-muted); font-size:12.5px; display:flex; align-items:center; gap:4px; margin-bottom:8px; padding:0;">← Requirements</button>
                     <div class="card" style="position:relative; z-index:1; text-align:center; padding:18px; margin-bottom:14px; border-color:var(--money-soft);">
                         <div class="muted" style="font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">Withdrawable balance</div>
                         <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">$${(state.user?.usdtBalance || 0).toFixed(2)} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">USDT</span></div>
@@ -1277,42 +1362,21 @@ function openWithdrawModal() {
 
                     <div class="section-title" style="margin:16px 0 10px; position:relative; z-index:1;">Choose a cash-out amount</div>
                     <div style="overflow-y:auto; flex:1; position:relative; z-index:1;">
-                        <div id="wd-tier-list">
-                            <div class="muted" style="text-align:center; padding:16px 0; grid-column:1/-1;">Loading tiers...</div>
-                        </div>
+                        <div id="wd-tier-list"></div>
                     </div>
 
                     <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6; position:relative; z-index:1;">
-                        No fee here — the 25% fee is already taken when you convert WTC to USDT. You need 1 watched ad per 0.01 USD today. At least 5 completed tasks are required before your first withdrawal. Your payout address locks for 30 days after your first withdrawal.
+                        No fee here — the 25% fee is already taken when you convert WTC to USDT. Your payout address locks for 30 days after your first withdrawal.
                     </div>
                     <button class="btn" style="margin-top:16px; position:relative; z-index:1; background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft);" id="wd-submit" disabled>Select a tier first</button>
                 </div>
             </div>`;
+        document.getElementById('wd-back').onclick = () => { step = 'requirements'; renderRequirements(); loadRequirements(); };
         document.getElementById('wd-go-convert').onclick = (e) => { e.preventDefault(); openConvertModal(); };
-        document.getElementById('m-binance').onclick = () => { method = 'binance'; render(); };
-        document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; render(); };
+        document.getElementById('m-binance').onclick = () => { method = 'binance'; renderForm(); };
+        document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; renderForm(); };
         document.getElementById('wd-submit').onclick = submitWithdraw;
-        // ⚠️ if already locked, pre-fill the address field to match and keep it read-only
         if (locked) { const df = document.getElementById('wd-details'); if (df) df.value = addressLock.address; }
-        loadTiers();
-    }
-
-    async function loadTiers() {
-        const r = await apiGet(`withdraw?action=tiers&initData=${encodeURIComponent(TG_INIT_DATA)}`);
-        const listEl = document.getElementById('wd-tier-list');
-        if (!listEl) return; // modal closed/method switched before this resolved
-        if (!r.ok) { listEl.innerHTML = `<div class="muted" style="text-align:center; padding:16px 0;">Couldn't load tiers, try again.</div>`; return; }
-        tiers = r.tiers;
-        // ⚠️ NEW — if the server says the address is locked and our local UI hadn't
-        // reflected that yet (e.g. modal just opened), sync method + re-render once
-        // so the fields lock/pre-fill correctly.
-        if (r.addressLock && !addressLock) {
-            addressLock = r.addressLock;
-            method = addressLock.method;
-            render();
-            return; // render() calls loadTiers() again — that second pass falls through below
-        }
-        addressLock = r.addressLock || null;
         renderTierList();
     }
 
@@ -1366,12 +1430,27 @@ function openWithdrawModal() {
             await refreshUser();
             if (state.activeTab === 'home') renderHome();
         } else {
+            // ⚠️ If the atomic gate in withdraw.js rejects because ads/tasks slipped
+            // below requirement between step 1 and submit (e.g. a concurrent reset,
+            // or the user took a long time on step 2 crossing midnight BD time),
+            // send them back to step 1 instead of just toasting an error in place —
+            // the form step no longer shows ads/task status, so silently failing
+            // here would leave the user stuck without knowing why.
+            if (r.error === 'insufficient_ads' || r.error === 'need_5_tasks') {
+                toast(r.message || errorText(r.error), 'error');
+                step = 'requirements';
+                renderRequirements();
+                loadRequirements();
+                return;
+            }
             toast(r.message || errorText(r.error), 'error');
             updateSubmitBtn();
             btn.disabled = false;
         }
     }
-    render();
+
+    renderRequirements();
+    loadRequirements();
 }
 
 // ══════════════════════════════════════════════════════════════
