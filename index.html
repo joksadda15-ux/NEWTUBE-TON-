@@ -149,6 +149,67 @@
     .btn-primary { background: linear-gradient(135deg, var(--accent), var(--coin) 55%, var(--coin-deep)); color: #FFFFFF; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 22px var(--coin-soft); }
     .btn-primary:active { transform: translateY(2px) scale(0.99); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 3px rgba(0,0,0,0.25), 0 4px 10px var(--coin-soft); }
     .btn-outline { background: transparent; border: 0.5px solid var(--border-strong); color: var(--ink); }
+
+    /* ══════════════════════════════════════════════════════════
+       HOME REDESIGN — replaces the old "stack of identical rounded
+       cards" layout. Signature element: the hero balance card has a
+       real edge (gradient border, not just a blurred glow) and an
+       etched lightning-bolt watermark instead of a generic spinning
+       ring. Actions get a hierarchy (one wide primary + two icon-only
+       secondaries) instead of 3 equal-width pill buttons. Stats are
+       ONE divided strip instead of two stacked 2-card grids. ══════════════════════════════════════════════════════════ */
+    .hero-balance {
+        position: relative; overflow: hidden; border-radius: 20px; padding: 20px 20px 18px;
+        background:
+            radial-gradient(ellipse 140% 100% at 100% -20%, var(--coin-soft), transparent 60%),
+            linear-gradient(165deg, var(--surface-raised), var(--surface));
+        border: 1px solid transparent;
+        background-clip: padding-box;
+        box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 16px 34px rgba(0,0,0,0.42);
+    }
+    .hero-balance::before {
+        content: ''; position: absolute; inset: 0; border-radius: 20px; padding: 1px;
+        background: linear-gradient(150deg, var(--accent-soft), transparent 40%, transparent 70%, var(--coin-soft));
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor; mask-composite: exclude;
+        pointer-events: none;
+    }
+    .hero-bolt { position: absolute; right: 6px; top: 2px; width: 92px; height: 128px; opacity: 0.1; pointer-events: none; }
+    .hero-top-row { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+    .hero-id-chip { font-size: 10.5px; color: var(--ink-faint); background: rgba(0,0,0,0.18); border: 0.5px solid var(--border); padding: 3px 8px; border-radius: 999px; }
+    .hero-amount-row { display: flex; align-items: flex-end; gap: 9px; margin-top: 10px; position: relative; z-index: 1; }
+    .hero-usd-line { margin-top: 5px; font-size: 12.5px; color: var(--ink-muted); position: relative; z-index: 1; display: flex; align-items: center; gap: 5px; }
+    .hero-divider { margin: 14px 0 12px; height: 1px; background: linear-gradient(90deg, transparent, var(--border-strong), transparent); position: relative; z-index: 1; }
+    .hero-withdrawable-row { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; margin-bottom: 14px; }
+    .hero-actions { display: flex; gap: 8px; position: relative; z-index: 1; }
+    .action-primary { flex: 1; height: 44px; border-radius: 12px; border: none; display: flex; align-items: center; justify-content: center; gap: 7px; font-weight: 600; font-size: 13.5px; color: #04140A; background: linear-gradient(135deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 18px var(--money-soft); }
+    .action-icon-btn { width: 44px; height: 44px; border-radius: 12px; border: 0.5px solid var(--border-strong); background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; color: var(--ink-muted); flex-shrink: 0; }
+    .action-icon-btn:active, .action-primary:active { transform: scale(0.95); }
+
+    /* live activity ticker — a slim inline line, not a boxed card */
+    .live-ticker { display: flex; align-items: center; gap: 8px; margin: 12px 4px 0; overflow: hidden; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--money); flex-shrink: 0; box-shadow: 0 0 6px var(--money); animation: live-dot-pulse 1.8s ease-in-out infinite; }
+    @keyframes live-dot-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    /* unified stat strip — one card, divided columns, instead of 4 separate cards */
+    .stat-strip { display: flex; border-radius: 16px; overflow: hidden; border: 0.5px solid var(--border); background: linear-gradient(165deg, var(--surface-raised), var(--surface)); }
+    .stat-strip-item { flex: 1; padding: 13px 6px; text-align: center; border-right: 0.5px solid var(--border); }
+    .stat-strip-item:last-child { border-right: none; }
+    .stat-strip-num { font-family: var(--font-display); font-weight: 700; font-size: 16px; margin-top: 3px; }
+    .stat-strip-label { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.01em; }
+
+    /* leaderboard podium — top 3 get visual weight instead of being plain list rows */
+    .podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding: 18px 8px 6px; }
+    .podium-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; max-width: 100px; }
+    .podium-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; border: 2px solid var(--border-strong); }
+    .podium-slot.rank-1 .podium-avatar { width: 58px; height: 58px; font-size: 20px; border-color: #FFD23D; box-shadow: 0 0 0 3px rgba(255,210,61,0.14), 0 8px 18px rgba(255,210,61,0.25); }
+    .podium-slot.rank-2 .podium-avatar { border-color: #C9D6FF; }
+    .podium-slot.rank-3 .podium-avatar { border-color: #CD8A5A; }
+    .podium-medal { font-size: 15px; margin-top: -3px; }
+    .podium-name { font-size: 12px; font-weight: 600; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .podium-refs { font-size: 10.5px; color: var(--ink-faint); }
+    .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 4px; }
+    .lb-rank-num { width: 22px; text-align: center; font-family: var(--font-display); font-weight: 600; font-size: 12px; color: var(--ink-faint); flex-shrink: 0; }
     .btn-outline:active { transform: translateY(1px); background: rgba(255,255,255,0.03); }
     .btn-signal { background: var(--signal); color: #04070D; }
     .btn:disabled { opacity: 0.45; }
@@ -1083,63 +1144,65 @@ async function renderHome() {
     const u = state.user || {};
     const prevBalance = window.__lastShownBalance ?? u.wtcBalance ?? 0;
     root.innerHTML = `
-        <div class="card anim-in" style="margin:18px 20px 0; position:relative; overflow:hidden; background:radial-gradient(circle at 85% 0%, var(--coin-soft), transparent 60%), var(--surface);">
-            <div class="shimmer-sweep"></div>
-            <div class="coin-ring-spin" style="position:absolute; right:-18px; top:-18px; width:110px; height:110px; border-radius:50%; border:14px solid var(--coin-deep);"></div>
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                <div class="muted" style="font-size:13px;">Your balance</div>
-                <div style="font-size:11px; color:var(--ink-faint);">
-                    ID <span style="font-family:var(--font-display); color:var(--ink-muted);">${USER_ID}</span>
-                    ${u.telegramUsername && u.telegramUsername !== 'N/A' ? `· @${u.telegramUsername}` : ''}
+        <div class="hero-balance anim-in" style="margin:18px 20px 0;">
+            <svg class="hero-bolt" viewBox="0 0 60 90" fill="none"><path d="M34 2L6 50h18L24 88L54 36H36L34 2z" fill="var(--accent)"/></svg>
+            <div class="hero-top-row">
+                <div class="muted" style="font-size:12.5px;">Your balance</div>
+                <div class="hero-id-chip">ID ${USER_ID}${u.telegramUsername && u.telegramUsername !== 'N/A' ? ` · @${u.telegramUsername}` : ''}</div>
+            </div>
+            <div class="hero-amount-row">
+                <span id="home-balance-num" style="font-family:var(--font-display); font-weight:700; font-size:40px; line-height:1; letter-spacing:-0.5px;">${fmtWTC(prevBalance)}</span>
+                <span style="font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--coin); padding-bottom:6px;">WTC</span>
+            </div>
+            <div class="hero-usd-line">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                ≈ $${wtcToUsd(u.wtcBalance)} USD if converted
+            </div>
+            <div class="hero-divider"></div>
+            <div class="hero-withdrawable-row">
+                <span class="muted" style="font-size:12px;">Ready to withdraw</span>
+                <span style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--money);">$${(u.usdtBalance || 0).toFixed(2)} <span style="font-size:11px; color:var(--ink-muted); font-weight:500;">USDT</span></span>
+            </div>
+            <div class="hero-actions">
+                <button class="action-primary" id="home-withdraw-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
+                </button>
+                <button class="action-icon-btn" id="home-convert-btn" title="Convert WTC to USDT">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg>
+                </button>
+                <button class="action-icon-btn" id="home-promo-btn" title="Redeem a promo code">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--gift-hue)" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="live-ticker anim-in-2" style="margin-left:20px; margin-right:20px;">
+            <span class="live-dot"></span>
+            <span id="wd-ticker-text" class="muted" style="font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:opacity 0.35s ease;">Loading recent activity...</span>
+        </div>
+
+        <div class="anim-in-3" style="margin:16px 20px 0;">
+            <div class="stat-strip">
+                <div class="stat-strip-item">
+                    <div style="font-size:15px;">📺</div>
+                    <div class="stat-strip-num" style="color:var(--signal);">${u.adsWatchedToday || 0}</div>
+                    <div class="stat-strip-label">Ads today</div>
                 </div>
-            </div>
-            <div style="display:flex; align-items:flex-end; gap:10px;">
-                <span id="home-balance-num" style="font-family:var(--font-display); font-weight:700; font-size:38px; line-height:1;">${fmtWTC(prevBalance)}</span>
-                <span style="font-family:var(--font-display); font-weight:500; font-size:16px; color:var(--coin); padding-bottom:5px;">WTC</span>
-            </div>
-            <div style="margin-top:6px; font-size:13px; color:var(--signal); font-weight:500;">≈ $${wtcToUsd(u.wtcBalance)} USD if converted</div>
-            <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
-                <span class="muted" style="font-size:12px;">💰 Ready to withdraw</span>
-                <span style="font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--money);">$${(u.usdtBalance || 0).toFixed(2)} <span style="font-size:11px; color:var(--ink-muted); font-weight:500;">USDT</span></span>
-            </div>
-        </div>
-
-        <div class="anim-in-2" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:14px 20px 0;">
-            <button class="btn" id="home-withdraw-btn" style="background:linear-gradient(160deg, var(--money), #16A34A); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--money-soft); font-size:12.5px; padding:0 4px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
-            </button>
-            <button class="btn" id="home-convert-btn" style="background:linear-gradient(160deg, var(--accent), #0891B2); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 8px 18px var(--accent-soft); font-size:12.5px; padding:0 4px; color:#052029;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg> Convert
-            </button>
-            <button class="btn btn-outline" id="home-promo-btn" style="font-size:12.5px; padding:0 4px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg> Promo
-            </button>
-        </div>
-
-        <div class="card anim-in-2" id="wd-ticker" style="margin:12px 20px 0; padding:10px 16px; display:flex; align-items:center; gap:10px; overflow:hidden;">
-            <span style="font-size:15px; flex-shrink:0;">🔥</span>
-            <span id="wd-ticker-text" class="muted" style="font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:opacity 0.35s ease;">Loading recent activity...</span>
-        </div>
-
-        <div class="anim-in-3" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
-            <div class="card" style="padding:13px 15px;">
-                <div class="muted" style="font-size:12px; margin-bottom:4px;">Ads watched today</div>
-                <div style="font-family:var(--font-display); font-weight:500; font-size:18px; color:var(--signal);">${u.adsWatchedToday || 0}</div>
-            </div>
-            <div class="card" style="padding:13px 15px;">
-                <div class="muted" style="font-size:12px; margin-bottom:4px;">Tasks done today</div>
-                <div style="font-family:var(--font-display); font-weight:500; font-size:18px; color:var(--signal);">${u.tasksCompletedToday || 0}</div>
-            </div>
-        </div>
-
-        <div class="anim-in-3" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 20px 0;">
-            <div class="card" style="padding:13px 15px;">
-                <div class="muted" style="font-size:12px; margin-bottom:4px;">Lifetime earned</div>
-                <div style="font-family:var(--font-display); font-weight:500; font-size:18px;">${fmtWTC(u.lifetimeWtcEarned)} WTC</div>
-            </div>
-            <div class="card" style="padding:13px 15px;">
-                <div class="muted" style="font-size:12px; margin-bottom:4px;">Referrals</div>
-                <div style="font-family:var(--font-display); font-weight:500; font-size:18px;">${u.referralCount || 0}</div>
+                <div class="stat-strip-item">
+                    <div style="font-size:15px;">✅</div>
+                    <div class="stat-strip-num" style="color:var(--signal);">${u.tasksCompletedToday || 0}</div>
+                    <div class="stat-strip-label">Tasks today</div>
+                </div>
+                <div class="stat-strip-item">
+                    <div style="font-size:15px;">📈</div>
+                    <div class="stat-strip-num">${fmtWTC(u.lifetimeWtcEarned)}</div>
+                    <div class="stat-strip-label">Lifetime WTC</div>
+                </div>
+                <div class="stat-strip-item">
+                    <div style="font-size:15px;">👥</div>
+                    <div class="stat-strip-num">${u.referralCount || 0}</div>
+                    <div class="stat-strip-label">Referrals</div>
+                </div>
             </div>
         </div>
 
@@ -1148,7 +1211,7 @@ async function renderHome() {
                 <div class="section-title">Top 20 Referrers</div>
                 <button id="lb-toggle-btn" class="btn btn-outline" style="width:auto; padding:0 12px; height:32px; font-size:12px;">Show</button>
             </div>
-            <div id="home-leaderboard" class="card" style="padding:4px 18px; display:none;">
+            <div id="home-leaderboard" class="card" style="padding:4px 14px; display:none;">
                 <div class="skel" style="height:14px; width:70%; margin:10px 0;"></div>
                 <div class="skel" style="height:14px; width:50%; margin:10px 0;"></div>
                 <div class="skel" style="height:14px; width:60%; margin:10px 0;"></div>
@@ -1163,7 +1226,10 @@ async function renderHome() {
     document.getElementById('home-promo-btn').onclick = openPromoModal;
     startWithdrawTicker();
 
-    // Leaderboard toggle — loads lazily on first expand
+    // Leaderboard toggle — loads lazily on first expand.
+    // ⚠️ NEW — top 3 render as a podium (rank-weighted avatar sizing + medal
+    // emoji), ranks 4+ render as plain numbered rows below it. Replaces the
+    // old "every rank looks identical" flat list.
     let lbLoaded = false;
     let lbOpen = false;
     document.getElementById('lb-toggle-btn').onclick = async () => {
@@ -1176,13 +1242,35 @@ async function renderHome() {
             lbLoaded = true;
             const r = await apiGet('data?type=leaderboard');
             if (r.ok && r.leaderboard?.length) {
-                board.innerHTML = r.leaderboard.slice(0, 20).map((p, i) => `
-                    <div style="display:flex; align-items:center; gap:12px; padding:10px 0; opacity:0; animation:rise-in 0.4s ease ${Math.min(i * 0.04, 0.5)}s forwards; ${i < r.leaderboard.length - 1 ? 'border-bottom:0.5px solid var(--border);' : ''}">
-                        <div style="width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:12px; ${i < 3 ? 'background:var(--coin-soft); color:var(--coin);' : 'background:var(--surface-raised); color:var(--ink-faint);'}">${i + 1}</div>
-                        <div style="width:34px; height:34px; border-radius:50%; background:var(--signal-soft); color:var(--signal); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">${(p.firstName || '?')[0].toUpperCase()}</div>
-                        <div style="flex:1; font-size:14px; font-weight:500;">${p.firstName || 'User'}</div>
-                        <div style="font-size:13px; color:var(--ink-muted); font-family:var(--font-display);">${p.referralCount || 0} refs</div>
+                const list = r.leaderboard.slice(0, 20);
+                const top3 = list.slice(0, 3);
+                const rest = list.slice(3);
+                const medals = ['🥇', '🥈', '🥉'];
+                const podiumOrder = [1, 0, 2].filter(i => top3[i]); // visually: 2nd, 1st, 3rd
+                const podiumHtml = top3.length ? `
+                    <div class="podium">
+                        ${podiumOrder.map(i => {
+                            const p = top3[i];
+                            if (!p) return '';
+                            return `
+                            <div class="podium-slot rank-${i + 1}" style="opacity:0; animation:rise-in 0.4s ease ${i * 0.06}s forwards;">
+                                <div class="podium-avatar" style="background:var(--signal-soft); color:var(--signal);">${(p.firstName || '?')[0].toUpperCase()}</div>
+                                <div class="podium-medal">${medals[i]}</div>
+                                <div class="podium-name">${p.firstName || 'User'}</div>
+                                <div class="podium-refs">${p.referralCount || 0} refs</div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    ${rest.length ? '<div style="height:1px; background:var(--border); margin:2px 0 4px;"></div>' : ''}
+                ` : '';
+                const restHtml = rest.map((p, i) => `
+                    <div class="lb-row" style="opacity:0; animation:rise-in 0.4s ease ${Math.min(i * 0.04, 0.4)}s forwards; ${i < rest.length - 1 ? 'border-bottom:0.5px solid var(--border);' : ''}">
+                        <div class="lb-rank-num">${i + 4}</div>
+                        <div style="width:30px; height:30px; border-radius:50%; background:var(--surface-raised); color:var(--ink-faint); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12px;">${(p.firstName || '?')[0].toUpperCase()}</div>
+                        <div style="flex:1; font-size:13.5px; font-weight:500;">${p.firstName || 'User'}</div>
+                        <div style="font-size:12.5px; color:var(--ink-muted); font-family:var(--font-display);">${p.referralCount || 0} refs</div>
                     </div>`).join('');
+                board.innerHTML = podiumHtml + restHtml;
             } else {
                 board.innerHTML = `<div class="muted" style="padding:14px 0; font-size:13px; text-align:center;">No data yet.</div>`;
             }
