@@ -33,6 +33,16 @@ async function handleInit(req, res, db) {
     const existing = await users.findOne({ _id: userId });
     if (existing) return res.status(200).json({ ok: true, alreadyExists: true });
 
+    // ⚠️ NEW — after 60 days, a banned user's full `users` document
+    // auto-deletes (see models/schema.js TTL index) to free up free-tier
+    // storage. Without this check, that would silently look like a brand
+    // new user here and hand them a fresh, un-banned account — undoing the
+    // ban. This tiny, TTL-free registry (see api/bot.js markBanned/
+    // markUnbanned) is checked first so a still-banned ID is refused
+    // outright instead of being recreated.
+    const stillBanned = await db.collection('bannedTelegramIds').findOne({ _id: userId });
+    if (stillBanned) return res.status(403).json({ ok: false, error: 'banned' });
+
     const newUser = {
         _id: userId,
         firstName: firstName || 'User',
@@ -158,4 +168,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-            }
+                }
