@@ -686,6 +686,13 @@ const ERROR_MESSAGES = {
     account_under_review: 'Your account is under review — join the channel & community to unlock earning.',
     sdk_not_loaded: 'Ad failed to load — please try again.',
     timeout: 'Ad timed out — please try again.',
+    missing_ad_token: 'Please tap "Watch" again to load the ad properly.',
+    invalid_ad_token: 'Ad session invalid — please tap "Watch" again.',
+    watch_time_too_short: 'Please watch the full ad before claiming the reward.',
+    ad_token_expired: 'This ad session expired — please tap "Watch" again.',
+    ad_token_already_used: 'This ad was already claimed.',
+    invalid_network: 'Unknown ad network — please refresh the app.',
+    server_misconfigured: 'Ad rewards are temporarily unavailable — please try again later.',
 };
 function errorText(code) { return ERROR_MESSAGES[code] || 'Something went wrong, please try again.'; }
 
@@ -1990,13 +1997,19 @@ function renderEarningTab() {
     })();
 }
 
+// ⚠️ SECURITY FIX — now requests a signed ad-token from the server BEFORE
+// showing the ad (adStart), and passes that exact token through to
+// creditAdReward afterward. A bare "network name" is no longer enough to
+// get a reward — see api/earn.js.
 async function watchAdNetwork(network) {
     const showFn = AD_SHOW_FUNCTIONS[network];
     const networkLabel = AD_NETWORKS_UI.find(n => n.id === network)?.label || network;
     toast(`Loading ${networkLabel} ad...`, 'info');
     try {
+        const startRes = await apiPost('earn', { action: 'adStart', network });
+        if (!startRes.ok) { toast(errorText(startRes.error), 'error'); return; }
         await showFn();
-        await creditAdReward(network);
+        await creditAdReward(network, startRes.startTime, startRes.signature);
     } catch (e) {
         // A network-specific, explicit message — a different network's ad is
         // never played instead; on failure the user is told directly to try
@@ -2005,8 +2018,8 @@ async function watchAdNetwork(network) {
     }
 }
 
-async function creditAdReward(network) {
-    const r = await apiPost('earn', { action: 'claimAdReward', network });
+async function creditAdReward(network, startTime, signature) {
+    const r = await apiPost('earn', { action: 'claimAdReward', network, startTime, signature });
     if (r.ok) {
         toast(`+${r.reward} WTC added! (${r.countToday}/${r.dailyLimit})`, 'success');
         triggerBurst(document.querySelector(`button[data-network="${network}"]`));
