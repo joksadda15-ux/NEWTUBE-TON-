@@ -33,13 +33,10 @@ async function handleInit(req, res, db) {
     const existing = await users.findOne({ _id: userId });
     if (existing) return res.status(200).json({ ok: true, alreadyExists: true });
 
-    // ⚠️ NEW — after 60 days, a banned user's full `users` document
-    // auto-deletes (see models/schema.js TTL index) to free up free-tier
-    // storage. Without this check, that would silently look like a brand
-    // new user here and hand them a fresh, un-banned account — undoing the
-    // ban. This tiny, TTL-free registry (see api/bot.js markBanned/
-    // markUnbanned) is checked first so a still-banned ID is refused
-    // outright instead of being recreated.
+    // after 60 days, a banned user's full `users` document auto-deletes
+    // (see models/schema.js TTL index) to free up free-tier storage.
+    // Without this check, that would silently look like a brand new user
+    // here and hand them a fresh, un-banned account — undoing the ban.
     const stillBanned = await db.collection('bannedTelegramIds').findOne({ _id: userId });
     if (stillBanned) return res.status(403).json({ ok: false, error: 'banned' });
 
@@ -48,10 +45,11 @@ async function handleInit(req, res, db) {
         firstName: firstName || 'User',
         telegramUsername: username || 'N/A',
         wtcBalance: 0,
-        usdtBalance: 0, // ⚠️ NEW — converted balance, ready to withdraw (see api/withdraw.js convert action)
+        usdtBalance: 0,
         lifetimeWtcEarned: 0,
         pendingVideoWTC: 0,
         referralCount: 0,
+        weeklyReferralCount: 0,
         totalInvites: 0,
         referredBy: (referrerCode && referrerCode !== userId) ? String(referrerCode) : null,
         referralStep1Done: false,
@@ -85,11 +83,17 @@ async function handleInit(req, res, db) {
     }
 
     if (newUser.referredBy) {
-        await users.updateOne({ _id: newUser.referredBy }, { $inc: { referralCount: 1, totalInvites: 1 } });
+        await users.updateOne({ _id: newUser.referredBy }, { $inc: { referralCount: 1, weeklyReferralCount: 1, totalInvites: 1 } });
     }
 
+    // ⚠️ CHANGED — checkAndRecordFingerprint (lib/fingerprintCheck.js) now
+    // auto-suspends THIS account itself (isBanned:true + bannedTelegramIds
+    // registry) the moment a duplicate-device match is found, instead of
+    // only setting multiAccountFlag for later admin review. See that file
+    // for the full reasoning/trade-off note. The ORIGINAL (first) account on
+    // that device is never touched by this — only the newly-created one.
     const fpResult = await checkAndRecordFingerprint(db, userId, fingerprint);
-    return res.status(200).json({ ok: true, created: true, multiAccountFlagged: fpResult.flagged });
+    return res.status(200).json({ ok: true, created: true, multiAccountFlagged: fpResult.flagged, autoSuspended: fpResult.flagged });
 }
 
 async function handleCheckJoin(req, res, db) {
@@ -132,16 +136,6 @@ async function handleProfile(req, res, db) {
     const userId = String(verified.user.id);
 
     const users = db.collection('users');
-
-    // ⚠️ BUG FIX: daily reset is now ensured before the profile is fetched.
-    // Previously this call was missing here — reset only happened inside
-    // earn.js (i.e. only when the user actually claimed an ad). So the
-    // profile returned right when the app opened still had yesterday's
-    // stale counters (e.g. gigaCountToday: 20), the frontend saw that and
-    // disabled the button ("Done"), and the user couldn't click at all —
-    // meaning the backend's reset never got a chance to trigger (deadlock).
-    // Now reset is guaranteed at profile-load time, so the UI always opens
-    // with correct (0) counts on a new day.
     await ensureDailyReset(users, userId);
 
     const user = await users.findOne({ _id: userId });
@@ -168,4 +162,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-                }
+}
