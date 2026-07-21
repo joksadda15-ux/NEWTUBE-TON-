@@ -716,7 +716,7 @@ async function apiGet(path) {
     catch (e) { return { ok: false, error: 'server_error' }; }
 }
 function fmtWTC(n) { return Math.floor(n || 0).toLocaleString('en-US'); }
-function wtcToUsd(wtc) { return (wtc / 20000).toFixed(4); }
+function wtcToUsd(wtc) { return (wtc / 30000).toFixed(4); } // ⚠️ CHANGED (was 20000) — mirrors lib/constants.js WTC_PER_USD
 
 // ══════════════════════════════════════════════════════════════
 // PARTICLE BURST — lightweight canvas confetti for reward moments
@@ -999,7 +999,7 @@ async function openHistoryModal() {
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <div>
                             <div style="font-weight:700; font-size:15px;">${fmtWTC(h.wtcAmount)} WTC</div>
-                            <div class="muted" style="font-size:12px; margin-top:2px;">≈ ${Number(h.cashAmount || 0).toFixed(4)} ${h.currency || ''} · ${date}</div>
+                            <div class="muted" style="font-size:12px; margin-top:2px;">≈ ${h.currency === 'DOGS' ? Number(h.dogsAmount || 0).toLocaleString() : Number(h.cashAmount || 0).toFixed(4)} ${h.currency || ''} · ${date}</div>
                         </div>
                         <div style="display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:${st.color}22; color:${st.color}; font-size:12px; font-weight:700; white-space:nowrap;">
                             ${st.icon} ${st.label}
@@ -1112,7 +1112,7 @@ async function startWithdrawTicker() {
         setTimeout(() => {
             const el2 = document.getElementById('wd-ticker-text');
             if (!el2) return;
-            el2.textContent = `${w.username} just withdrew ${Number(w.cashAmount).toFixed(2)} ${w.currency} 🎉`;
+            el2.textContent = `${w.username} just withdrew ${w.currency === 'DOGS' ? Number(w.dogsAmount || 0).toLocaleString() : Number(w.cashAmount).toFixed(2)} ${w.currency} 🎉`;
             el2.style.opacity = '1';
         }, 350);
     };
@@ -1146,7 +1146,7 @@ async function renderHome() {
             <div class="hero-divider"></div>
             <div class="hero-withdrawable-row">
                 <span class="muted" style="font-size:12px;">Ready to withdraw</span>
-                <span style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--money);">$${(u.usdtBalance || 0).toFixed(2)} <span style="font-size:11px; color:var(--ink-muted); font-weight:500;">USDT</span></span>
+                <span style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--money);">${Math.round((u.usdtBalance || 0) * DOGS_PER_USD).toLocaleString()} <span style="font-size:11px; color:var(--ink-muted); font-weight:500;">DOGS</span> <span style="font-size:10.5px; color:var(--ink-faint); font-weight:500;">(≈$${(u.usdtBalance || 0).toFixed(2)})</span></span>
             </div>
             <div class="hero-actions">
                 <button class="action-primary" id="home-withdraw-btn">
@@ -1292,9 +1292,14 @@ function openProfileModal() {
 // an amount). Tier eligibility (referral threshold, monthly claims left)
 // comes live from the server via GET withdraw?action=tiers.
 // ══════════════════════════════════════════════════════════════
+// ⚠️ CHANGED — Binance/USDT withdrawals temporarily LOCKED (mirrors
+// lib/constants.js WITHDRAW_METHODS.binance.locked). Tonkeeper now pays
+// out DOGS instead of USDT — same TON wallet address field, different
+// payout currency. The server (api/withdraw.js) also enforces this lock
+// independently, so this is just for disabling the button in the UI.
 const WITHDRAW_METHODS_UI = {
-    binance:   { label: 'Binance UID', currency: 'USDT', placeholder: 'Enter your Binance UID' },
-    tonkeeper: { label: 'Tonkeeper Address', currency: 'USDT', placeholder: 'UQ... wallet address' },
+    binance:   { label: 'Binance UID', currency: 'USDT', locked: true, placeholder: 'Enter your Binance UID' },
+    tonkeeper: { label: 'TON Wallet Address', currency: 'DOGS', locked: false, placeholder: 'UQ... wallet address' },
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -1303,7 +1308,8 @@ const WITHDRAW_METHODS_UI = {
 // ══════════════════════════════════════════════════════════════
 const CONVERT_MIN_WTC = 500;
 const CONVERT_FEE_PERCENT = 25;
-const CONVERT_RATE = 20000; // WTC per USD — mirrors lib/constants.js WTC_PER_USD
+const CONVERT_RATE = 30000; // ⚠️ CHANGED (was 20000) — WTC per USD, mirrors lib/constants.js WTC_PER_USD
+const DOGS_PER_USD = 30000; // ⚠️ NEW — mirrors lib/constants.js DOGS_PER_USD
 
 function openConvertModal() {
     const u = state.user || {};
@@ -1387,7 +1393,7 @@ function openConvertModal() {
 // ══════════════════════════════════════════════════════════════
 function openWithdrawModal() {
     let step = 'requirements';
-    let method = 'binance';
+    let method = 'tonkeeper'; // ⚠️ CHANGED (was 'binance') — Binance/USDT is temporarily locked, default to the working method
     let selectedTierId = null;
     let tiers = [];
     let addressLock = null; // { method, address, daysLeft } or null
@@ -1463,6 +1469,7 @@ function openWithdrawModal() {
     function renderForm() {
         const m = WITHDRAW_METHODS_UI[method];
         const locked = !!addressLock;
+        const binanceMethodLocked = !!WITHDRAW_METHODS_UI.binance.locked; // ⚠️ NEW
         document.getElementById('modal-root').innerHTML = `
             <div class="overlay" onclick="if(event.target===this)this.remove()">
                 <div class="sheet anim-in" style="max-height:86vh; display:flex; flex-direction:column; position:relative; overflow:hidden;">
@@ -1471,16 +1478,18 @@ function openWithdrawModal() {
                     <button id="wd-back" style="position:relative; z-index:1; background:none; border:none; color:var(--ink-muted); font-size:12.5px; display:flex; align-items:center; gap:4px; margin-bottom:8px; padding:0;">← Requirements</button>
                     <div class="card" style="position:relative; z-index:1; text-align:center; padding:18px; margin-bottom:14px; border-color:var(--money-soft);">
                         <div class="muted" style="font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">Withdrawable balance</div>
-                        <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">$${(state.user?.usdtBalance || 0).toFixed(2)} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">USDT</span></div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">${Math.round((state.user?.usdtBalance || 0) * DOGS_PER_USD).toLocaleString()} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">DOGS</span></div>
+                        <div class="muted" style="font-size:11px; margin-top:2px;">≈ $${(state.user?.usdtBalance || 0).toFixed(2)}</div>
                         <div class="muted" style="font-size:11.5px; margin-top:6px;">Need more? <a href="#" id="wd-go-convert" style="color:var(--accent); font-weight:600;">Convert WTC first →</a></div>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; position:relative; z-index:1;">
-                        <button class="btn ${method==='binance'?'btn-primary':'btn-outline'}" id="m-binance" ${locked ? 'disabled' : ''}>Binance</button>
+                        <button class="btn ${method==='binance'?'btn-primary':'btn-outline'}" id="m-binance" ${(locked || binanceMethodLocked) ? 'disabled' : ''}>Binance ${binanceMethodLocked ? '🔒' : ''}</button>
                         <button class="btn ${method==='tonkeeper'?'btn-primary':'btn-outline'}" id="m-tonkeeper" ${locked ? 'disabled' : ''}>Tonkeeper</button>
                     </div>
-                    <div class="field-label" style="position:relative; z-index:1;">${m.label}</div>
+                    ${binanceMethodLocked ? `<div class="muted" style="font-size:11.5px; margin-top:6px; position:relative; z-index:1;">🔒 Binance/USDT withdrawals are temporarily paused — withdraw via your TON wallet to receive <b>DOGS</b> instead.</div>` : ''}
+                    <div class="field-label" style="position:relative; z-index:1; margin-top:10px;">${m.label}</div>
                     <input class="field-input" id="wd-details" placeholder="${m.placeholder}" style="position:relative; z-index:1;" ${locked ? 'readonly' : ''}>
-                    ${method === 'tonkeeper' && !locked ? `<div class="muted" style="font-size:11.5px; margin-top:5px; position:relative; z-index:1;">💡 Paste your TON wallet address — you'll receive <b>USDT</b> (USDT-on-TON) at this address, not native TON.</div>` : ''}
+                    ${method === 'tonkeeper' && !locked ? `<div class="muted" style="font-size:11.5px; margin-top:5px; position:relative; z-index:1;">💡 Paste your TON wallet address — you'll receive <b>DOGS</b> at this address, not native TON.</div>` : ''}
                     ${locked ? `<div class="muted" style="font-size:11.5px; margin-top:6px; position:relative; z-index:1; color:var(--task-hue);">🔒 Your withdraw address is locked for <b>${addressLock.daysLeft} more day(s)</b> — you can only withdraw to this same address until then.</div>` : ''}
 
                     <div class="section-title" style="margin:16px 0 10px; position:relative; z-index:1;">Choose a cash-out amount</div>
@@ -1496,7 +1505,7 @@ function openWithdrawModal() {
             </div>`;
         document.getElementById('wd-back').onclick = () => { step = 'requirements'; renderRequirements(); loadRequirements(); };
         document.getElementById('wd-go-convert').onclick = (e) => { e.preventDefault(); openConvertModal(); };
-        document.getElementById('m-binance').onclick = () => { method = 'binance'; renderForm(); };
+        document.getElementById('m-binance').onclick = () => { if (!binanceMethodLocked) { method = 'binance'; renderForm(); } };
         document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; renderForm(); };
         document.getElementById('wd-submit').onclick = submitWithdraw;
         if (locked) { const df = document.getElementById('wd-details'); if (df) df.value = addressLock.address; }
@@ -1520,7 +1529,7 @@ function openWithdrawModal() {
             <button class="wd-tier-btn ${selected ? 'wd-tier-selected' : ''}" data-tier="${t.id}" ${disabled ? 'disabled' : ''}>
                 ${selected ? '<div class="wd-tier-check">✓</div>' : ''}
                 <div class="wd-tier-usd">$${t.usd}</div>
-                <div class="wd-tier-wtc">No fee here — you receive the full $${t.usd}</div>
+                <div class="wd-tier-wtc">No fee here — you receive ${method === 'tonkeeper' ? `${Math.round(t.usd * DOGS_PER_USD).toLocaleString()} DOGS` : `the full $${t.usd}`}</div>
                 <div class="wd-tier-status" style="color:${disabled ? 'var(--ink-faint)' : 'var(--ink-muted)'};">${statusLine}</div>
             </button>`;
         }).join('');
