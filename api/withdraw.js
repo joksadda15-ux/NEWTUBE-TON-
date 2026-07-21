@@ -1,126 +1,95 @@
-// api/withdraw.js — CONVERT-FIRST FLOW + TIERED WITHDRAW + ADDRESS LOCK
+// api/withdraw.js — SEASON 3: DOGS-ONLY, FREE-AMOUNT WITHDRAW (tiers removed)
 //
-// ⚠️ MAJOR CHANGE: withdrawals no longer deduct WTC (or a fee) directly.
-// Users must first CONVERT WTC into a USDT balance — that's where the 25%
-// fee is now taken (see handleConvert). Withdrawals then spend from that
-// already-fee-deducted `usdtBalance` with NO additional fee at this step.
+// ⚠️ MAJOR REBUILD (this pass):
+//   - Withdrawals still spend from a converted balance (`dogsBalance`,
+//     renamed from `usdtBalance`) built up via action:'convert' (25% fee
+//     taken there, same as before) — but the fixed $-tier system is GONE.
+//     Users submit any `dogsAmount` >= MIN_WITHDRAW_DOGS that's a multiple
+//     of WITHDRAW_AMOUNT_STEP (must end in "00").
+//   - Only Tonkeeper (TON wallet address) is accepted — Binance is locked
+//     and rejected server-side regardless of what the client sends.
+//   - Requirements are FLAT per request: FIRST_WITHDRAW_MIN_TASKS tasks
+//     (lifetime), WITHDRAW_ADS_REQUIRED ads (today), WITHDRAW_REFERRALS_REQUIRED
+//     referrals (lifetime).
+//   - Address lock is now 7 days (WITHDRAW_ADDRESS_LOCK_DAYS). Users who were
+//     previously locked to Binance (from the old system) are auto-unlocked
+//     here — see getAddressLockStatus — since Binance can't be withdrawn to
+//     anymore; they can immediately submit a fresh Tonkeeper withdrawal,
+//     which will then lock them to that TON address for 7 days.
+//   - Still ONE withdrawal per Bangladesh calendar day (`lastWithdrawDate`),
+//     unchanged from before.
 //
-// Tier claim limits reset every 6 MONTHS (Bangladesh time, currentHalfYearBD()).
-// A 30-day address lock still applies: the first method+address a user
-// withdraws to becomes fixed for that long.
-//
-// ⚠️ NEW (this update): Binance/USDT withdrawals are temporarily LOCKED
-// (WITHDRAW_METHODS.binance.locked in lib/constants.js). Tonkeeper now pays
-// out in DOGS instead of USDT, at the fixed DOGS_PER_USD rate — same TON
-// wallet address field as before, only the payout currency changed.
-//
+//   GET  /api/withdraw?action=requirements&initData=...        → dogsBalance + requirements + addressLock status
 //   GET  /api/withdraw?action=history&initData=...
-//   GET  /api/withdraw?action=tiers&initData=...              → tier list + eligibility + global ads/task requirement status + address-lock status
 //   POST /api/withdraw   body: { initData, action:'convert', wtcAmount }
-//   POST /api/withdraw   body: { initData, action:'create',  method, details, tierId }   (action defaults to 'create' if omitted)
+//   POST /api/withdraw   body: { initData, details, dogsAmount }              (action defaults to 'create')
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import { tgSend } from '../lib/telegram.js';
 import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
-    WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS, WITHDRAW_ADDRESS_LOCK_DAYS, MIN_CONVERT_WTC,
-    FIRST_WITHDRAW_MIN_TASKS, WITHDRAW_ADS_REQUIRED, todayBD, currentHalfYearBD, WTC_PER_USD, DOGS_PER_USD,
+    WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, MIN_CONVERT_WTC, MIN_WITHDRAW_DOGS, WITHDRAW_AMOUNT_STEP,
+    FIRST_WITHDRAW_MIN_TASKS, WITHDRAW_ADS_REQUIRED, WITHDRAW_REFERRALS_REQUIRED, WITHDRAW_ADDRESS_LOCK_DAYS,
+    todayBD, WTC_PER_DOGS,
 } from '../lib/constants.js';
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
 const LOCK_MS = WITHDRAW_ADDRESS_LOCK_DAYS * 24 * 60 * 60 * 1000;
+const ACTIVE_METHOD = 'tonkeeper'; // the only method currently accepted — Binance is locked (see lib/constants.js)
 
-// Ensures the per-tier claim counters are reset if the 6-month period has
-// rolled over since the user's last withdrawal. Returns the (possibly
-// freshly-reset) tier-count map and the current period key.
-async function ensureTierPeriodReset(users, userId, user) {
-    const period = currentHalfYearBD();
-    if (user.withdrawTierMonth === period) {
-        return { counts: user.withdrawTierCounts || {}, period };
-    }
-    await users.updateOne({ _id: userId }, { $set: { withdrawTierCounts: {}, withdrawTierMonth: period } });
-    return { counts: {}, period };
-}
-
-// Address-lock status for a user — null if not currently locked (either
-// never withdrawn, or the lock has expired).
+// Address-lock status for a user — null if not currently locked.
+// ⚠️ NEW: a user whose existing lock is on the (now-locked) 'binance'
+// method is treated as UNLOCKED — Binance can't be paid out to anymore, so
+// there's nothing to protect by holding that lock. This auto-migrates
+// every previously-Binance-locked user the first time they open the
+// withdraw sheet, with no separate DB migration needed.
 function getAddressLockStatus(user) {
     if (!user.addressLockedAt) return null;
+    if (user.lockedWithdrawMethod && user.lockedWithdrawMethod !== ACTIVE_METHOD) return null; // ⚠️ NEW — e.g. old binance locks
     const elapsed = Date.now() - new Date(user.addressLockedAt).getTime();
     if (elapsed >= LOCK_MS) return null; // expired
     return {
-        method: user.lockedWithdrawMethod,
         address: user.lockedWithdrawAddress,
         daysLeft: Math.max(1, Math.ceil((LOCK_MS - elapsed) / (24 * 60 * 60 * 1000))),
     };
 }
 
-// `usd` is deducted straight from usdtBalance, no fee here (fee already
-// happened at convert time) — so "net" is just `usd`.
-function tierEligibility(tier, referralCount, claimsUsedThisMonth, usdtBalance) {
-    return {
-        id: tier.id,
-        usd: tier.usd,
-        netUsd: tier.usd, // kept for frontend compatibility — no fee at this step
-        monthlyLimit: tier.monthlyLimit,
-        claimsUsed: claimsUsedThisMonth,
-        claimsLeft: Math.max(0, tier.monthlyLimit - claimsUsedThisMonth),
-        referralsRequired: tier.referralsRequired,
-        referralsHave: referralCount,
-        referralsMet: referralCount >= tier.referralsRequired,
-        monthlyLimitReached: claimsUsedThisMonth >= tier.monthlyLimit,
-        balanceOk: usdtBalance >= tier.usd,
-    };
-}
-
-// ── GET ?action=tiers ──
-async function handleTiers(req, res, db) {
+// ── GET ?action=requirements ──
+async function handleRequirements(req, res, db) {
     res.setHeader('Cache-Control', 'no-store, max-age=0');
     const verified = verifyTelegramInitData(req.query.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const id = String(verified.user.id);
 
     const users = db.collection('users');
-    // ⚠️ NEW: reset applied here too (previously only handleCreate called
-    // this), so adsWatchedToday shown in the "tiers" GET response can't be
-    // stale from a previous calendar day.
     const today = await ensureDailyReset(users, id);
     const user = await users.findOne({ _id: id });
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
 
-    const { counts } = await ensureTierPeriodReset(users, id, user);
-    const usdtBalance = user.usdtBalance || 0;
-    const tiers = WITHDRAW_TIERS.map(t => tierEligibility(t, user.referralCount || 0, counts[t.id] || 0, usdtBalance));
     const addressLock = getAddressLockStatus(user);
-
-    // ⚠️ NEW — global (tier-independent) requirement status, for the
-    // multi-step withdraw wizard's "Requirements" screen (ads progress bar,
-    // lifetime task progress bar — matches the reference screenshot's UI).
     const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
     const tasksHave = (user.completedTasks || []).length;
+    const referralsHave = user.referralCount || 0;
+
     const withdrawRequirements = {
-        adsRequired: WITHDRAW_ADS_REQUIRED,
-        adsWatchedToday: adsToday,
-        adsMet: adsToday >= WITHDRAW_ADS_REQUIRED,
-        tasksRequired: FIRST_WITHDRAW_MIN_TASKS,
-        tasksHave,
-        tasksMet: tasksHave >= FIRST_WITHDRAW_MIN_TASKS,
+        tasksRequired: FIRST_WITHDRAW_MIN_TASKS, tasksHave, tasksMet: tasksHave >= FIRST_WITHDRAW_MIN_TASKS,
+        adsRequired: WITHDRAW_ADS_REQUIRED, adsWatchedToday: adsToday, adsMet: adsToday >= WITHDRAW_ADS_REQUIRED,
+        referralsRequired: WITHDRAW_REFERRALS_REQUIRED, referralsHave, referralsMet: referralsHave >= WITHDRAW_REFERRALS_REQUIRED,
     };
 
-    // ⚠️ NEW — expose each method's lock state + payout currency + live
-    // DOGS rate so the frontend doesn't have to hardcode any of this.
-    const methods = Object.fromEntries(
-        Object.entries(WITHDRAW_METHODS).map(([key, m]) => [key, {
-            label: m.label, currency: m.currency, locked: !!m.locked,
-        }])
-    );
-
     return res.status(200).json({
-        ok: true, tiers, usdtBalance, wtcBalance: user.wtcBalance || 0, addressLock,
-        withdrawRequirements, methods,
-        minConvertWtc: MIN_CONVERT_WTC, convertFeePercent: WITHDRAW_FEE_PERCENT,
-        dogsPerUsd: DOGS_PER_USD,
+        ok: true,
+        dogsBalance: user.dogsBalance || 0,
+        wtcBalance: user.wtcBalance || 0,
+        addressLock,
+        withdrawRequirements,
+        minWithdrawDogs: MIN_WITHDRAW_DOGS,
+        withdrawAmountStep: WITHDRAW_AMOUNT_STEP,
+        minConvertWtc: MIN_CONVERT_WTC,
+        convertFeePercent: WITHDRAW_FEE_PERCENT,
+        wtcPerDogs: WTC_PER_DOGS,
+        alreadyWithdrewToday: user.lastWithdrawDate === today,
     });
 }
 
@@ -142,7 +111,7 @@ async function handleHistory(req, res, db) {
     return res.status(200).json({ ok: true, history: list });
 }
 
-// ── POST action:'convert' — WTC → usdtBalance, fee taken HERE ──
+// ── POST action:'convert' — WTC → dogsBalance, fee taken HERE ──
 async function handleConvert(req, res, db) {
     const verified = verifyTelegramInitData(req.body?.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
@@ -161,50 +130,54 @@ async function handleConvert(req, res, db) {
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
 
-    const grossUsd = wtcAmount / WTC_PER_USD;
-    const feeUsd = grossUsd * (WITHDRAW_FEE_PERCENT / 100);
-    const netUsd = grossUsd - feeUsd;
+    const grossDogs = wtcAmount / WTC_PER_DOGS;
+    const feeDogs = grossDogs * (WITHDRAW_FEE_PERCENT / 100);
+    const netDogs = grossDogs - feeDogs;
 
-    // ── ATOMIC — balance check + deduct WTC + credit usdtBalance, one operation ──
+    // ── ATOMIC — balance check + deduct WTC + credit dogsBalance, one operation ──
     const gate = await users.findOneAndUpdate(
         { _id: id, isBanned: { $ne: true }, wtcBalance: { $gte: wtcAmount } },
-        { $inc: { wtcBalance: -wtcAmount, usdtBalance: netUsd } },
+        { $inc: { wtcBalance: -wtcAmount, dogsBalance: netDogs } },
         { returnDocument: 'after' }
     );
     if (!gate) return res.status(409).json({ ok: false, error: 'insufficient_balance' });
 
     return res.status(200).json({
-        ok: true, wtcConverted: wtcAmount, feeUsd, netUsd,
-        newWtcBalance: gate.wtcBalance, newUsdtBalance: gate.usdtBalance,
+        ok: true, wtcConverted: wtcAmount, feeDogs, netDogs,
+        newWtcBalance: gate.wtcBalance, newDogsBalance: gate.dogsBalance,
     });
 }
 
-// ── POST action:'create' (default) — spend usdtBalance against a tier ──
+// ── POST (default action 'create') — spend dogsBalance, free amount ──
 async function handleCreate(req, res, db) {
     const verified = verifyTelegramInitData(req.body?.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const id = String(verified.user.id);
 
-    const { method, details, tierId } = req.body;
-    if (!method || !details || !tierId) {
-        return res.status(400).json({ ok: false, error: 'missing_fields' });
-    }
+    const { details, method } = req.body;
+    const dogsAmount = Math.floor(Number(req.body?.dogsAmount));
 
-    const methodConfig = WITHDRAW_METHODS[method];
-    if (!methodConfig) return res.status(400).json({ ok: false, error: 'invalid_method' });
-
-    // ⚠️ NEW — Binance/USDT withdrawals temporarily paused. Checked here,
-    // server-side, so this can't be bypassed even if the frontend button
-    // check is somehow skipped (old cached page, direct API call, etc).
-    if (methodConfig.locked) {
+    // ⚠️ Only Tonkeeper/TON is accepted right now. If a client explicitly
+    // sends a different (e.g. legacy 'binance') method, reject it —
+    // defensive check even though the current frontend never sends one.
+    if (method && method !== ACTIVE_METHOD) {
+        const cfg = WITHDRAW_METHODS[method];
         return res.status(400).json({
             ok: false, error: 'method_locked',
-            message: `${methodConfig.label} withdrawals are temporarily paused. Please use your TON wallet address to receive DOGS instead.`,
+            message: `${cfg?.label || method} withdrawals are temporarily paused. Please use your TON wallet address to receive DOGS instead.`,
         });
     }
 
-    const tier = WITHDRAW_TIERS.find(t => t.id === tierId);
-    if (!tier) return res.status(400).json({ ok: false, error: 'invalid_tier' });
+    if (!details) return res.status(400).json({ ok: false, error: 'missing_fields' });
+    if (!dogsAmount || isNaN(dogsAmount) || dogsAmount <= 0) {
+        return res.status(400).json({ ok: false, error: 'invalid_amount' });
+    }
+    if (dogsAmount < MIN_WITHDRAW_DOGS) {
+        return res.status(400).json({ ok: false, error: 'below_min_withdraw', message: `Minimum withdraw is ${MIN_WITHDRAW_DOGS.toLocaleString()} DOGS.` });
+    }
+    if (dogsAmount % WITHDRAW_AMOUNT_STEP !== 0) {
+        return res.status(400).json({ ok: false, error: 'bad_amount_step', message: 'Amount must end in "00" (e.g. 1000, 1200, 1500).' });
+    }
 
     const users = db.collection('users');
     const today = await ensureDailyReset(users, id);
@@ -213,53 +186,41 @@ async function handleCreate(req, res, db) {
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
 
-    // ⚠️ CHANGED: was "only on the very first withdraw, need 5" — now a
-    // LIFETIME gate re-checked on every request, threshold 10. Since
-    // completedTasks only grows, once a user crosses 10 this always passes —
-    // functionally still a "one-time" wall, just re-verified each time
-    // instead of gated behind a withdrawalCount===0 flag.
+    // ── lifetime task gate ──
     const tasksHave = (user.completedTasks || []).length;
     if (tasksHave < FIRST_WITHDRAW_MIN_TASKS) {
         return res.status(400).json({
-            ok: false, error: 'need_5_tasks', // ⚠️ error code name kept as-is for frontend errorText() compatibility — semantics updated, code string unchanged
+            ok: false, error: 'need_5_tasks', // error code name kept as-is for frontend errorText() compatibility
             tasksRequired: FIRST_WITHDRAW_MIN_TASKS, tasksHave,
             message: `Complete at least ${FIRST_WITHDRAW_MIN_TASKS} tasks before withdrawing (you have ${tasksHave}).`,
         });
     }
 
-    // ── 30-day address lock ──
-    const lockStatus = getAddressLockStatus(user);
-    if (lockStatus && (lockStatus.method !== method || lockStatus.address !== details)) {
-        return res.status(400).json({
-            ok: false, error: 'address_locked',
-            lockedMethod: lockStatus.method, lockedAddress: lockStatus.address, daysLeft: lockStatus.daysLeft,
-            message: `Your withdraw address is locked to ${WITHDRAW_METHODS[lockStatus.method]?.label || lockStatus.method} (${lockStatus.address}) for ${lockStatus.daysLeft} more day(s).`,
-        });
-    }
-
-    // ── tier eligibility: lifetime referral threshold + claim limit (UNCHANGED logic; values unchanged in constants.js) ──
-    const { counts: tierCounts, period: tierPeriod } = await ensureTierPeriodReset(users, id, user);
-    if ((user.referralCount || 0) < tier.referralsRequired) {
+    // ── lifetime referral gate ──
+    const referralsHave = user.referralCount || 0;
+    if (referralsHave < WITHDRAW_REFERRALS_REQUIRED) {
         return res.status(400).json({
             ok: false, error: 'referral_required',
-            referralsNeeded: tier.referralsRequired, referralsHave: user.referralCount || 0,
-            message: `This tier needs ${tier.referralsRequired} total referrals (you have ${user.referralCount || 0}).`,
+            referralsNeeded: WITHDRAW_REFERRALS_REQUIRED, referralsHave,
+            message: `You need at least ${WITHDRAW_REFERRALS_REQUIRED} referral to withdraw (you have ${referralsHave}).`,
         });
     }
-    const claimsUsed = tierCounts[tier.id] || 0;
-    if (claimsUsed >= tier.monthlyLimit) {
+
+    // ── 7-day address lock (Binance-locked users are auto-unlocked — see getAddressLockStatus) ──
+    const lockStatus = getAddressLockStatus(user);
+    if (lockStatus && lockStatus.address !== details) {
         return res.status(400).json({
-            ok: false, error: 'tier_monthly_limit_reached',
-            message: `You've used all ${tier.monthlyLimit} claim(s) for this tier this period. It resets every 6 months.`,
+            ok: false, error: 'address_locked',
+            lockedAddress: lockStatus.address, daysLeft: lockStatus.daysLeft,
+            message: `Your withdraw address is locked to ${lockStatus.address} for ${lockStatus.daysLeft} more day(s).`,
         });
     }
 
-    if ((user.usdtBalance || 0) < tier.usd) {
-        return res.status(400).json({ ok: false, error: 'insufficient_balance', message: `You need $${tier.usd} in your converted balance. Convert more WTC first.` });
+    if ((user.dogsBalance || 0) < dogsAmount) {
+        return res.status(400).json({ ok: false, error: 'insufficient_balance', message: `You need ${dogsAmount.toLocaleString()} DOGS in your converted balance. Convert more WTC first.` });
     }
 
-    // ⚠️ CHANGED: fixed WITHDRAW_ADS_REQUIRED instead of
-    // calcAdsRequired(tier.usd) — same requirement regardless of tier size.
+    // ── daily ads gate ──
     const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
     if (adsToday < WITHDRAW_ADS_REQUIRED) {
         return res.status(400).json({ ok: false, error: 'insufficient_ads', adsRequired: WITHDRAW_ADS_REQUIRED, adsToday });
@@ -274,40 +235,34 @@ async function handleCreate(req, res, db) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // ATOMIC GATE — usdtBalance check, once-per-day check, tier's claim-limit
-    // check, and the address-lock condition all re-verified + applied here.
-    //
-    // lastResetDate + adsWatchedToday are part of this atomic filter too —
-    // without this, a request landing right at the Bangladesh midnight
-    // boundary could pass the non-atomic ads check above and then have
-    // adsWatchedToday reset to 0 by a concurrent/later request before this
-    // update runs — letting a withdrawal through with 0 ads watched today.
+    // ATOMIC GATE — dogsBalance, once-per-day, ads-today, and the address
+    // lock condition are all re-verified + applied here in one update.
     // ══════════════════════════════════════════════════════════
-    const tierCountField = `withdrawTierCounts.${tier.id}`;
-    const lockFilter = lockStatus
-        ? { lockedWithdrawMethod: method, lockedWithdrawAddress: details }
-        : { $or: [{ addressLockedAt: { $exists: false } }, { addressLockedAt: { $lt: new Date(Date.now() - LOCK_MS) } }] };
+    const lockFilter = (lockStatus)
+        ? { lockedWithdrawMethod: ACTIVE_METHOD, lockedWithdrawAddress: details }
+        : { $or: [
+              { addressLockedAt: { $exists: false } },
+              { addressLockedAt: { $lt: new Date(Date.now() - LOCK_MS) } },
+              { lockedWithdrawMethod: { $ne: ACTIVE_METHOD } }, // ⚠️ NEW — old binance lock, ignored
+          ] };
 
     const gate = await users.findOneAndUpdate(
         {
             _id: id,
             isBanned: { $ne: true },
-            usdtBalance: { $gte: tier.usd },
+            dogsBalance: { $gte: dogsAmount },
             lastWithdrawDate: { $ne: today },
             lastResetDate: today,
             adsWatchedToday: { $gte: WITHDRAW_ADS_REQUIRED },
-            withdrawTierMonth: tierPeriod,
-            $or: [
-                { [tierCountField]: { $exists: false } },
-                { [tierCountField]: { $lt: tier.monthlyLimit } },
-            ],
             ...lockFilter,
         },
         {
-            $inc: { usdtBalance: -tier.usd, withdrawalCount: 1, [tierCountField]: 1 },
+            $inc: { dogsBalance: -dogsAmount, withdrawalCount: 1 },
             $set: {
                 lastWithdrawDate: today,
-                ...(!lockStatus ? { lockedWithdrawMethod: method, lockedWithdrawAddress: details, addressLockedAt: new Date() } : {}),
+                lockedWithdrawMethod: ACTIVE_METHOD,
+                lockedWithdrawAddress: details,
+                addressLockedAt: (lockStatus && lockStatus.address === details) ? user.addressLockedAt : new Date(),
             },
         },
         { returnDocument: 'after' }
@@ -317,33 +272,22 @@ async function handleCreate(req, res, db) {
         return res.status(409).json({ ok: false, error: 'conflict_retry' });
     }
 
-    // ⚠️ NEW — when the payout currency is DOGS, record the DOGS amount
-    // alongside the USD tier value (cashAmount stays the USD-equivalent
-    // ledger value used everywhere else; dogsAmount is what's actually
-    // sent to the user's TON wallet).
-    const dogsAmount = methodConfig.currency === 'DOGS' ? Math.round(tier.usd * DOGS_PER_USD) : null;
-
     const result = await withdrawals.insertOne({
         userId: id,
         username: user.telegramUsername || 'N/A',
-        method, details, tierId: tier.id,
-        wtcAmount: Math.round(tier.usd * WTC_PER_USD), feeWtc: 0, netWtc: Math.round(tier.usd * WTC_PER_USD),
-        cashAmount: tier.usd, dogsAmount, currency: methodConfig.currency, // ⚠️ dogsAmount added
+        method: ACTIVE_METHOD, details,
+        dogsAmount, currency: 'DOGS',
         adsRequired: WITHDRAW_ADS_REQUIRED,
         status: 'pending', createdAt: new Date(),
     });
 
     if (ADMIN_ID) {
-        const payoutLine = methodConfig.currency === 'DOGS'
-            ? `💰 <b>${dogsAmount.toLocaleString()} DOGS</b> (≈ $${tier.usd})`
-            : `💰 <b>${tier.usd.toFixed(2)} ${methodConfig.currency}</b>`;
         tgSend(ADMIN_ID,
             `💸 <b>Withdrawal Request</b>\n\n` +
             `👤 <code>${id}</code> (@${user.telegramUsername || '?'})\n` +
-            `🎯 Tier: <b>$${tier.usd}</b> (${claimsUsed + 1}/${tier.monthlyLimit} this period)\n` +
-            `${payoutLine} (already fee-deducted at convert time — no fee here)\n` +
-            `📤 Method: <b>${methodConfig.label}</b>\n` +
-            `📍 Address: <code>${details}</code>${lockStatus ? '' : ' 🔒 (newly locked for 30 days)'}\n` +
+            `💰 <b>${dogsAmount.toLocaleString()} DOGS</b>\n` +
+            `📤 Method: <b>TON Wallet (Tonkeeper)</b>\n` +
+            `📍 Address: <code>${details}</code>${(lockStatus && lockStatus.address === details) ? '' : ' 🔒 (newly locked for ' + WITHDRAW_ADDRESS_LOCK_DAYS + ' days)'}\n` +
             `📊 Total withdrawals so far: <b>${gate.withdrawalCount || 1}</b>\n` +
             `👥 Total referrals: <b>${user.referralCount || 0}</b>\n` +
             `📅 ${new Date().toLocaleString()}`,
@@ -354,7 +298,7 @@ async function handleCreate(req, res, db) {
         ).catch((e) => console.error('admin notify failed:', e));
     }
 
-    return res.status(200).json({ ok: true, withdrawalId: result.insertedId, netCurrencyAmount: dogsAmount ?? tier.usd, currency: methodConfig.currency, feeWtc: 0 });
+    return res.status(200).json({ ok: true, withdrawalId: result.insertedId, dogsAmount });
 }
 
 export default async function handler(req, res) {
@@ -364,7 +308,7 @@ export default async function handler(req, res) {
         if (req.method === 'GET') {
             const { action } = req.query;
             if (action === 'history') return handleHistory(req, res, db);
-            if (action === 'tiers') return handleTiers(req, res, db);
+            if (action === 'requirements') return handleRequirements(req, res, db);
             return res.status(400).json({ ok: false, error: 'unknown_action' });
         }
 
@@ -380,4 +324,4 @@ export default async function handler(req, res) {
         console.error('withdraw error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-                }
+    }
