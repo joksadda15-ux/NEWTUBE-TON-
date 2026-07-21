@@ -9,13 +9,10 @@
 // A 30-day address lock still applies: the first method+address a user
 // withdraws to becomes fixed for that long.
 //
-// ⚠️ NEW (this update): every withdraw request — regardless of tier size —
-// now requires:
-//   - WITHDRAW_ADS_REQUIRED (15) ads watched TODAY (Bangladesh calendar day)
-//   - FIRST_WITHDRAW_MIN_TASKS (10) tasks completed LIFETIME
-// These replace the old per-tier calcAdsRequired(tier.usd) scaling and the
-// "only checked on the very first withdraw" task gate. Referral requirements
-// (per-tier, in WITHDRAW_TIERS) are UNCHANGED.
+// ⚠️ NEW (this update): Binance/USDT withdrawals are temporarily LOCKED
+// (WITHDRAW_METHODS.binance.locked in lib/constants.js). Tonkeeper now pays
+// out in DOGS instead of USDT, at the fixed DOGS_PER_USD rate — same TON
+// wallet address field as before, only the payout currency changed.
 //
 //   GET  /api/withdraw?action=history&initData=...
 //   GET  /api/withdraw?action=tiers&initData=...              → tier list + eligibility + global ads/task requirement status + address-lock status
@@ -28,7 +25,7 @@ import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS, WITHDRAW_ADDRESS_LOCK_DAYS, MIN_CONVERT_WTC,
-    FIRST_WITHDRAW_MIN_TASKS, WITHDRAW_ADS_REQUIRED, todayBD, currentHalfYearBD, WTC_PER_USD,
+    FIRST_WITHDRAW_MIN_TASKS, WITHDRAW_ADS_REQUIRED, todayBD, currentHalfYearBD, WTC_PER_USD, DOGS_PER_USD,
 } from '../lib/constants.js';
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
@@ -111,10 +108,19 @@ async function handleTiers(req, res, db) {
         tasksMet: tasksHave >= FIRST_WITHDRAW_MIN_TASKS,
     };
 
+    // ⚠️ NEW — expose each method's lock state + payout currency + live
+    // DOGS rate so the frontend doesn't have to hardcode any of this.
+    const methods = Object.fromEntries(
+        Object.entries(WITHDRAW_METHODS).map(([key, m]) => [key, {
+            label: m.label, currency: m.currency, locked: !!m.locked,
+        }])
+    );
+
     return res.status(200).json({
         ok: true, tiers, usdtBalance, wtcBalance: user.wtcBalance || 0, addressLock,
-        withdrawRequirements,
+        withdrawRequirements, methods,
         minConvertWtc: MIN_CONVERT_WTC, convertFeePercent: WITHDRAW_FEE_PERCENT,
+        dogsPerUsd: DOGS_PER_USD,
     });
 }
 
@@ -187,6 +193,16 @@ async function handleCreate(req, res, db) {
     const methodConfig = WITHDRAW_METHODS[method];
     if (!methodConfig) return res.status(400).json({ ok: false, error: 'invalid_method' });
 
+    // ⚠️ NEW — Binance/USDT withdrawals temporarily paused. Checked here,
+    // server-side, so this can't be bypassed even if the frontend button
+    // check is somehow skipped (old cached page, direct API call, etc).
+    if (methodConfig.locked) {
+        return res.status(400).json({
+            ok: false, error: 'method_locked',
+            message: `${methodConfig.label} withdrawals are temporarily paused. Please use your TON wallet address to receive DOGS instead.`,
+        });
+    }
+
     const tier = WITHDRAW_TIERS.find(t => t.id === tierId);
     if (!tier) return res.status(400).json({ ok: false, error: 'invalid_tier' });
 
@@ -221,7 +237,7 @@ async function handleCreate(req, res, db) {
         });
     }
 
-    // ── tier eligibility: lifetime referral threshold + claim limit (UNCHANGED logic; monthlyLimit values updated in constants.js) ──
+    // ── tier eligibility: lifetime referral threshold + claim limit (UNCHANGED logic; values unchanged in constants.js) ──
     const { counts: tierCounts, period: tierPeriod } = await ensureTierPeriodReset(users, id, user);
     if ((user.referralCount || 0) < tier.referralsRequired) {
         return res.status(400).json({
@@ -242,7 +258,7 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'insufficient_balance', message: `You need $${tier.usd} in your converted balance. Convert more WTC first.` });
     }
 
-    // ⚠️ CHANGED: fixed WITHDRAW_ADS_REQUIRED (15) instead of
+    // ⚠️ CHANGED: fixed WITHDRAW_ADS_REQUIRED instead of
     // calcAdsRequired(tier.usd) — same requirement regardless of tier size.
     const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
     if (adsToday < WITHDRAW_ADS_REQUIRED) {
@@ -261,13 +277,11 @@ async function handleCreate(req, res, db) {
     // ATOMIC GATE — usdtBalance check, once-per-day check, tier's claim-limit
     // check, and the address-lock condition all re-verified + applied here.
     //
-    // ⚠️ NEW: lastResetDate + adsWatchedToday are now ALSO part of this
-    // atomic filter (previously the ads check above was a plain read with no
-    // atomic re-verification). Without this, a request landing right at the
-    // Bangladesh midnight boundary could pass the non-atomic ads check above
-    // and then have adsWatchedToday reset to 0 by a concurrent/later request
-    // before this update runs — letting a withdrawal through with 0 ads
-    // watched today. Now that gap is closed.
+    // lastResetDate + adsWatchedToday are part of this atomic filter too —
+    // without this, a request landing right at the Bangladesh midnight
+    // boundary could pass the non-atomic ads check above and then have
+    // adsWatchedToday reset to 0 by a concurrent/later request before this
+    // update runs — letting a withdrawal through with 0 ads watched today.
     // ══════════════════════════════════════════════════════════
     const tierCountField = `withdrawTierCounts.${tier.id}`;
     const lockFilter = lockStatus
@@ -280,8 +294,8 @@ async function handleCreate(req, res, db) {
             isBanned: { $ne: true },
             usdtBalance: { $gte: tier.usd },
             lastWithdrawDate: { $ne: today },
-            lastResetDate: today,                              // ⚠️ NEW
-            adsWatchedToday: { $gte: WITHDRAW_ADS_REQUIRED },   // ⚠️ NEW
+            lastResetDate: today,
+            adsWatchedToday: { $gte: WITHDRAW_ADS_REQUIRED },
             withdrawTierMonth: tierPeriod,
             $or: [
                 { [tierCountField]: { $exists: false } },
@@ -303,22 +317,31 @@ async function handleCreate(req, res, db) {
         return res.status(409).json({ ok: false, error: 'conflict_retry' });
     }
 
+    // ⚠️ NEW — when the payout currency is DOGS, record the DOGS amount
+    // alongside the USD tier value (cashAmount stays the USD-equivalent
+    // ledger value used everywhere else; dogsAmount is what's actually
+    // sent to the user's TON wallet).
+    const dogsAmount = methodConfig.currency === 'DOGS' ? Math.round(tier.usd * DOGS_PER_USD) : null;
+
     const result = await withdrawals.insertOne({
         userId: id,
         username: user.telegramUsername || 'N/A',
         method, details, tierId: tier.id,
         wtcAmount: Math.round(tier.usd * WTC_PER_USD), feeWtc: 0, netWtc: Math.round(tier.usd * WTC_PER_USD),
-        cashAmount: tier.usd, currency: methodConfig.currency,
-        adsRequired: WITHDRAW_ADS_REQUIRED, // ⚠️ CHANGED — fixed value, not tier-dependent anymore
+        cashAmount: tier.usd, dogsAmount, currency: methodConfig.currency, // ⚠️ dogsAmount added
+        adsRequired: WITHDRAW_ADS_REQUIRED,
         status: 'pending', createdAt: new Date(),
     });
 
     if (ADMIN_ID) {
+        const payoutLine = methodConfig.currency === 'DOGS'
+            ? `💰 <b>${dogsAmount.toLocaleString()} DOGS</b> (≈ $${tier.usd})`
+            : `💰 <b>${tier.usd.toFixed(2)} ${methodConfig.currency}</b>`;
         tgSend(ADMIN_ID,
             `💸 <b>Withdrawal Request</b>\n\n` +
             `👤 <code>${id}</code> (@${user.telegramUsername || '?'})\n` +
             `🎯 Tier: <b>$${tier.usd}</b> (${claimsUsed + 1}/${tier.monthlyLimit} this period)\n` +
-            `💰 <b>${tier.usd.toFixed(2)} ${methodConfig.currency}</b> (already fee-deducted at convert time — no fee here)\n` +
+            `${payoutLine} (already fee-deducted at convert time — no fee here)\n` +
             `📤 Method: <b>${methodConfig.label}</b>\n` +
             `📍 Address: <code>${details}</code>${lockStatus ? '' : ' 🔒 (newly locked for 30 days)'}\n` +
             `📊 Total withdrawals so far: <b>${gate.withdrawalCount || 1}</b>\n` +
@@ -331,7 +354,7 @@ async function handleCreate(req, res, db) {
         ).catch((e) => console.error('admin notify failed:', e));
     }
 
-    return res.status(200).json({ ok: true, withdrawalId: result.insertedId, netCurrencyAmount: tier.usd, feeWtc: 0 });
+    return res.status(200).json({ ok: true, withdrawalId: result.insertedId, netCurrencyAmount: dogsAmount ?? tier.usd, currency: methodConfig.currency, feeWtc: 0 });
 }
 
 export default async function handler(req, res) {
@@ -357,4 +380,4 @@ export default async function handler(req, res) {
         console.error('withdraw error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-        }
+                }
