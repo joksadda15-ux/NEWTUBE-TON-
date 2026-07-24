@@ -549,13 +549,12 @@ const MINI_APP_BASE = 'https://t.me/NewTube12_bot/WatchTo_Earn';
 const OFFICIAL_CHANNEL = 'Newtube_Earn';
 const COMMUNITY_GROUP = 'newtube_commonity';
 const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video section only (6 min)
-// ⚠️ NEW — mirrors lib/constants.js WITHDRAW_ADS_REQUIRED / FIRST_WITHDRAW_MIN_TASKS / WITHDRAW_REFERRALS_REQUIRED.
+// ⚠️ NEW — mirrors lib/constants.js WITHDRAW_ADS_REQUIRED / FIRST_WITHDRAW_MIN_TASKS.
 // Frontend-only copies for instant UI rendering (progress bars, requirement
-// text) — the server is still the source of truth via withdraw?action=requirements'
+// text) — the server is still the source of truth via withdraw?action=tiers'
 // `withdrawRequirements` field; these are just the display fallback/labels.
-const WITHDRAW_ADS_REQUIRED = 8;   // ⚠️ FIXED (was 15, stale — server value is 8)
+const WITHDRAW_ADS_REQUIRED = 15;
 const WITHDRAW_TASKS_REQUIRED = 10;
-const WITHDRAW_REFERRALS_REQUIRED = 1; // ⚠️ NEW
 
 const tg = window.Telegram?.WebApp;
 if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#070B14'); } catch (e) {} }
@@ -667,13 +666,11 @@ const ERROR_MESSAGES = {
     insufficient_balance: 'Insufficient balance.',
     insufficient_ads: `Watch ${WITHDRAW_ADS_REQUIRED} ads today before withdrawing.`,
     need_5_tasks: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks before withdrawing.`,
-    referral_required: `You need at least ${WITHDRAW_REFERRALS_REQUIRED} referral before withdrawing.`,
-    method_locked: 'This withdraw method is temporarily paused — use your TON wallet address instead.',
-    invalid_amount: 'Please enter a valid amount.',
-    below_min_withdraw: 'Amount is below the minimum withdraw amount.',
-    bad_amount_step: 'Amount must end in 00 (e.g. 1000, 1200, 1500).',
-    already_withdrawn_today: 'You already withdrew today — try again tomorrow.',
+    referral_required: 'This tier needs more referrals — check the tier list.',
+    tier_monthly_limit_reached: "You've used all claims for this tier — resets every 6 months.",
     address_locked: 'Your withdraw address is locked — check the note in the withdraw sheet.',
+    invalid_tier: 'Please select a valid tier.',
+    already_withdrawn_today: 'You already withdrew today — try again tomorrow.',
     address_used_by_other: 'This address is already used by another account.',
     banned: 'Your account has been suspended.',
     not_member: 'Please join the channel/group first.',
@@ -719,7 +716,7 @@ async function apiGet(path) {
     catch (e) { return { ok: false, error: 'server_error' }; }
 }
 function fmtWTC(n) { return Math.floor(n || 0).toLocaleString('en-US'); }
-function wtcToDogs(wtc) { return (wtc / 3).toFixed(2); } // ⚠️ CHANGED — WTC→DOGS now direct fixed 3:1 rate, no more USD step
+function wtcToUsd(wtc) { return (wtc / 20000).toFixed(4); }
 
 // ══════════════════════════════════════════════════════════════
 // PARTICLE BURST — lightweight canvas confetti for reward moments
@@ -1002,7 +999,7 @@ async function openHistoryModal() {
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <div>
                             <div style="font-weight:700; font-size:15px;">${fmtWTC(h.wtcAmount)} WTC</div>
-                            <div class="muted" style="font-size:12px; margin-top:2px;">≈ ${Number(h.dogsAmount || 0).toLocaleString()} DOGS · ${date}</div>
+                            <div class="muted" style="font-size:12px; margin-top:2px;">≈ ${Number(h.cashAmount || 0).toFixed(4)} ${h.currency || ''} · ${date}</div>
                         </div>
                         <div style="display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:${st.color}22; color:${st.color}; font-size:12px; font-weight:700; white-space:nowrap;">
                             ${st.icon} ${st.label}
@@ -1115,7 +1112,7 @@ async function startWithdrawTicker() {
         setTimeout(() => {
             const el2 = document.getElementById('wd-ticker-text');
             if (!el2) return;
-            el2.textContent = `${w.username} just withdrew ${Number(w.dogsAmount || 0).toLocaleString()} DOGS 🎉`;
+            el2.textContent = `${w.username} just withdrew ${Number(w.cashAmount).toFixed(2)} ${w.currency} 🎉`;
             el2.style.opacity = '1';
         }, 350);
     };
@@ -1144,12 +1141,12 @@ async function renderHome() {
             </div>
             <div class="hero-usd-line">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                ≈ ${wtcToDogs(u.wtcBalance)} DOGS if converted
+                ≈ $${wtcToUsd(u.wtcBalance)} USD if converted
             </div>
             <div class="hero-divider"></div>
             <div class="hero-withdrawable-row">
                 <span class="muted" style="font-size:12px;">Ready to withdraw</span>
-                <span style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--money);">${Math.floor(u.dogsBalance || 0).toLocaleString()} <span style="font-size:11px; color:var(--ink-muted); font-weight:500;">DOGS</span></span>
+                <span style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--money);">$${(u.usdtBalance || 0).toFixed(2)} <span style="font-size:11px; color:var(--ink-muted); font-weight:500;">USDT</span></span>
             </div>
             <div class="hero-actions">
                 <button class="action-primary" id="home-withdraw-btn">
@@ -1291,38 +1288,23 @@ function openProfileModal() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// CURRENCY / CONVERT / WITHDRAW — SEASON 3 UPDATE
-//
-// ⚠️ MAJOR REBUILD (this pass):
-//   - Currency is now WTC → DOGS directly, fixed 3:1 rate (3 WTC = 1 DOGS).
-//     The old WTC→USD→USDT abstraction is gone.
-//   - Binance is LOCKED (kept configured in lib/constants.js so it can be
-//     re-enabled later by flipping `locked:false` there — no other code
-//     needs to change to bring it back). TON wallet address (Tonkeeper) is
-//     currently the ONLY withdraw method, so the method-picker UI is gone.
-//   - The old fixed-tier "tap a $ amount" system is gone. Users now type
-//     any DOGS amount they want, as long as it's >= MIN_WITHDRAW_DOGS and
-//     ends in 0 (a multiple of WITHDRAW_AMOUNT_STEP) — e.g. 1200, 2500,
-//     3000 are fine; 1001, 1507, 1131 are rejected (both here and
-//     server-side in api/withdraw.js).
-//   - Withdraw requirements are now flat or every request (not scaled by
-//     tier): FIRST_WITHDRAW_MIN_TASKS tasks (lifetime), WITHDRAW_ADS_REQUIRED
-//     ads (today), and WITHDRAW_REFERRALS_REQUIRED referral (lifetime) — all
-//     threshold checks, same pattern as before.
-//   - Withdraw address lock is now WITHDRAW_ADDRESS_LOCK_DAYS = 7 days
-//     (was 30).
+// WITHDRAW MODAL — tiered cash-out system (tap a $ tier instead of typing
+// an amount). Tier eligibility (referral threshold, monthly claims left)
+// comes live from the server via GET withdraw?action=tiers.
 // ══════════════════════════════════════════════════════════════
-const WTC_PER_DOGS = 3;             // 3 WTC = 1 DOGS (fixed)
-const CONVERT_MIN_WTC = 1000; // ⚠️ CHANGED (was 500)
-const CONVERT_FEE_PERCENT = 25;     // taken at convert time, unchanged
-const MIN_WITHDRAW_DOGS = 1000;     // ⚠️ NEW
-const WITHDRAW_AMOUNT_STEP = 100;   // ⚠️ CHANGED (was 10) — amount must end in TWO zeros (1000, 1200, 1500 ✓ — 1001, 1220, 5310 ✗)
-const WITHDRAW_ADDRESS_LOCK_DAYS = 7; // ⚠️ CHANGED (was 30)
+const WITHDRAW_METHODS_UI = {
+    binance:   { label: 'Binance UID', currency: 'USDT', placeholder: 'Enter your Binance UID' },
+    tonkeeper: { label: 'Tonkeeper Address', currency: 'USDT', placeholder: 'UQ... wallet address' },
+};
 
 // ══════════════════════════════════════════════════════════════
-// CONVERT MODAL — WTC → DOGS balance. The 25% fee is taken HERE, not at
+// CONVERT MODAL — WTC → USDT balance. The 25% fee is taken HERE, not at
 // withdraw time (see api/withdraw.js, action:'convert').
 // ══════════════════════════════════════════════════════════════
+const CONVERT_MIN_WTC = 500;
+const CONVERT_FEE_PERCENT = 25;
+const CONVERT_RATE = 20000; // WTC per USD — mirrors lib/constants.js WTC_PER_USD
+
 function openConvertModal() {
     const u = state.user || {};
     document.getElementById('modal-root').innerHTML = `
@@ -1331,8 +1313,8 @@ function openConvertModal() {
                 <div class="jg-glow" style="opacity:0.5;"></div>
                 <div class="sheet-handle" style="position:relative; z-index:1;"></div>
                 <div style="position:relative; z-index:1;">
-                    <div class="section-title" style="margin-bottom:4px;">Convert WTC → DOGS</div>
-                    <div class="muted" style="font-size:12px; margin-bottom:16px;">A 25% fee applies here, at conversion — withdrawing afterward is fee-free. Rate: ${WTC_PER_DOGS} WTC = 1 DOGS.</div>
+                    <div class="section-title" style="margin-bottom:4px;">Convert WTC → USDT</div>
+                    <div class="muted" style="font-size:12px; margin-bottom:16px;">A 25% fee applies here, at conversion — withdrawing afterward is fee-free.</div>
 
                     <div class="card" style="text-align:center; padding:14px; margin-bottom:14px;">
                         <div class="muted" style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">WTC balance</div>
@@ -1344,13 +1326,13 @@ function openConvertModal() {
 
                     <div class="card" style="margin-top:12px; padding:14px;">
                         <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;">
-                            <span class="muted">Gross value</span><span id="cv-gross">0 DOGS</span>
+                            <span class="muted">Gross value</span><span id="cv-gross">$0.0000</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;">
-                            <span class="muted">Fee (25%)</span><span id="cv-fee" style="color:var(--danger);">-0 DOGS</span>
+                            <span class="muted">Fee (25%)</span><span id="cv-fee" style="color:var(--danger);">-$0.0000</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:700; padding-top:8px; border-top:1px solid var(--border);">
-                            <span>You'll receive</span><span id="cv-net" style="color:var(--money);">0 DOGS</span>
+                            <span>You'll receive</span><span id="cv-net" style="color:var(--money);">$0.0000</span>
                         </div>
                     </div>
 
@@ -1364,12 +1346,12 @@ function openConvertModal() {
 
     amountEl.oninput = () => {
         const wtc = parseFloat(amountEl.value) || 0;
-        const gross = wtc / WTC_PER_DOGS;
+        const gross = wtc / CONVERT_RATE;
         const fee = gross * (CONVERT_FEE_PERCENT / 100);
         const net = gross - fee;
-        document.getElementById('cv-gross').textContent = `${gross.toFixed(2)} DOGS`;
-        document.getElementById('cv-fee').textContent = `-${fee.toFixed(2)} DOGS`;
-        document.getElementById('cv-net').textContent = `${net.toFixed(2)} DOGS`;
+        document.getElementById('cv-gross').textContent = `$${gross.toFixed(4)}`;
+        document.getElementById('cv-fee').textContent = `-$${fee.toFixed(4)}`;
+        document.getElementById('cv-net').textContent = `$${net.toFixed(4)}`;
 
         if (wtc < CONVERT_MIN_WTC) { submitBtn.disabled = true; submitBtn.textContent = `Minimum ${CONVERT_MIN_WTC} WTC`; }
         else if (wtc > (u.wtcBalance || 0)) { submitBtn.disabled = true; submitBtn.textContent = `Insufficient WTC balance`; }
@@ -1382,7 +1364,7 @@ function openConvertModal() {
         submitBtn.disabled = true; submitBtn.textContent = 'Converting...';
         const r = await apiPost('withdraw', { action: 'convert', wtcAmount });
         if (r.ok) {
-            toast(`Converted! +${Number(r.netDogs || 0).toFixed(2)} DOGS added to your withdrawable balance.`, 'success');
+            toast(`Converted! +$${r.netUsd.toFixed(4)} added to your withdrawable balance.`, 'success');
             triggerBurst(submitBtn);
             setTimeout(() => { document.getElementById('modal-root').innerHTML = ''; }, 250);
             await refreshUser();
@@ -1395,28 +1377,29 @@ function openConvertModal() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// WITHDRAW MODAL — 2-STEP WIZARD, TON-ONLY:
-//   Step 1 "requirements" — global gate: tasks (lifetime) + ads (today) +
-//           referrals (lifetime), fetched from withdraw?action=requirements'
-//           `withdrawRequirements` field.
-//   Step 2 "form"         — TON wallet address + a free-typed DOGS amount
-//           (no more method picker, no more fixed tier buttons — Binance is
-//           locked, so TON/Tonkeeper is the only option right now).
+// WITHDRAW MODAL — now a 2-STEP WIZARD:
+//   Step 1 "requirements" — global gate: 15 ads watched today + 10 tasks
+//           completed lifetime (fetched from withdraw?action=tiers'
+//           `withdrawRequirements` field, same call the tier list already
+//           needed — no extra endpoint).
+//   Step 2 "form"         — unchanged tier + method/address picker, only
+//           reachable once step 1's requirements are met.
 // ══════════════════════════════════════════════════════════════
 function openWithdrawModal() {
     let step = 'requirements';
-    let addressLock = null; // { address, daysLeft } or null
-    let requirements = null; // { tasksRequired, tasksHave, tasksMet, adsRequired, adsWatchedToday, adsMet, referralsRequired, referralsHave, referralsMet }
-    let dogsBalance = 0;
+    let method = 'binance';
+    let selectedTierId = null;
+    let tiers = [];
+    let addressLock = null; // { method, address, daysLeft } or null
+    let requirements = null; // { adsRequired, adsWatchedToday, adsMet, tasksRequired, tasksHave, tasksMet }
     let loadFailed = false;
 
     // ── STEP 1 — requirements gate ──
     function renderRequirements() {
         const r = requirements;
-        const tasksPct = r ? Math.min(100, Math.round((r.tasksHave / r.tasksRequired) * 100)) : 0;
         const adsPct = r ? Math.min(100, Math.round((r.adsWatchedToday / r.adsRequired) * 100)) : 0;
-        const refPct = r ? Math.min(100, Math.round((r.referralsHave / r.referralsRequired) * 100)) : 0;
-        const allMet = !!(r && r.tasksMet && r.adsMet && r.referralsMet);
+        const tasksPct = r ? Math.min(100, Math.round((r.tasksHave / r.tasksRequired) * 100)) : 0;
+        const allMet = !!(r && r.adsMet && r.tasksMet);
 
         function reqCard(label, have, need, pct, met, hue, hint) {
             return `
@@ -1442,14 +1425,13 @@ function openWithdrawModal() {
                     <div class="sheet-handle" style="position:relative; z-index:1;"></div>
                     <div style="position:relative; z-index:1;">
                         <div class="section-title" style="margin-bottom:4px;">Withdraw — Requirements</div>
-                        <div class="muted" style="font-size:12px; margin-bottom:16px;">Complete all three before entering an amount.</div>
+                        <div class="muted" style="font-size:12px; margin-bottom:16px;">Complete both before choosing an amount.</div>
 
                         ${!r ? `
                             <div class="muted" style="text-align:center; padding:28px 0;">${loadFailed ? "Couldn't load — try again." : 'Loading...'}</div>
                         ` : `
                             ${reqCard(`Complete ${r.tasksRequired} tasks (lifetime)`, r.tasksHave, r.tasksRequired, tasksPct, r.tasksMet, 'var(--task-hue)', `Head to the Tasks tab — ${Math.max(0, r.tasksRequired - r.tasksHave)} more to go.`)}
                             ${reqCard(`Watch ${r.adsRequired} ads (today)`, r.adsWatchedToday, r.adsRequired, adsPct, r.adsMet, 'var(--video-hue)', `Head to the Earn tab — ${Math.max(0, r.adsRequired - r.adsWatchedToday)} more ads today.`)}
-                            ${reqCard(`Refer ${r.referralsRequired} friend (lifetime)`, r.referralsHave, r.referralsRequired, refPct, r.referralsMet, 'var(--accent)', `Share your referral link — you need at least ${r.referralsRequired} referral to withdraw.`)}
                         `}
 
                         <button class="btn btn-money" id="wd-req-next" style="margin-top:6px;" ${allMet ? '' : 'disabled'}>${!r ? (loadFailed ? 'Retry' : 'Loading...') : (allMet ? '→ Next' : 'Complete requirements above')}</button>
@@ -1464,24 +1446,22 @@ function openWithdrawModal() {
     }
 
     async function loadRequirements() {
-        const r = await apiGet(`withdraw?action=requirements&initData=${encodeURIComponent(TG_INIT_DATA)}`);
+        const r = await apiGet(`withdraw?action=tiers&initData=${encodeURIComponent(TG_INIT_DATA)}`);
         if (!r.ok) {
             loadFailed = true;
             if (step === 'requirements') renderRequirements();
             return;
         }
-        dogsBalance = r.dogsBalance || 0;
+        tiers = r.tiers;
         addressLock = r.addressLock || null;
-        requirements = r.withdrawRequirements || {
-            tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: 0, tasksMet: false,
-            adsRequired: WITHDRAW_ADS_REQUIRED, adsWatchedToday: 0, adsMet: false,
-            referralsRequired: WITHDRAW_REFERRALS_REQUIRED, referralsHave: 0, referralsMet: false,
-        };
+        requirements = r.withdrawRequirements || { adsRequired: WITHDRAW_ADS_REQUIRED, adsWatchedToday: 0, adsMet: false, tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: 0, tasksMet: false };
+        if (addressLock) method = addressLock.method;
         if (step === 'requirements') renderRequirements();
     }
 
-    // ── STEP 2 — TON address + free-typed DOGS amount ──
+    // ── STEP 2 — tier + method/address (same UI as before, minus the network call — tiers/addressLock already loaded in step 1) ──
     function renderForm() {
+        const m = WITHDRAW_METHODS_UI[method];
         const locked = !!addressLock;
         document.getElementById('modal-root').innerHTML = `
             <div class="overlay" onclick="if(event.target===this)this.remove()">
@@ -1491,55 +1471,81 @@ function openWithdrawModal() {
                     <button id="wd-back" style="position:relative; z-index:1; background:none; border:none; color:var(--ink-muted); font-size:12.5px; display:flex; align-items:center; gap:4px; margin-bottom:8px; padding:0;">← Requirements</button>
                     <div class="card" style="position:relative; z-index:1; text-align:center; padding:18px; margin-bottom:14px; border-color:var(--money-soft);">
                         <div class="muted" style="font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">Withdrawable balance</div>
-                        <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">${Math.floor(dogsBalance).toLocaleString()} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">DOGS</span></div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">$${(state.user?.usdtBalance || 0).toFixed(2)} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">USDT</span></div>
                         <div class="muted" style="font-size:11.5px; margin-top:6px;">Need more? <a href="#" id="wd-go-convert" style="color:var(--accent); font-weight:600;">Convert WTC first →</a></div>
                     </div>
-
-                    <div class="muted" style="font-size:11.5px; margin-bottom:10px; position:relative; z-index:1;">🔒 Binance is temporarily paused — your TON wallet is currently the only withdraw method.</div>
-
-                    <div class="field-label" style="position:relative; z-index:1;">TON Wallet Address</div>
-                    <input class="field-input" id="wd-details" placeholder="UQ... wallet address" style="position:relative; z-index:1;" ${locked ? 'readonly' : ''}>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; position:relative; z-index:1;">
+                        <button class="btn ${method==='binance'?'btn-primary':'btn-outline'}" id="m-binance" ${locked ? 'disabled' : ''}>Binance</button>
+                        <button class="btn ${method==='tonkeeper'?'btn-primary':'btn-outline'}" id="m-tonkeeper" ${locked ? 'disabled' : ''}>Tonkeeper</button>
+                    </div>
+                    <div class="field-label" style="position:relative; z-index:1;">${m.label}</div>
+                    <input class="field-input" id="wd-details" placeholder="${m.placeholder}" style="position:relative; z-index:1;" ${locked ? 'readonly' : ''}>
+                    ${method === 'tonkeeper' && !locked ? `<div class="muted" style="font-size:11.5px; margin-top:5px; position:relative; z-index:1;">💡 Paste your TON wallet address — you'll receive <b>USDT</b> (USDT-on-TON) at this address, not native TON.</div>` : ''}
                     ${locked ? `<div class="muted" style="font-size:11.5px; margin-top:6px; position:relative; z-index:1; color:var(--task-hue);">🔒 Your withdraw address is locked for <b>${addressLock.daysLeft} more day(s)</b> — you can only withdraw to this same address until then.</div>` : ''}
 
-                    <div class="field-label" style="position:relative; z-index:1; margin-top:14px;">Amount (DOGS) — minimum ${MIN_WITHDRAW_DOGS.toLocaleString()}, must end in 00</div>
-                    <input class="field-input" id="wd-amount" type="number" step="${WITHDRAW_AMOUNT_STEP}" placeholder="e.g. 1000, 1200, 1500" style="position:relative; z-index:1;">
-                    <div class="muted" style="font-size:11.5px; margin-top:5px; position:relative; z-index:1;">Amounts like 1001, 1220, 5310 aren't allowed — only round-100 amounts (1000, 1200, 1500...).</div>
+                    <div class="section-title" style="margin:16px 0 10px; position:relative; z-index:1;">Choose a cash-out amount</div>
+                    <div style="overflow-y:auto; flex:1; position:relative; z-index:1;">
+                        <div id="wd-tier-list"></div>
+                    </div>
 
                     <div class="card" style="margin-top:14px; font-size:12px; color:var(--ink-muted); line-height:1.6; position:relative; z-index:1;">
-                        No fee here — the 25% fee is already taken when you convert WTC to DOGS. Your payout address locks for ${WITHDRAW_ADDRESS_LOCK_DAYS} day(s) after your first withdrawal.
+                        No fee here — the 25% fee is already taken when you convert WTC to USDT. Your payout address locks for 30 days after your first withdrawal.
                     </div>
-                    <button class="btn btn-money" style="margin-top:16px; position:relative; z-index:1;" id="wd-submit" disabled>Enter an amount</button>
+                    <button class="btn btn-money" style="margin-top:16px; position:relative; z-index:1;" id="wd-submit" disabled>Select a tier first</button>
                 </div>
             </div>`;
         document.getElementById('wd-back').onclick = () => { step = 'requirements'; renderRequirements(); loadRequirements(); };
         document.getElementById('wd-go-convert').onclick = (e) => { e.preventDefault(); openConvertModal(); };
+        document.getElementById('m-binance').onclick = () => { method = 'binance'; renderForm(); };
+        document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; renderForm(); };
+        document.getElementById('wd-submit').onclick = submitWithdraw;
         if (locked) { const df = document.getElementById('wd-details'); if (df) df.value = addressLock.address; }
+        renderTierList();
+    }
 
-        const amountEl = document.getElementById('wd-amount');
-        const submitBtn = document.getElementById('wd-submit');
-
-        function updateSubmitBtn() {
-            const amt = Math.floor(parseFloat(amountEl.value) || 0);
-            if (!amt) { submitBtn.disabled = true; submitBtn.textContent = 'Enter an amount'; return; }
-            if (amt < MIN_WITHDRAW_DOGS) { submitBtn.disabled = true; submitBtn.textContent = `Minimum ${MIN_WITHDRAW_DOGS.toLocaleString()} DOGS`; return; }
-            if (amt % WITHDRAW_AMOUNT_STEP !== 0) { submitBtn.disabled = true; submitBtn.textContent = 'Amount must end in 00'; return; }
-            if (amt > dogsBalance) { submitBtn.disabled = true; submitBtn.textContent = 'Insufficient DOGS balance'; return; }
-            submitBtn.disabled = false; submitBtn.textContent = `Withdraw ${amt.toLocaleString()} DOGS`;
-        }
-        amountEl.oninput = updateSubmitBtn;
-        submitBtn.onclick = submitWithdraw;
+    function renderTierList() {
+        const listEl = document.getElementById('wd-tier-list');
+        if (!listEl) return;
+        listEl.innerHTML = tiers.map(t => {
+            const locked = !t.referralsMet;
+            const exhausted = t.monthlyLimitReached;
+            const disabled = locked || exhausted || !t.balanceOk;
+            const selected = selectedTierId === t.id;
+            let statusLine;
+            if (locked) statusLine = `🔒 Need ${t.referralsRequired} referrals (you have ${t.referralsHave})`;
+            else if (exhausted) statusLine = `⏳ Used up — resets every 6 months`;
+            else if (!t.balanceOk) statusLine = `Need $${t.usd} converted (${t.claimsLeft}/${t.monthlyLimit} claims left)`;
+            else statusLine = `✅ ${t.claimsLeft}/${t.monthlyLimit} claims left this period`;
+            return `
+            <button class="wd-tier-btn ${selected ? 'wd-tier-selected' : ''}" data-tier="${t.id}" ${disabled ? 'disabled' : ''}>
+                ${selected ? '<div class="wd-tier-check">✓</div>' : ''}
+                <div class="wd-tier-usd">$${t.usd}</div>
+                <div class="wd-tier-wtc">No fee here — you receive the full $${t.usd}</div>
+                <div class="wd-tier-status" style="color:${disabled ? 'var(--ink-faint)' : 'var(--ink-muted)'};">${statusLine}</div>
+            </button>`;
+        }).join('');
+        listEl.querySelectorAll('.wd-tier-btn:not([disabled])').forEach(btn => {
+            btn.onclick = () => { selectedTierId = btn.dataset.tier; renderTierList(); updateSubmitBtn(); };
+        });
         updateSubmitBtn();
+    }
+
+    function updateSubmitBtn() {
+        const btn = document.getElementById('wd-submit');
+        if (!btn) return;
+        const tier = tiers.find(t => t.id === selectedTierId);
+        if (!tier) { btn.disabled = true; btn.textContent = 'Select a tier first'; return; }
+        btn.disabled = false;
+        btn.textContent = `Withdraw $${tier.usd}`;
     }
 
     async function submitWithdraw() {
         const details = document.getElementById('wd-details').value.trim();
-        const dogsAmount = Math.floor(parseFloat(document.getElementById('wd-amount').value) || 0);
-        if (!details) return toast('Please enter your TON wallet address.', 'error');
-        if (dogsAmount < MIN_WITHDRAW_DOGS) return toast(`Minimum ${MIN_WITHDRAW_DOGS.toLocaleString()} DOGS required.`, 'error');
-        if (dogsAmount % WITHDRAW_AMOUNT_STEP !== 0) return toast('Amount must end in 00 (e.g. 1000, 1200, 1500).', 'error');
+        if (!details) return toast('Please enter your address/UID.', 'error');
+        if (!selectedTierId) return toast('Please select a tier.', 'error');
         const btn = document.getElementById('wd-submit');
         btn.textContent = 'Submitting...'; btn.disabled = true;
-        const r = await apiPost('withdraw', { details, dogsAmount });
+        const r = await apiPost('withdraw', { method, details, tierId: selectedTierId });
         if (r.ok) {
             toast('Withdraw request submitted — you\'ll be paid once approved.', 'success');
             triggerBurst(btn);
@@ -1547,10 +1553,13 @@ function openWithdrawModal() {
             await refreshUser();
             if (state.activeTab === 'home') renderHome();
         } else {
-            // ⚠️ If the atomic gate in withdraw.js rejects because ads/tasks/
-            // referrals slipped below requirement between step 1 and submit,
-            // send the user back to step 1 instead of just toasting in place.
-            if (r.error === 'insufficient_ads' || r.error === 'need_5_tasks' || r.error === 'referral_required') {
+            // ⚠️ If the atomic gate in withdraw.js rejects because ads/tasks slipped
+            // below requirement between step 1 and submit (e.g. a concurrent reset,
+            // or the user took a long time on step 2 crossing midnight BD time),
+            // send them back to step 1 instead of just toasting an error in place —
+            // the form step no longer shows ads/task status, so silently failing
+            // here would leave the user stuck without knowing why.
+            if (r.error === 'insufficient_ads' || r.error === 'need_5_tasks') {
                 toast(r.message || errorText(r.error), 'error');
                 step = 'requirements';
                 renderRequirements();
@@ -1558,15 +1567,14 @@ function openWithdrawModal() {
                 return;
             }
             toast(r.message || errorText(r.error), 'error');
+            updateSubmitBtn();
             btn.disabled = false;
-            renderForm();
         }
     }
 
     renderRequirements();
     loadRequirements();
 }
-
 
 // ══════════════════════════════════════════════════════════════
 // PROMO MODAL
