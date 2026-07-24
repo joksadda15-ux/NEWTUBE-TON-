@@ -188,6 +188,16 @@
     .podium-refs { font-size: 10.5px; color: var(--ink-faint); }
     .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 4px; }
     .lb-rank-num { width: 22px; text-align: center; font-family: var(--font-display); font-weight: 600; font-size: 12px; color: var(--ink-faint); flex-shrink: 0; }
+
+    /* ── Home redesign v2 — dual WTC/USDT box, rate line, inline promo box,
+       milestone/leaderboard button row (matches the "Mining Buddies"
+       reference screenshot's layout language, not a pixel copy) ── */
+    .dual-balance-row { display: flex; gap: 10px; margin-top: 12px; position: relative; z-index: 1; }
+    .dual-balance-box { flex: 1; border-radius: 14px; padding: 12px 14px; background: rgba(255,255,255,0.02); border: 0.5px solid var(--border); }
+    .hero-rate-line { margin-top: 10px; font-size: 11.5px; color: var(--ink-muted); text-align: center; position: relative; z-index: 1; }
+    .promo-inline-box { border-radius: 16px; padding: 14px 16px; background: linear-gradient(160deg, var(--gift-soft), var(--surface)); border: 1px solid var(--gift-soft); }
+    .promo-inline-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,176,32,0.14); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .milestone-lb-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12.5px; }
     .btn-outline:active { transform: translateY(1px); background: rgba(255,255,255,0.03); }
     .btn-signal { background: var(--signal); color: #04070D; }
     .btn:disabled { opacity: 0.45; }
@@ -553,7 +563,11 @@ const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video
 // Frontend-only copies for instant UI rendering (progress bars, requirement
 // text) — the server is still the source of truth via withdraw?action=tiers'
 // `withdrawRequirements` field; these are just the display fallback/labels.
-const WITHDRAW_ADS_REQUIRED = 15;
+const WITHDRAW_ADS_REQUIRED = 8;
+// ⚠️ NEW — mirrors lib/constants.js WTC_PER_USD, for the Home hero card's
+// "1 WTC = $X" rate line. Display-only; the server is always the source of
+// truth for actual conversion (see api/withdraw.js's convert action).
+const WTC_PER_USD_DISPLAY = 25000;
 const WITHDRAW_TASKS_REQUIRED = 10;
 
 const tg = window.Telegram?.WebApp;
@@ -1128,6 +1142,7 @@ async function renderHome() {
     const root = document.getElementById('tab-content');
     const u = state.user || {};
     const prevBalance = window.__lastShownBalance ?? u.wtcBalance ?? 0;
+    const rateUsd = (1 / WTC_PER_USD_DISPLAY); // e.g. 25,000 WTC = $1 -> 1 WTC = $0.00004
     root.innerHTML = `
         <div class="hero-balance anim-in" style="margin:18px 20px 0;">
             <svg class="hero-bolt" viewBox="0 0 60 90" fill="none"><path d="M34 2L6 50h18L24 88L54 36H36L34 2z" fill="var(--accent)"/></svg>
@@ -1135,28 +1150,25 @@ async function renderHome() {
                 <div class="muted" style="font-size:12.5px;">Your balance</div>
                 <div class="hero-id-chip">ID ${USER_ID}${u.telegramUsername && u.telegramUsername !== 'N/A' ? ` · @${u.telegramUsername}` : ''}</div>
             </div>
-            <div class="hero-amount-row">
-                <span id="home-balance-num" style="font-family:var(--font-display); font-weight:700; font-size:40px; line-height:1; letter-spacing:-0.5px;">${fmtWTC(prevBalance)}</span>
-                <span style="font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--coin); padding-bottom:6px;">WTC</span>
+
+            <div class="dual-balance-row">
+                <div class="dual-balance-box" style="border-color:var(--coin-soft);">
+                    <div class="muted" style="font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase;">🪙 WTC</div>
+                    <div id="home-balance-num" style="font-family:var(--font-display); font-weight:700; font-size:24px; margin-top:4px; color:var(--coin);">${fmtWTC(prevBalance)}</div>
+                </div>
+                <div class="dual-balance-box" style="border-color:var(--money-soft);">
+                    <div class="muted" style="font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase;">💵 USDT</div>
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:24px; margin-top:4px; color:var(--money);">${(u.usdtBalance || 0).toFixed(3)}</div>
+                </div>
             </div>
-            <div class="hero-usd-line">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                ≈ $${wtcToUsd(u.wtcBalance)} USD if converted
-            </div>
-            <div class="hero-divider"></div>
-            <div class="hero-withdrawable-row">
-                <span class="muted" style="font-size:12px;">Ready to withdraw</span>
-                <span style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--money);">$${(u.usdtBalance || 0).toFixed(2)} <span style="font-size:11px; color:var(--ink-muted); font-weight:500;">USDT</span></span>
-            </div>
-            <div class="hero-actions">
+            <div class="hero-rate-line">1 WTC = $${rateUsd.toFixed(5)} &nbsp;·&nbsp; ${fmtWTC(u.wtcBalance)} WTC ≈ $${wtcToUsd(u.wtcBalance)} USD</div>
+
+            <div class="hero-actions" style="margin-top:14px;">
                 <button class="action-primary" id="home-withdraw-btn">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
                 </button>
                 <button class="action-icon-btn" id="home-convert-btn" title="Convert WTC to USDT">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg>
-                </button>
-                <button class="action-icon-btn" id="home-promo-btn" title="Redeem a promo code">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--gift-hue)" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                 </button>
             </div>
         </div>
@@ -1166,40 +1178,49 @@ async function renderHome() {
             <span id="wd-ticker-text" class="muted" style="font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:opacity 0.35s ease;">Loading recent activity...</span>
         </div>
 
-        <div class="anim-in-3" style="margin:16px 20px 0;">
-            <div class="stat-strip">
-                <div class="stat-strip-item">
-                    <div style="font-size:15px;">📺</div>
-                    <div class="stat-strip-num" style="color:var(--signal);">${u.adsWatchedToday || 0}</div>
-                    <div class="stat-strip-label">Ads today</div>
+        <div class="promo-inline-box anim-in-2" style="margin:16px 20px 0;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div class="promo-inline-icon">🎁</div>
+                <div>
+                    <div style="font-weight:600; font-size:14px; color:var(--gift-hue);">Have a promo code?</div>
+                    <div class="muted" style="font-size:11.5px;">Redeem it for free WTC</div>
                 </div>
-                <div class="stat-strip-item">
-                    <div style="font-size:15px;">✅</div>
-                    <div class="stat-strip-num" style="color:var(--signal);">${u.tasksCompletedToday || 0}</div>
-                    <div class="stat-strip-label">Tasks today</div>
-                </div>
-                <div class="stat-strip-item">
-                    <div style="font-size:15px;">📈</div>
-                    <div class="stat-strip-num">${fmtWTC(u.lifetimeWtcEarned)}</div>
-                    <div class="stat-strip-label">Lifetime WTC</div>
-                </div>
-                <div class="stat-strip-item">
-                    <div style="font-size:15px;">👥</div>
-                    <div class="stat-strip-num">${u.referralCount || 0}</div>
-                    <div class="stat-strip-label">Referrals</div>
-                </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <input class="field-input" id="home-promo-input" placeholder="ENTER CODE" style="flex:1; text-align:center; font-family:var(--font-display); font-size:14px; letter-spacing:2px; text-transform:uppercase; margin:0;">
+                <button class="btn" id="home-promo-submit" style="width:auto; padding:0 18px; background:linear-gradient(150deg, var(--gift-hue), var(--surface-pop) 78%); border:0.5px solid var(--gift-soft); color:var(--ink);">Redeem</button>
             </div>
         </div>
 
-        <div class="section-pad anim-in-4" style="margin-top:26px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                <div class="section-title">Top 20 Referrers</div>
-                <button id="lb-toggle-btn" class="btn btn-outline" style="width:auto; padding:0 12px; height:32px; font-size:12px;">Show</button>
-            </div>
-            <div id="home-leaderboard" class="card" style="padding:4px 14px; display:none;">
-                <div class="skel" style="height:14px; width:70%; margin:10px 0;"></div>
-                <div class="skel" style="height:14px; width:50%; margin:10px 0;"></div>
-                <div class="skel" style="height:14px; width:60%; margin:10px 0;"></div>
+        <div class="anim-in-3" style="display:flex; gap:10px; margin:16px 20px 0;">
+            <button class="btn btn-outline milestone-lb-btn" id="home-milestone-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--refer-hue)" stroke-width="2"><path d="M12 15a4 4 0 100-8 4 4 0 000 8zM12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
+                Milestones
+            </button>
+            <button class="btn btn-outline milestone-lb-btn" id="home-leaderboard-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--task-hue)" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM17 6h2a2 2 0 010 4h-2M7 6H5a2 2 0 000 4h2"/></svg>
+                Leaderboard
+            </button>
+        </div>
+
+        <div class="section-pad anim-in-4" style="margin-top:22px;">
+            <div class="section-title" style="margin-bottom:12px;">Platform stats</div>
+            <div class="stat-strip" id="home-platform-stats">
+                <div class="stat-strip-item">
+                    <div style="font-size:15px;">🎬</div>
+                    <div class="stat-strip-num skel" style="height:18px; width:28px; margin:4px auto 0;"></div>
+                    <div class="stat-strip-label">Videos to watch</div>
+                </div>
+                <div class="stat-strip-item">
+                    <div style="font-size:15px;">✅</div>
+                    <div class="stat-strip-num skel" style="height:18px; width:28px; margin:4px auto 0;"></div>
+                    <div class="stat-strip-label">Tasks available</div>
+                </div>
+                <div class="stat-strip-item">
+                    <div style="font-size:15px;">👥</div>
+                    <div class="stat-strip-num" style="color:var(--refer-hue);">${u.referralCount || 0}</div>
+                    <div class="stat-strip-label">Your referrals</div>
+                </div>
             </div>
         </div>`;
 
@@ -1208,59 +1229,117 @@ async function renderHome() {
 
     document.getElementById('home-withdraw-btn').onclick = openWithdrawModal;
     document.getElementById('home-convert-btn').onclick = openConvertModal;
-    document.getElementById('home-promo-btn').onclick = openPromoModal;
+    document.getElementById('home-promo-submit').onclick = () => redeemPromoCode(
+        document.getElementById('home-promo-input').value.trim(),
+        document.getElementById('home-promo-submit'),
+        () => { if (state.activeTab === 'home') renderHome(); }
+    );
+    document.getElementById('home-milestone-btn').onclick = () => toast('Referral milestones — coming soon!', 'info');
+    document.getElementById('home-leaderboard-btn').onclick = openLeaderboardModal;
     startWithdrawTicker();
 
-    // Leaderboard toggle — loads lazily on first expand.
-    // ⚠️ NEW — top 3 render as a podium (rank-weighted avatar sizing + medal
-    // emoji), ranks 4+ render as plain numbered rows below it. Replaces the
-    // old "every rank looks identical" flat list.
-    let lbLoaded = false;
-    let lbOpen = false;
-    document.getElementById('lb-toggle-btn').onclick = async () => {
-        lbOpen = !lbOpen;
-        const board = document.getElementById('home-leaderboard');
-        const btn = document.getElementById('lb-toggle-btn');
-        board.style.display = lbOpen ? 'block' : 'none';
-        btn.textContent = lbOpen ? 'Hide' : 'Show';
-        if (lbOpen && !lbLoaded) {
-            lbLoaded = true;
-            const r = await apiGet('data?type=leaderboard');
-            if (r.ok && r.leaderboard?.length) {
-                const list = r.leaderboard.slice(0, 20);
-                const top3 = list.slice(0, 3);
-                const rest = list.slice(3);
-                const medals = ['🥇', '🥈', '🥉'];
-                const podiumOrder = [1, 0, 2].filter(i => top3[i]); // visually: 2nd, 1st, 3rd
-                const podiumHtml = top3.length ? `
-                    <div class="podium">
-                        ${podiumOrder.map(i => {
-                            const p = top3[i];
-                            if (!p) return '';
-                            return `
-                            <div class="podium-slot rank-${i + 1}" style="opacity:0; animation:rise-in 0.4s ease ${i * 0.06}s forwards;">
-                                <div class="podium-avatar" style="background:var(--signal-soft); color:var(--signal);">${(p.firstName || '?')[0].toUpperCase()}</div>
-                                <div class="podium-medal">${medals[i]}</div>
-                                <div class="podium-name">${p.firstName || 'User'}</div>
-                                <div class="podium-refs">${p.referralCount || 0} refs</div>
-                            </div>`;
-                        }).join('')}
-                    </div>
-                    ${rest.length ? '<div style="height:1px; background:var(--border); margin:2px 0 4px;"></div>' : ''}
-                ` : '';
-                const restHtml = rest.map((p, i) => `
-                    <div class="lb-row" style="opacity:0; animation:rise-in 0.4s ease ${Math.min(i * 0.04, 0.4)}s forwards; ${i < rest.length - 1 ? 'border-bottom:0.5px solid var(--border);' : ''}">
-                        <div class="lb-rank-num">${i + 4}</div>
-                        <div style="width:30px; height:30px; border-radius:50%; background:var(--surface-raised); color:var(--ink-faint); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12px;">${(p.firstName || '?')[0].toUpperCase()}</div>
-                        <div style="flex:1; font-size:13.5px; font-weight:500;">${p.firstName || 'User'}</div>
-                        <div style="font-size:12.5px; color:var(--ink-muted); font-family:var(--font-display);">${p.referralCount || 0} refs</div>
-                    </div>`).join('');
-                board.innerHTML = podiumHtml + restHtml;
-            } else {
-                board.innerHTML = `<div class="muted" style="padding:14px 0; font-size:13px; text-align:center;">No data yet.</div>`;
-            }
-        }
-    };
+    // Platform-wide stats: total videos/tasks currently available. Reuses the
+    // SAME data?type=videos / data?type=tasks endpoints the Video and Task
+    // tabs already call -- no new backend endpoint needed. Runs after the
+    // initial paint so it doesn't block Home from showing (skeleton -> number).
+    (async () => {
+        const [videosRes, tasksRes] = await Promise.all([
+            apiGet('data?type=videos'),
+            apiGet('data?type=tasks'),
+        ]);
+        const statsEl = document.getElementById('home-platform-stats');
+        if (!statsEl) return; // user navigated away before this resolved
+        const nums = statsEl.querySelectorAll('.stat-strip-num.skel');
+        if (nums[0]) { nums[0].classList.remove('skel'); nums[0].style.cssText = ''; nums[0].textContent = videosRes.ok ? (videosRes.videos?.length || 0) : '—'; }
+        if (nums[1]) { nums[1].classList.remove('skel'); nums[1].style.cssText = ''; nums[1].textContent = tasksRes.ok ? (tasksRes.tasks?.length || 0) : '—'; }
+    })();
+}
+
+// Shared promo-redeem flow (ad-gate -> claim), used by BOTH the inline Home
+// promo box and the openPromoModal() popup, so the anti-abuse "must watch an
+// ad before the code is spent" behavior can't drift out of sync between them.
+async function redeemPromoCode(code, btn, onSuccess) {
+    if (!code) return toast('Please enter a code.', 'error');
+    const originalLabel = btn.textContent;
+    btn.textContent = 'Loading ad...'; btn.disabled = true;
+
+    const candidates = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    try {
+        await pick();
+    } catch (e) {
+        toast(errorText(e.message), 'error');
+        btn.textContent = originalLabel; btn.disabled = false;
+        return;
+    }
+
+    btn.textContent = 'Checking...';
+    const r = await apiPost('earn', { action: 'claimPromo', code });
+    if (r.ok) {
+        toast(`+${r.reward} WTC added!`, 'success');
+        triggerBurst(btn);
+        showCongrats(`+${r.reward} WTC`, '🎁');
+        await refreshUser();
+        onSuccess?.();
+    } else {
+        toast(errorText(r.error), 'error');
+    }
+    btn.textContent = originalLabel; btn.disabled = false;
+}
+
+// Leaderboard moved behind its own button/modal instead of living inline on
+// Home permanently (same podium-rendering logic as before, just relocated).
+async function openLeaderboardModal() {
+    document.getElementById('modal-root').innerHTML = `
+        <div class="overlay" onclick="if(event.target===this)this.remove()">
+            <div class="sheet anim-in" style="max-height:80vh; overflow-y:auto;">
+                <div class="sheet-handle"></div>
+                <div class="section-title" style="margin-bottom:2px;">🏆 Top 20 Referrers</div>
+                <div class="muted" style="font-size:12px; margin-bottom:14px;">Ranked by lifetime referrals.</div>
+                <div id="lb-modal-body">
+                    <div class="skel" style="height:14px; width:70%; margin:10px 0;"></div>
+                    <div class="skel" style="height:14px; width:50%; margin:10px 0;"></div>
+                    <div class="skel" style="height:14px; width:60%; margin:10px 0;"></div>
+                </div>
+            </div>
+        </div>`;
+
+    const body = document.getElementById('lb-modal-body');
+    const r = await apiGet('data?type=leaderboard');
+    if (!body) return; // modal closed before this resolved
+    if (!r.ok || !r.leaderboard?.length) {
+        body.innerHTML = `<div class="muted" style="text-align:center; padding:16px 0;">No data yet.</div>`;
+        return;
+    }
+    const list = r.leaderboard.slice(0, 20);
+    const top3 = list.slice(0, 3);
+    const rest = list.slice(3);
+    const medals = ['🥇', '🥈', '🥉'];
+    const podiumOrder = [1, 0, 2].filter(i => top3[i]);
+    const podiumHtml = top3.length ? `
+        <div class="podium">
+            ${podiumOrder.map(i => {
+                const p = top3[i];
+                if (!p) return '';
+                return `
+                <div class="podium-slot rank-${i + 1}" style="opacity:0; animation:rise-in 0.4s ease ${i * 0.06}s forwards;">
+                    <div class="podium-avatar" style="background:var(--signal-soft); color:var(--signal);">${(p.firstName || '?')[0].toUpperCase()}</div>
+                    <div class="podium-medal">${medals[i]}</div>
+                    <div class="podium-name">${p.firstName || 'User'}</div>
+                    <div class="podium-refs">${p.referralCount || 0} refs</div>
+                </div>`;
+            }).join('')}
+        </div>
+        ${rest.length ? '<div style="height:1px; background:var(--border); margin:6px 0 4px;"></div>' : ''}
+    ` : '';
+    const restHtml = rest.map((p, i) => `
+        <div class="lb-row" style="opacity:0; animation:rise-in 0.4s ease ${Math.min(i * 0.04, 0.4)}s forwards; ${i < rest.length - 1 ? 'border-bottom:0.5px solid var(--border);' : ''}">
+            <div class="lb-rank-num">${i + 4}</div>
+            <div style="width:30px; height:30px; border-radius:50%; background:var(--surface-raised); color:var(--ink-faint); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:12px;">${(p.firstName || '?')[0].toUpperCase()}</div>
+            <div style="flex:1; font-size:13.5px; font-weight:500;">${p.firstName || 'User'}</div>
+            <div style="font-size:12.5px; color:var(--ink-muted); font-family:var(--font-display);">${p.referralCount || 0} refs</div>
+        </div>`).join('');
+    body.innerHTML = podiumHtml + restHtml;
 }
 
 function openProfileModal() {
@@ -1579,6 +1658,11 @@ function openWithdrawModal() {
 // ══════════════════════════════════════════════════════════════
 // PROMO MODAL
 // ══════════════════════════════════════════════════════════════
+// ⚠️ Currently not called from anywhere (the inline Home promo box replaced
+// it) — kept in case a modal-style promo entry point is wanted again later
+// (e.g. from another tab). Uses the same shared redeemPromoCode() as Home,
+// so re-enabling this never risks drifting out of sync with the anti-abuse
+// ad-gate logic.
 function openPromoModal() {
     document.getElementById('modal-root').innerHTML = `
         <div class="overlay" onclick="if(event.target===this)this.remove()">
@@ -1590,41 +1674,16 @@ function openPromoModal() {
                 <button class="btn btn-primary" style="margin-top:16px;" id="promo-submit">Redeem</button>
             </div>
         </div>`;
-    document.getElementById('promo-submit').onclick = async () => {
-        const code = document.getElementById('promo-code').value.trim();
-        if (!code) return toast('Please enter a code.', 'error');
-        const btn = document.getElementById('promo-submit');
-        btn.textContent = 'Loading ad...'; btn.disabled = true;
-
-        // ── Shows a real ad before redeeming the promo code (same pattern as
-        // the lootbox claim) — this step didn't exist before, so no ad was ever
-        // shown. The code won't be redeemed until the ad finishes, so there's no
-        // risk of wasting a single-use code.
-        const candidates = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
-        const pick = candidates[Math.floor(Math.random() * candidates.length)];
-        try {
-            await pick();
-        } catch (e) {
-            toast(errorText(e.message), 'error');
-            btn.textContent = 'Redeem'; btn.disabled = false;
-            return;
-        }
-
-        btn.textContent = 'Checking...';
-        const r = await apiPost('earn', { action: 'claimPromo', code });
-        if (r.ok) {
-            toast(`+${r.reward} WTC added!`, 'success');
-            triggerBurst(btn);
-            showCongrats(`+${r.reward} WTC`, '🎁');
+    document.getElementById('promo-submit').onclick = () => redeemPromoCode(
+        document.getElementById('promo-code').value.trim(),
+        document.getElementById('promo-submit'),
+        () => {
             setTimeout(() => { document.getElementById('modal-root').innerHTML = ''; }, 200);
-            await refreshUser();
             if (state.activeTab === 'home') renderHome();
-        } else {
-            toast(errorText(r.error), 'error');
-            btn.textContent = 'Redeem'; btn.disabled = false;
         }
-    };
+    );
 }
+
 
 // ══════════════════════════════════════════════════════════════
 // VIDEO SECTION
