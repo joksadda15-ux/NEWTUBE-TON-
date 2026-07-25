@@ -28,7 +28,7 @@ import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS, WITHDRAW_ADDRESS_LOCK_DAYS, MIN_CONVERT_WTC,
-    FIRST_WITHDRAW_MIN_TASKS, WITHDRAW_ADS_REQUIRED, todayBD, currentHalfYearBD, WTC_PER_USD,
+    FIRST_WITHDRAW_MIN_TASKS, WITHDRAW_ADS_REQUIRED, todayBD, currentHalfYearBD, WTC_PER_USD, WITHDRAWALS_OPEN,
 } from '../lib/constants.js';
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
@@ -114,6 +114,7 @@ async function handleTiers(req, res, db) {
     return res.status(200).json({
         ok: true, tiers, usdtBalance, wtcBalance: user.wtcBalance || 0, addressLock,
         withdrawRequirements,
+        withdrawalsOpen: WITHDRAWALS_OPEN, // ⚠️ NEW — frontend checks this first to show a closed banner instead of the full wizard
         minConvertWtc: MIN_CONVERT_WTC, convertFeePercent: WITHDRAW_FEE_PERCENT,
     });
 }
@@ -175,6 +176,13 @@ async function handleConvert(req, res, db) {
 
 // ── POST action:'create' (default) — spend usdtBalance against a tier ──
 async function handleCreate(req, res, db) {
+    // ⚠️ SEASON END — checked FIRST, before auth/DB, so a closed season
+    // fails fast and cheap. Already-submitted ('pending') withdrawals are
+    // untouched by this — only NEW submissions are blocked here.
+    if (!WITHDRAWALS_OPEN) {
+        return res.status(403).json({ ok: false, error: 'withdrawals_closed', message: 'Withdrawals are currently closed. Any previously submitted request will still be processed.' });
+    }
+
     const verified = verifyTelegramInitData(req.body?.initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const id = String(verified.user.id);
@@ -357,4 +365,4 @@ export default async function handler(req, res) {
         console.error('withdraw error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-        }
+         }
