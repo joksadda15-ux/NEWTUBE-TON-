@@ -698,6 +698,7 @@ const ERROR_MESSAGES = {
     video_secret_missing: 'Video earning is temporarily unavailable — please try again later.',
     unauthorized: 'Session expired — please reopen the app from Telegram.',
     account_under_review: 'Your account is under review — join the channel & community to unlock earning.',
+    withdrawals_closed: 'Withdrawals are currently closed. Any previously submitted request will still be processed.',
     sdk_not_loaded: 'Ad failed to load — please try again.',
     timeout: 'Ad timed out — please try again.',
     missing_ad_token: 'Please tap "Watch" again to load the ad properly.',
@@ -1472,6 +1473,26 @@ function openWithdrawModal() {
     let addressLock = null; // { method, address, daysLeft } or null
     let requirements = null; // { adsRequired, adsWatchedToday, adsMet, tasksRequired, tasksHave, tasksMet }
     let loadFailed = false;
+    let withdrawalsOpen = true; // ⚠️ NEW — flips to false if the server reports the season's withdrawals are closed
+
+    // ── SEASON-CLOSED — shown instead of the requirements screen when the server reports withdrawals are off ──
+    function renderClosed() {
+        document.getElementById('modal-root').innerHTML = `
+            <div class="overlay" onclick="if(event.target===this)this.remove()">
+                <div class="sheet anim-in" style="position:relative; overflow:hidden;">
+                    <div class="jg-glow" style="opacity:0.5;"></div>
+                    <div class="sheet-handle" style="position:relative; z-index:1;"></div>
+                    <div style="position:relative; z-index:1; text-align:center; padding:12px 4px 4px;">
+                        <div style="font-size:34px; margin-bottom:10px;">🔒</div>
+                        <div class="section-title" style="margin-bottom:8px;">Withdrawals are closed</div>
+                        <div class="muted" style="font-size:13px; line-height:1.6; margin-bottom:20px;">New withdraw requests aren't being accepted right now. Any request you already submitted before this will still be reviewed and paid normally.</div>
+                        <button class="btn btn-outline" id="wd-closed-ok" style="width:100%;">Close</button>
+                    </div>
+                </div>
+            </div>`;
+        const okBtn = document.getElementById('wd-closed-ok');
+        if (okBtn) okBtn.onclick = () => { document.getElementById('modal-root').innerHTML = ''; };
+    }
 
     // ── STEP 1 — requirements gate ──
     function renderRequirements() {
@@ -1529,6 +1550,14 @@ function openWithdrawModal() {
         if (!r.ok) {
             loadFailed = true;
             if (step === 'requirements') renderRequirements();
+            return;
+        }
+        // ⚠️ NEW — checked before anything else: if the server says withdrawals
+        // are closed, show that instead of the normal requirements/tier flow,
+        // no matter what step the modal thinks it's on.
+        if (r.withdrawalsOpen === false) {
+            withdrawalsOpen = false;
+            renderClosed();
             return;
         }
         tiers = r.tiers;
