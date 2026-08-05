@@ -28,7 +28,7 @@ import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_TIERS, WITHDRAW_ADDRESS_LOCK_DAYS, MIN_CONVERT_WTC,
-    FIRST_WITHDRAW_MIN_TASKS, WITHDRAW_ADS_REQUIRED, todayBD, currentHalfYearBD, WTC_PER_USD, WITHDRAWALS_OPEN,
+    WITHDRAW_TASKS_REQUIRED, WITHDRAW_ADS_REQUIRED, WITHDRAW_LEVELS, todayBD, currentHalfYearBD, WTC_PER_USD, WITHDRAWALS_OPEN,
 } from '../lib/constants.js';
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
@@ -44,6 +44,63 @@ async function ensureTierPeriodReset(users, userId, user) {
     }
     await users.updateOne({ _id: userId }, { $set: { withdrawTierCounts: {}, withdrawTierMonth: period } });
     return { counts: {}, period };
+}
+
+// Resets the level-6 (final level) recurring withdraw counter if the
+// 6-month period rolled over — same period key as the tier system
+// (currentHalfYearBD()), so both reset in sync. Levels 1-5 never need a
+// reset: they're one-way (spend the allowance, then level up for more).
+async function ensureLevelSixPeriodReset(users, userId, user) {
+    const period = currentHalfYearBD();
+    if (user.level6WithdrawPeriod === period) {
+        return { count: user.level6WithdrawCount || 0, period };
+    }
+    await users.updateOne({ _id: userId }, { $set: { level6WithdrawCount: 0, level6WithdrawPeriod: period } });
+    return { count: 0, period };
+}
+
+// Figures out whether the user CAN withdraw right now under the level
+// system, auto-leveling them up in the DB if they've spent their current
+// level's allowance and already qualify (referral-wise) for the next one.
+// Returns either { ok:true, level, isFinal, period? } or { ok:false, ... }
+// with enough detail for the frontend's hidden-until-withdraw level screen.
+async function resolveWithdrawLevel(users, userId, user) {
+    const currentLevel = user.withdrawLevel || 1;
+    const cfg = WITHDRAW_LEVELS.find(l => l.level === currentLevel) || WITHDRAW_LEVELS[0];
+
+    if (cfg.final) {
+        const { count, period } = await ensureLevelSixPeriodReset(users, userId, user);
+        if (count >= cfg.withdrawsAllowed) {
+            return {
+                ok: false, error: 'level_limit_reached', level: currentLevel, isFinal: true,
+                message: `You've used all ${cfg.withdrawsAllowed} withdrawals for this 6-month period at level ${currentLevel} (max level). It resets automatically every 6 months.`,
+            };
+        }
+        return { ok: true, level: currentLevel, isFinal: true, period, usedSoFar: count };
+    }
+
+    const usedAtLevel = user.withdrawsUsedAtLevel || 0;
+    if (usedAtLevel < cfg.withdrawsAllowed) {
+        return { ok: true, level: currentLevel, isFinal: false, usedSoFar: usedAtLevel };
+    }
+
+    // Allowance spent at this level — see if they already qualify to level up.
+    const nextCfg = WITHDRAW_LEVELS.find(l => l.level === currentLevel + 1);
+    if (!nextCfg || (user.referralCount || 0) < nextCfg.referralsRequired) {
+        return {
+            ok: false, error: 'level_up_required', level: currentLevel,
+            nextLevel: nextCfg?.level ?? null,
+            referralsRequired: nextCfg?.referralsRequired ?? null,
+            referralsHave: user.referralCount || 0,
+            message: nextCfg
+                ? `You've used all ${cfg.withdrawsAllowed} withdrawals at level ${currentLevel}. Refer ${Math.max(0, nextCfg.referralsRequired - (user.referralCount || 0))} more people to reach level ${nextCfg.level} and unlock ${nextCfg.withdrawsAllowed} more withdrawals.`
+                : `You've used all withdrawals at level ${currentLevel}.`,
+        };
+    }
+
+    // Qualifies — level up now, allowance resets to 0 used at the new level.
+    await users.updateOne({ _id: userId }, { $set: { withdrawLevel: nextCfg.level, withdrawsUsedAtLevel: 0 } });
+    return { ok: true, level: nextCfg.level, isFinal: !!nextCfg.final, usedSoFar: 0, leveledUp: true };
 }
 
 // Address-lock status for a user — null if not currently locked (either
@@ -97,23 +154,47 @@ async function handleTiers(req, res, db) {
     const tiers = WITHDRAW_TIERS.map(t => tierEligibility(t, user.referralCount || 0, counts[t.id] || 0, usdtBalance));
     const addressLock = getAddressLockStatus(user);
 
-    // ⚠️ NEW — global (tier-independent) requirement status, for the
-    // multi-step withdraw wizard's "Requirements" screen (ads progress bar,
-    // lifetime task progress bar — matches the reference screenshot's UI).
+    // ⚠️ NEW — global (level-independent... wait, tier-independent) requirement
+    // status, for the multi-step withdraw wizard's "Requirements" screen (ads
+    // progress bar, TODAY's task progress bar — matches the reference
+    // screenshot's UI). tasksHave is now tasksCompletedToday (Season 3 — was
+    // lifetime completedTasks.length).
     const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
-    const tasksHave = (user.completedTasks || []).length;
+    const tasksToday = user.lastResetDate === today ? (user.tasksCompletedToday || 0) : 0;
     const withdrawRequirements = {
         adsRequired: WITHDRAW_ADS_REQUIRED,
         adsWatchedToday: adsToday,
         adsMet: adsToday >= WITHDRAW_ADS_REQUIRED,
-        tasksRequired: FIRST_WITHDRAW_MIN_TASKS,
-        tasksHave,
-        tasksMet: tasksHave >= FIRST_WITHDRAW_MIN_TASKS,
+        tasksRequired: WITHDRAW_TASKS_REQUIRED,
+        tasksHave: tasksToday,
+        tasksMet: tasksToday >= WITHDRAW_TASKS_REQUIRED,
+    };
+
+    // ⚠️ NEW — Season 3 level system. Deliberately only exposed from THIS
+    // endpoint (called when the withdraw screen opens), not from
+    // action=profile or anywhere else — the whole ladder stays hidden until
+    // the user actually goes to withdraw, per the spec.
+    const currentLevel = user.withdrawLevel || 1;
+    const levelCfg = WITHDRAW_LEVELS.find(l => l.level === currentLevel) || WITHDRAW_LEVELS[0];
+    const levelUsed = levelCfg.final
+        ? (user.level6WithdrawPeriod === currentHalfYearBD() ? (user.level6WithdrawCount || 0) : 0)
+        : (user.withdrawsUsedAtLevel || 0);
+    const nextLevelCfg = WITHDRAW_LEVELS.find(l => l.level === currentLevel + 1) || null;
+    const withdrawLevelInfo = {
+        level: currentLevel,
+        isFinal: !!levelCfg.final,
+        withdrawsAllowed: levelCfg.withdrawsAllowed,
+        withdrawsUsed: levelUsed,
+        withdrawsLeft: Math.max(0, levelCfg.withdrawsAllowed - levelUsed),
+        nextLevel: nextLevelCfg?.level ?? null,
+        nextLevelReferralsRequired: nextLevelCfg?.referralsRequired ?? null,
+        referralsHave: user.referralCount || 0,
+        canLevelUpNow: nextLevelCfg ? (user.referralCount || 0) >= nextLevelCfg.referralsRequired : false,
     };
 
     return res.status(200).json({
         ok: true, tiers, usdtBalance, wtcBalance: user.wtcBalance || 0, addressLock,
-        withdrawRequirements,
+        withdrawRequirements, withdrawLevelInfo,
         withdrawalsOpen: WITHDRAWALS_OPEN, // ⚠️ NEW — frontend checks this first to show a closed banner instead of the full wizard
         minConvertWtc: MIN_CONVERT_WTC, convertFeePercent: WITHDRAW_FEE_PERCENT,
     });
@@ -205,17 +286,15 @@ async function handleCreate(req, res, db) {
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
 
-    // ⚠️ CHANGED: was "only on the very first withdraw, need 5" — now a
-    // LIFETIME gate re-checked on every request, threshold 10. Since
-    // completedTasks only grows, once a user crosses 10 this always passes —
-    // functionally still a "one-time" wall, just re-verified each time
-    // instead of gated behind a withdrawalCount===0 flag.
-    const tasksHave = (user.completedTasks || []).length;
-    if (tasksHave < FIRST_WITHDRAW_MIN_TASKS) {
+    // ⚠️ SEASON 3 CHANGE: was a lifetime completedTasks.length gate — now
+    // checked against TODAY's tasksCompletedToday instead (resets daily,
+    // same boundary as ads below).
+    const tasksToday = user.lastResetDate === today ? (user.tasksCompletedToday || 0) : 0;
+    if (tasksToday < WITHDRAW_TASKS_REQUIRED) {
         return res.status(400).json({
             ok: false, error: 'need_5_tasks', // ⚠️ error code name kept as-is for frontend errorText() compatibility — semantics updated, code string unchanged
-            tasksRequired: FIRST_WITHDRAW_MIN_TASKS, tasksHave,
-            message: `Complete at least ${FIRST_WITHDRAW_MIN_TASKS} tasks before withdrawing (you have ${tasksHave}).`,
+            tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: tasksToday,
+            message: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks today before withdrawing (you have ${tasksToday} today).`,
         });
     }
 
@@ -257,6 +336,15 @@ async function handleCreate(req, res, db) {
         return res.status(400).json({ ok: false, error: 'insufficient_ads', adsRequired: WITHDRAW_ADS_REQUIRED, adsToday });
     }
 
+    // ⚠️ NEW — Season 3 level gate. Separate from the tier's own
+    // referralsRequired above: this caps the total number of withdrawal
+    // ACTIONS allowed at the user's current level, auto-leveling them up
+    // (and resetting their per-level count) if they already qualify.
+    const levelResolution = await resolveWithdrawLevel(users, id, user);
+    if (!levelResolution.ok) {
+        return res.status(400).json(levelResolution);
+    }
+
     const withdrawals = db.collection('withdrawals');
     const addressUsedByOther = await withdrawals.findOne({
         details, userId: { $ne: id }, status: { $ne: 'rejected' },
@@ -282,87 +370,12 @@ async function handleCreate(req, res, db) {
         ? { lockedWithdrawMethod: method, lockedWithdrawAddress: details }
         : { $or: [{ addressLockedAt: { $exists: false } }, { addressLockedAt: { $lt: new Date(Date.now() - LOCK_MS) } }] };
 
-    const gate = await users.findOneAndUpdate(
-        {
-            _id: id,
-            isBanned: { $ne: true },
-            usdtBalance: { $gte: tier.usd },
-            lastWithdrawDate: { $ne: today },
-            lastResetDate: today,                              // ⚠️ NEW
-            adsWatchedToday: { $gte: WITHDRAW_ADS_REQUIRED },   // ⚠️ NEW
-            withdrawTierMonth: tierPeriod,
-            $or: [
-                { [tierCountField]: { $exists: false } },
-                { [tierCountField]: { $lt: tier.monthlyLimit } },
-            ],
-            ...lockFilter,
-        },
-        {
-            $inc: { usdtBalance: -tier.usd, withdrawalCount: 1, [tierCountField]: 1 },
-            $set: {
-                lastWithdrawDate: today,
-                ...(!lockStatus ? { lockedWithdrawMethod: method, lockedWithdrawAddress: details, addressLockedAt: new Date() } : {}),
-            },
-        },
-        { returnDocument: 'after' }
-    );
-
-    if (!gate) {
-        return res.status(409).json({ ok: false, error: 'conflict_retry' });
-    }
-
-    const result = await withdrawals.insertOne({
-        userId: id,
-        username: user.telegramUsername || 'N/A',
-        method, details, tierId: tier.id,
-        wtcAmount: Math.round(tier.usd * WTC_PER_USD), feeWtc: 0, netWtc: Math.round(tier.usd * WTC_PER_USD),
-        cashAmount: tier.usd, currency: methodConfig.currency,
-        adsRequired: WITHDRAW_ADS_REQUIRED, // ⚠️ CHANGED — fixed value, not tier-dependent anymore
-        status: 'pending', createdAt: new Date(),
-    });
-
-    if (ADMIN_ID) {
-        tgSend(ADMIN_ID,
-            `💸 <b>Withdrawal Request</b>\n\n` +
-            `👤 <code>${id}</code> (@${user.telegramUsername || '?'})\n` +
-            `🎯 Tier: <b>$${tier.usd}</b> (${claimsUsed + 1}/${tier.monthlyLimit} this period)\n` +
-            `💰 <b>${tier.usd.toFixed(2)} ${methodConfig.currency}</b> (already fee-deducted at convert time — no fee here)\n` +
-            `📤 Method: <b>${methodConfig.label}</b>\n` +
-            `📍 Address: <code>${details}</code>${lockStatus ? '' : ' 🔒 (newly locked for 30 days)'}\n` +
-            `📊 Total withdrawals so far: <b>${gate.withdrawalCount || 1}</b>\n` +
-            `👥 Total referrals: <b>${user.referralCount || 0}</b>\n` +
-            `📅 ${new Date().toLocaleString()}`,
-            { reply_markup: { inline_keyboard: [[
-                { text: '✅ Approve', callback_data: `wd_approve_${result.insertedId}` },
-                { text: '❌ Reject',  callback_data: `wd_reject_${result.insertedId}` },
-            ]]}}
-        ).catch((e) => console.error('admin notify failed:', e));
-    }
-
-    return res.status(200).json({ ok: true, withdrawalId: result.insertedId, netCurrencyAmount: tier.usd, feeWtc: 0 });
-}
-
-export default async function handler(req, res) {
-    try {
-        const { db } = await connectToDatabase();
-
-        if (req.method === 'GET') {
-            const { action } = req.query;
-            if (action === 'history') return handleHistory(req, res, db);
-            if (action === 'tiers') return handleTiers(req, res, db);
-            return res.status(400).json({ ok: false, error: 'unknown_action' });
-        }
-
-        if (req.method === 'POST') {
-            const action = req.body?.action || 'create';
-            if (action === 'convert') return handleConvert(req, res, db);
-            if (action === 'create') return handleCreate(req, res, db);
-            return res.status(400).json({ ok: false, error: 'unknown_action' });
-        }
-
-        return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-    } catch (err) {
-        console.error('withdraw error:', err);
-        return res.status(500).json({ ok: false, error: 'server_error' });
-    }
-         }
+    // ⚠️ NEW — level-specific filter/update fragment, re-verified atomically
+    // here (resolveWithdrawLevel's read above is non-atomic, same tradeoff
+    // the tier system already accepts for its own period-reset check).
+    // withdrawLevel is unset for anyone who has never leveled up yet (still
+    // level 1 by default) — plain equality wouldn't match a missing field,
+    // so level 1 needs the $exists:false fallback too.
+    const levelEqFilter = levelResolution.level === 1
+        ? { $or: [{ withdrawLevel: { $exists: false } }, { withdrawLevel: 1 }] }
+        : { withd
