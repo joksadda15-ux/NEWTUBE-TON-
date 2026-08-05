@@ -86,6 +86,19 @@
 // accumulating forever on the free-tier database.
 //
 // ──────────────────────────────────────────────────────────────────
+// COLLECTION: ipRegistry  (⚠️ NEW — SEASON 3, pure IP one-account gate)
+// ──────────────────────────────────────────────────────────────────
+// { _id: "<ip address>", userId: "<current owner telegram id>", claimedAt: Date }
+//
+// One doc per IP; whoever it points to is the only Telegram account allowed
+// to use the app from that IP right now. Checked on EVERY api/user.js
+// action:init call (new signup AND returning user), not just at signup —
+// see lib/ipRegistry.js. This fully replaces fingerprint-based auto-ban as
+// the season's active enforcement path; `fingerprints` below is left in
+// place for the multiAccountFlag admin-review data it already produced, but
+// no longer auto-suspends anyone on its own — IP is now the hard gate.
+//
+// ──────────────────────────────────────────────────────────────────
 // COLLECTION: videos
 // ──────────────────────────────────────────────────────────────────
 // { _id: ObjectId, videoId: "dQw4w9WgXcQ", title: "...", isActive: true, createdAt: Date }
