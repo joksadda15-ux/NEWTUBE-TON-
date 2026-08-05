@@ -25,28 +25,33 @@
 <script src="https://ad.gigapub.tech/script?id=846"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
     :root {
-        --bg: #05060F;
-        --bg-nebula-1: rgba(124,58,237,0.16);   /* violet nebula cloud */
-        --bg-nebula-2: rgba(20,120,150,0.14);   /* deep teal nebula cloud */
-        --surface: #0D0F1F;
-        --surface-raised: #141830;
-        --surface-pop: #1C2140;
-        /* ── "lightning" primary — electric violet → cyan, replaces the old plain blue ── */
-        --coin: #8B5CF6;
-        --coin-deep: #5B21B6;
-        --coin-soft: rgba(139,92,246,0.18);
-        --accent: #35E7FF;
-        --accent-soft: rgba(53,231,255,0.16);
-        --signal: #C9D6FF;
-        --signal-soft: rgba(201,214,255,0.14);
-        --ink: #F1F0FF;
-        --ink-muted: #9C9AC2;
-        --ink-faint: #5C5A85;
-        --border: rgba(241,240,255,0.07);
-        --border-strong: rgba(241,240,255,0.15);
+        /* ══ SEASON 3 — "Signal & Ledger" ══
+           Two worlds this app actually lives in: broadcast (video) and the
+           cash ledger (earning). Palette pulls from a receipt/ticket +
+           tuned-radio-dial world instead of another glowing space theme. */
+        --bg: #0A0F0C;
+        --bg-nebula-1: rgba(201,161,90,0.10);   /* warm brass haze */
+        --bg-nebula-2: rgba(228,67,44,0.08);    /* faint signal-red haze */
+        --surface: #121810;
+        --surface-raised: #182016;
+        --surface-pop: #202B1C;
+        /* ── brass/gold ledger primary — the "earning" metal ── */
+        --coin: #C9A15A;
+        --coin-deep: #8A6A2F;
+        --coin-soft: rgba(201,161,90,0.18);
+        /* ── broadcast-signal red — the "video" accent ── */
+        --accent: #E4432C;
+        --accent-soft: rgba(228,67,44,0.16);
+        --signal: #EDE6D3;
+        --signal-soft: rgba(237,230,211,0.12);
+        --ink: #ECEFE8;
+        --ink-muted: #99A395;
+        --ink-faint: #57604F;
+        --border: rgba(236,239,232,0.08);
+        --border-strong: rgba(236,239,232,0.16);
         --danger: #FF5C7A;
         --danger-soft: rgba(255,92,122,0.14);
         --success: #22C55E;
@@ -54,8 +59,8 @@
            instead of everything being one blue tint ── */
         --money: #22C55E;        /* withdraw / cash-out related */
         --money-soft: rgba(34,197,94,0.16);
-        --video-hue: #F0459B;    /* video / lootbox section */
-        --video-soft: rgba(240,69,155,0.16);
+        --video-hue: #E4432C;    /* video / lootbox section — broadcast red */
+        --video-soft: rgba(228,67,44,0.16);
         --task-hue: #F5A623;     /* regular tasks */
         --task-soft: rgba(245,166,35,0.16);
         --faucet-hue: #14B8A6;   /* faucet sites */
@@ -75,8 +80,9 @@
         --net-monetag-soft: rgba(34,230,179,0.16);
         --net-giga: #FFD23D;
         --net-giga-soft: rgba(255,210,61,0.18);
-        --font-display: 'Space Grotesk', sans-serif;
-        --font-body: 'Plus Jakarta Sans', sans-serif;
+        --font-display: 'Fraunces', serif;
+        --font-body: 'Inter', sans-serif;
+        --font-mono: 'IBM Plex Mono', monospace;
     }
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -117,7 +123,7 @@
     .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: none; display: flex; align-items: center; justify-content: center; color: var(--ink); position: relative; }
     .icon-btn.has-dot::after { content: ''; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); }
 
-    .card { background: linear-gradient(160deg, var(--surface-raised), var(--surface)); border-radius: 16px; padding: 16px 18px; border: 0.5px solid var(--border); box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 28px rgba(0,0,0,0.38), 0 1px 0 rgba(139,92,246,0.06); }
+    .card { background: linear-gradient(160deg, var(--surface-raised), var(--surface)); border-radius: 16px; padding: 16px 18px; border: 0.5px solid var(--border); box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 28px rgba(0,0,0,0.38), 0 1px 0 rgba(201,161,90,0.06); }
     .btn { height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; font-size: 14px; border: none; width: 100%; transition: transform 0.12s ease, box-shadow 0.12s ease; }
     .btn-primary { background: linear-gradient(135deg, var(--accent), var(--coin) 55%, var(--coin-deep)); color: #FFFFFF; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 22px var(--coin-soft); }
     .btn-primary:active { transform: translateY(2px) scale(0.99); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 3px rgba(0,0,0,0.25), 0 4px 10px var(--coin-soft); }
@@ -148,6 +154,21 @@
         pointer-events: none;
     }
     .hero-bolt { position: absolute; right: 6px; top: 2px; width: 92px; height: 128px; opacity: 0.1; pointer-events: none; }
+
+    /* ══════════════════════════════════════════════════════════
+       SIGNATURE — the balance card as a cash-register ticket, not a
+       glowing orb card. Two round notches cut into the left/right edges
+       (like a torn perforation), a dashed tear-line under the ID stub,
+       and a barcode strip along the bottom. Numbers set in mono with
+       tabular figures so they roll like a receipt total, not a UI label.
+       ══════════════════════════════════════════════════════════ */
+    .ticket-notch { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: var(--bg); z-index: 2; }
+    .ticket-notch.left { left: -9px; transform: translateY(-50%); }
+    .ticket-notch.right { right: -9px; transform: translateY(-50%); }
+    .ticket-tear { position: relative; z-index: 1; margin: 14px 0 12px; height: 0; border-top: 1.5px dashed var(--border-strong); }
+    .ticket-barcode { position: relative; z-index: 1; height: 20px; margin-top: 14px; border-radius: 3px; opacity: 0.55;
+        background: repeating-linear-gradient(90deg, var(--ink-faint) 0 2px, transparent 2px 5px, var(--ink-faint) 5px 6px, transparent 6px 11px, var(--ink-faint) 11px 14px, transparent 14px 17px); }
+    .mono-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
     .hero-top-row { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
     .hero-id-chip { font-size: 10.5px; color: var(--ink-faint); background: rgba(0,0,0,0.18); border: 0.5px solid var(--border); padding: 3px 8px; border-radius: 999px; }
     .hero-amount-row { display: flex; align-items: flex-end; gap: 9px; margin-top: 10px; position: relative; z-index: 1; }
@@ -209,7 +230,7 @@
     .pill-signal { background: var(--signal-soft); color: var(--signal); }
     .pill-coin { background: var(--coin-soft); color: var(--coin); }
 
-    .bottomnav { position: fixed; bottom: 14px; left: 0; right: 0; max-width: 440px; margin: 0 auto; background: var(--surface-raised); border-radius: 22px; display: flex; align-items: center; justify-content: space-around; padding: 10px 6px; box-shadow: 0 8px 30px rgba(0,0,0,0.45); z-index: 40; }
+    .bottomnav { position: fixed; bottom: 14px; left: 0; right: 0; max-width: 440px; margin: 0 auto; background: var(--surface-raised); border-radius: 14px; border-top: 1.5px dashed var(--border-strong); display: flex; align-items: center; justify-content: space-around; padding: 10px 6px; box-shadow: 0 8px 30px rgba(0,0,0,0.45); z-index: 40; }
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink-faint); width: 56px; background: none; border: none; padding: 4px 0; }
     .nav-item.active { color: var(--coin); }
     .nav-label { font-size: 10px; font-weight: 500; }
@@ -235,16 +256,16 @@
        ══════════════════════════════════════════════════════════ */
 
     /* ── splash screen ── */
-    #splash { position: fixed; inset: 0; background: radial-gradient(circle at 50% 38%, #0E1830 0%, var(--bg) 68%); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, transform 0.5s ease; }
+    #splash { position: fixed; inset: 0; background: radial-gradient(circle at 50% 38%, #14200F 0%, var(--bg) 68%); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, transform 0.5s ease; }
     #splash.out { opacity: 0; transform: scale(1.06); pointer-events: none; }
-    .splash-orbit { position: absolute; width: 208px; height: 208px; border-radius: 50%; border: 1px solid rgba(47,123,255,0.16); animation: splash-orbit-spin 7s linear infinite; z-index: 0; }
-    .splash-orbit::before, .splash-orbit::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--coin); box-shadow: 0 0 10px rgba(47,123,255,0.9); }
+    .splash-orbit { position: absolute; width: 208px; height: 208px; border-radius: 50%; border: 1px solid rgba(201,161,90,0.16); animation: splash-orbit-spin 7s linear infinite; z-index: 0; }
+    .splash-orbit::before, .splash-orbit::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--coin); box-shadow: 0 0 10px rgba(201,161,90,0.9); }
     .splash-orbit::before { top: -3px; left: 50%; margin-left: -3px; }
     .splash-orbit::after { bottom: -3px; left: 50%; margin-left: -3px; background: var(--signal); box-shadow: 0 0 10px rgba(56,189,248,0.9); }
     @keyframes splash-orbit-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .splash-badge { position: relative; width: 88px; height: 88px; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, #16233D, #05070D); box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -8px 16px rgba(0,0,0,0.5), 0 20px 44px rgba(0,0,0,0.55); animation: splash-pop 0.7s cubic-bezier(.34,1.56,.64,1); z-index: 1; }
-    .splash-badge-inner { width: 100%; height: 100%; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, rgba(47,123,255,0.18), rgba(47,123,255,0.02) 65%); color: var(--coin); position: relative; overflow: hidden; }
-    .splash-badge-inner .splash-play { filter: drop-shadow(0 0 10px rgba(47,123,255,0.65)); position: relative; z-index: 1; }
+    .splash-badge { position: relative; width: 88px; height: 88px; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, #1C2416, #05070D); box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -8px 16px rgba(0,0,0,0.5), 0 20px 44px rgba(0,0,0,0.55); animation: splash-pop 0.7s cubic-bezier(.34,1.56,.64,1); z-index: 1; }
+    .splash-badge-inner { width: 100%; height: 100%; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, rgba(201,161,90,0.18), rgba(201,161,90,0.02) 65%); color: var(--coin); position: relative; overflow: hidden; }
+    .splash-badge-inner .splash-play { filter: drop-shadow(0 0 10px rgba(201,161,90,0.65)); position: relative; z-index: 1; }
     .splash-badge-sheen { position: absolute; inset: -40% -10%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.14) 50%, transparent 60%); transform: translateX(-120%); animation: splash-sheen-sweep 2.4s ease-in-out 0.4s infinite; }
     @keyframes splash-sheen-sweep { 0% { transform: translateX(-130%); } 45%,100% { transform: translateX(130%); } }
     .splash-badge::before, .splash-badge::after { content: ''; position: absolute; inset: -7px; border-radius: 32px; border: 1.5px solid var(--coin); opacity: 0; animation: splash-ring 2s ease-out infinite; }
@@ -252,7 +273,7 @@
     @keyframes splash-pop { 0% { transform: scale(0) rotate(-25deg); opacity: 0; } 60% { transform: scale(1.15) rotate(4deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
     @keyframes splash-ring { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.55); opacity: 0; } }
     .splash-name { margin-top: 20px; font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.5px; opacity: 0; animation: fade-up 0.6s ease 0.35s forwards; }
-    .splash-name .accent { color: var(--coin); text-shadow: 0 0 16px rgba(47,123,255,0.5); }
+    .splash-name .accent { color: var(--coin); text-shadow: 0 0 16px rgba(201,161,90,0.5); }
     .splash-tagline { margin-top: 6px; font-size: 12px; color: var(--ink-muted); opacity: 0; animation: fade-up 0.6s ease 0.5s forwards; }
     @keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -278,7 +299,7 @@
     #floating-lootbox:active { transform: scale(0.9); }
     @keyframes lootbox-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
     #floating-lootbox.claimable { animation: lootbox-bob 2.4s ease-in-out infinite, lootbox-pulse 1.6s ease-in-out infinite; }
-    @keyframes lootbox-pulse { 0%,100% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 0 rgba(139,92,246,0.45); } 50% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 8px rgba(139,92,246,0); } }
+    @keyframes lootbox-pulse { 0%,100% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 0 rgba(201,161,90,0.45); } 50% { box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 8px rgba(201,161,90,0); } }
     #lb-coin-icon { transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
     #floating-lootbox.claimable #lb-coin-icon { animation: coin-flip 1.8s ease-in-out infinite; }
     .lb-claim-hint { position: fixed; z-index: 51; display: flex; align-items: center; gap: 6px; pointer-events: none; animation: lb-hint-bob 1.4s ease-in-out infinite; }
@@ -323,7 +344,7 @@
     @keyframes jg-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
     .jg-link-card { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 10px; border-radius: 16px; border: 1px solid var(--border-strong); background: linear-gradient(160deg, var(--surface-raised), var(--surface)); text-decoration: none; color: var(--ink); transition: transform 0.12s ease, border-color 0.15s ease; }
     .jg-link-card:active { transform: translateY(2px) scale(0.98); }
-    .jg-link-card.jg-channel { border-color: rgba(47,123,255,0.35); }
+    .jg-link-card.jg-channel { border-color: rgba(201,161,90,0.35); }
     .jg-link-card.jg-community { border-color: rgba(56,189,248,0.35); }
     .jg-link-icon { font-size: 22px; }
     .jg-link-label { font-size: 12px; font-weight: 600; }
@@ -409,10 +430,10 @@
        SPLASH — extra glow + rising sparkle particles (purely
        decorative, layered behind the existing logo/text).
        ══════════════════════════════════════════════════════════ */
-    .splash-glow { position: absolute; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(47,123,255,0.16), transparent 72%); animation: splash-glow-pulse 2.6s ease-in-out infinite; z-index: 0; }
+    .splash-glow { position: absolute; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(201,161,90,0.16), transparent 72%); animation: splash-glow-pulse 2.6s ease-in-out infinite; z-index: 0; }
     @keyframes splash-glow-pulse { 0%,100% { opacity: 0.4; transform: scale(0.92); } 50% { opacity: 0.7; transform: scale(1.1); } }
     .splash-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-    .splash-particles span { position: absolute; bottom: -10px; width: 5px; height: 5px; border-radius: 50%; background: var(--coin); opacity: 0.75; box-shadow: 0 0 8px rgba(47,123,255,0.7); animation: splash-particle-rise 3.4s ease-in infinite; }
+    .splash-particles span { position: absolute; bottom: -10px; width: 5px; height: 5px; border-radius: 50%; background: var(--coin); opacity: 0.75; box-shadow: 0 0 8px rgba(201,161,90,0.7); animation: splash-particle-rise 3.4s ease-in infinite; }
     .splash-particles span:nth-child(1) { left: 14%; animation-delay: 0s; }
     .splash-particles span:nth-child(2) { left: 30%; animation-delay: 0.5s; background: var(--signal); box-shadow: 0 0 8px rgba(56,189,248,0.7); }
     .splash-particles span:nth-child(3) { left: 48%; animation-delay: 1.05s; }
@@ -440,14 +461,14 @@
     .congrats-overlay.closing .congrats-card { animation: congrats-card-out 0.28s ease both; }
     @keyframes congrats-card-in { 0% { transform: scale(0.6) translateY(24px); opacity: 0; } 60% { transform: scale(1.06) translateY(0); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
     @keyframes congrats-card-out { to { transform: scale(0.85); opacity: 0; } }
-    .congrats-glow { position: absolute; inset: -34%; border-radius: 50%; background: radial-gradient(circle, rgba(47,123,255,0.35), transparent 70%); animation: congrats-glow-pulse 1.8s ease-in-out infinite; z-index: 0; pointer-events: none; }
+    .congrats-glow { position: absolute; inset: -34%; border-radius: 50%; background: radial-gradient(circle, rgba(201,161,90,0.35), transparent 70%); animation: congrats-glow-pulse 1.8s ease-in-out infinite; z-index: 0; pointer-events: none; }
     @keyframes congrats-glow-pulse { 0%,100% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 0.9; transform: scale(1.1); } }
     .congrats-icon { position: relative; z-index: 1; font-size: 50px; line-height: 1; animation: congrats-icon-bounce 0.8s cubic-bezier(.34,1.56,.64,1) 0.05s both, congrats-icon-wiggle 2.1s ease-in-out 0.85s infinite; }
     @keyframes congrats-icon-bounce { 0% { transform: scale(0) rotate(-18deg); } 60% { transform: scale(1.25) rotate(8deg); } 100% { transform: scale(1) rotate(0); } }
     @keyframes congrats-icon-wiggle { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
     .congrats-title { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: 0.3px; margin-top: 6px; opacity: 0; animation: fade-up 0.5s ease 0.22s forwards; }
     .congrats-sub { position: relative; z-index: 1; font-size: 12px; color: var(--ink-muted); margin-top: 3px; opacity: 0; animation: fade-up 0.5s ease 0.32s forwards; }
-    .congrats-amount { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 27px; color: var(--coin); margin-top: 4px; opacity: 0; text-shadow: 0 0 18px rgba(47,123,255,0.55); animation: congrats-amount-in 0.55s cubic-bezier(.34,1.56,.64,1) 0.42s forwards; }
+    .congrats-amount { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 27px; color: var(--coin); margin-top: 4px; opacity: 0; text-shadow: 0 0 18px rgba(201,161,90,0.55); animation: congrats-amount-in 0.55s cubic-bezier(.34,1.56,.64,1) 0.42s forwards; }
     @keyframes congrats-amount-in { from { opacity: 0; transform: scale(0.6) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .congrats-hint { position: relative; z-index: 1; font-size: 10.5px; color: var(--ink-faint); margin-top: 14px; opacity: 0; animation: fade-up 0.5s ease 0.6s forwards; }
 
@@ -491,7 +512,7 @@
         </div>
     </div>
     <div class="splash-name">NEW<span class="accent">TUBE</span></div>
-    <div class="splash-tagline">Watch · Earn · Withdraw</div>
+    <div class="splash-tagline mono-num" style="letter-spacing:0.04em;">TUNE IN · EARN · CASH OUT</div>
 </div>
 
 <canvas id="burst-canvas"></canvas>
@@ -556,22 +577,22 @@
 // ══════════════════════════════════════════════════════════════
 const API_BASE = 'https://newtube-ton.vercel.app/api';
 const MINI_APP_BASE = 'https://t.me/NewTube12_bot/WatchTo_Earn';
-const OFFICIAL_CHANNEL = 'Newtube_Earn';
+const OFFICIAL_CHANNEL = 'Newtube_offcial'; // ⚠️ SEASON 3 CHANGE — mirrors lib/telegram.js
 const COMMUNITY_GROUP = 'newtube_commonity';
 const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video section only (6 min)
 // ⚠️ NEW — mirrors lib/constants.js WITHDRAW_ADS_REQUIRED / FIRST_WITHDRAW_MIN_TASKS.
 // Frontend-only copies for instant UI rendering (progress bars, requirement
 // text) — the server is still the source of truth via withdraw?action=tiers'
 // `withdrawRequirements` field; these are just the display fallback/labels.
-const WITHDRAW_ADS_REQUIRED = 8;
+const WITHDRAW_ADS_REQUIRED = 10; // ⚠️ SEASON 3 CHANGE — was 8
 // ⚠️ NEW — mirrors lib/constants.js WTC_PER_USD, for the Home hero card's
 // "1 WTC = $X" rate line. Display-only; the server is always the source of
 // truth for actual conversion (see api/withdraw.js's convert action).
 const WTC_PER_USD_DISPLAY = 25000;
-const WITHDRAW_TASKS_REQUIRED = 10;
+const WITHDRAW_TASKS_REQUIRED = 8; // ⚠️ SEASON 3 CHANGE — was 10, and now checked TODAY not lifetime
 
 const tg = window.Telegram?.WebApp;
-if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#070B14'); } catch (e) {} }
+if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#0A0F0C'); } catch (e) {} }
 
 // ⚠️ SECURITY: USER_ID/FIRST_NAME/USERNAME here are for DISPLAY ONLY (cosmetic).
 // They are never sent to the backend as a trusted identity — every API call
@@ -679,8 +700,10 @@ const ERROR_MESSAGES = {
     ad_required: 'Please watch an ad first.',
     insufficient_balance: 'Insufficient balance.',
     insufficient_ads: `Watch ${WITHDRAW_ADS_REQUIRED} ads today before withdrawing.`,
-    need_5_tasks: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks before withdrawing.`,
+    need_5_tasks: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks today before withdrawing.`,
     referral_required: 'This tier needs more referrals — check the tier list.',
+    level_up_required: "You've used your withdrawals at this level — refer more people to level up.",
+    level_limit_reached: "You've used all withdrawals available at your level for this period.",
     tier_monthly_limit_reached: "You've used all claims for this tier — resets every 6 months.",
     address_locked: 'Your withdraw address is locked — check the note in the withdraw sheet.',
     invalid_tier: 'Please select a valid tier.',
@@ -731,7 +754,7 @@ async function apiGet(path) {
     catch (e) { return { ok: false, error: 'server_error' }; }
 }
 function fmtWTC(n) { return Math.floor(n || 0).toLocaleString('en-US'); }
-function wtcToUsd(wtc) { return (wtc / 20000).toFixed(4); }
+function wtcToUsd(wtc) { return (wtc / WTC_PER_USD_DISPLAY).toFixed(4); }
 
 // ══════════════════════════════════════════════════════════════
 // PARTICLE BURST — lightweight canvas confetti for reward moments
@@ -748,7 +771,7 @@ function triggerBurst(originEl) {
     const rect = originEl ? originEl.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
     const ox = rect.left + rect.width / 2;
     const oy = rect.top + rect.height / 2;
-    const colors = ['#2F7BFF', '#38BDF8', '#22C55E', '#F0F5FF'];
+    const colors = ['#C9A15A', '#E4432C', '#22C55E', '#EDE6D3'];
     const particles = Array.from({ length: 26 }, () => {
         const angle = Math.random() * Math.PI * 2;
         const speed = 2.5 + Math.random() * 4.5;
@@ -829,48 +852,88 @@ function animateCountUp(el, from, to, duration = 700) {
 // ══════════════════════════════════════════════════════════════
 const ONBOARD_KEY = 'newtube_onboarded_v1';
 
+// ══════════════════════════════════════════════════════════════
+// ONBOARDING — SEASON 3: fully replaced. No more icon-in-circle /
+// one-slide-at-a-time dot carousel (that pattern was carried over from a
+// different bot's UI). New model: everything presented as a single
+// "membership ticket" — reuses the same perforated-ticket component
+// language as the Home hero (ticket-notch / ticket-tear / ticket-barcode)
+// so onboarding feels like part of THIS app's visual system, not a
+// generic template. Two screens instead of three: the ticket (what the
+// app does), then a signed-contract-style terms screen.
+// ══════════════════════════════════════════════════════════════
 function showOnboarding(onDone) {
     if (localStorage.getItem(ONBOARD_KEY)) { onDone(); return; }
-    let step = 0;
-    const steps = [
-        { icon: '🎬', title: 'Welcome to NEWTUBE', body: 'Earn real crypto by watching videos — completely free, no investment required.', cta: 'Continue' },
-        { icon: '▶', title: 'Watch video to earn', body: 'The more videos you watch, the more WTC you collect. Just watch & monetize for free — no investment, ever.', cta: 'Continue' },
-        { icon: '📋', title: 'Terms', body: 'One account per device — using multiple accounts will result in a ban. No investment needed, just watch free videos to earn. A 25% fee applies on withdrawals. Suspicious or bot-like activity may result in your balance being frozen. You must be 13 or older to use this app.', cta: null },
+    let screen = 'ticket';
+
+    const POINTS = [
+        { icon: '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>', label: 'Tune in & watch', body: 'Every broadcast you watch earns WTC — no investment, ever.' },
+        { icon: '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5a3 3 0 013-1.5h0a3 3 0 010 6h0a3 3 0 000 6h0a3 3 0 003-1.5"/>', label: 'Balance builds', body: 'Convert WTC to USDT, refer friends to unlock bigger cash-outs.' },
+        { icon: '<path d="M21 12V7H5a2 2 0 01-2-2v0a2 2 0 012-2h14v4M3 5v14a2 2 0 002 2h16v-5M18 12a2 2 0 100 4 2 2 0 000-4z"/>', label: 'Cash out', body: 'Withdraw straight to Binance or your Tonkeeper wallet.' },
     ];
 
-    function render() {
-        const s = steps[step];
+    function renderTicket() {
         document.getElementById('modal-root').innerHTML = `
             <div class="overlay" style="align-items:center;">
-                <div class="sheet ob-slide-in" style="border-radius:22px; text-align:center; padding: 36px 24px;">
-                    <div class="ob-icon-wrap"><span class="ob-icon">${s.icon}</span></div>
-                    <div style="font-family:var(--font-display); font-weight:700; font-size:20px; margin-bottom:10px;">${s.title}</div>
-                    <div class="muted" style="font-size:14px; line-height:1.6; margin-bottom:22px;">${s.body}</div>
-                    <div style="display:flex; justify-content:center; gap:6px; margin-bottom:20px;">
-                        ${steps.map((_, i) => `<div class="ob-dot" style="width:${i===step?22:6}px; background:${i===step?'var(--coin)':'var(--border-strong)'};"></div>`).join('')}
+                <div class="sheet ob-slide-in" style="border-radius:16px; padding:28px 22px; position:relative; overflow:hidden;">
+                    <div class="ticket-notch left" style="background:var(--surface-raised);"></div>
+                    <div class="ticket-notch right" style="background:var(--surface-raised);"></div>
+                    <div style="text-align:center;">
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--coin);">Membership ticket</div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:21px; margin-top:6px;">Welcome to NEW<span style="color:var(--coin);">TUBE</span></div>
                     </div>
-                    ${s.cta ? `<button class="btn btn-primary" id="ob-next">${s.cta}</button>` : `
-                        <label style="display:flex; align-items:flex-start; gap:10px; text-align:left; margin-bottom:18px; font-size:13px; color:var(--ink-muted);">
-                            <input type="checkbox" id="ob-confirm-box" style="margin-top:3px;"> I have read and agree to the terms
-                        </label>
-                        <button class="btn btn-primary" id="ob-done" disabled>Get Started</button>
-                    `}
+
+                    <div class="ticket-tear" style="margin:18px 0;"></div>
+
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        ${POINTS.map(p => `
+                            <div style="display:flex; align-items:flex-start; gap:12px;">
+                                <div style="width:36px; height:36px; border-radius:10px; background:var(--coin-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coin)" stroke-width="2">${p.icon}</svg>
+                                </div>
+                                <div>
+                                    <div style="font-weight:600; font-size:14px;">${p.label}</div>
+                                    <div class="muted" style="font-size:12.5px; line-height:1.5; margin-top:2px;">${p.body}</div>
+                                </div>
+                            </div>`).join('')}
+                    </div>
+
+                    <div class="ticket-barcode" style="margin-top:22px;"></div>
+                    <button class="btn btn-primary" id="ob-ticket-next" style="margin-top:18px;">Continue</button>
                 </div>
             </div>`;
-        if (s.cta) {
-            document.getElementById('ob-next').onclick = () => { step++; render(); };
-        } else {
-            const box = document.getElementById('ob-confirm-box');
-            const done = document.getElementById('ob-done');
-            box.onchange = () => { done.disabled = !box.checked; };
-            done.onclick = () => {
-                localStorage.setItem(ONBOARD_KEY, '1');
-                triggerBurst(done);
-                setTimeout(() => { document.getElementById('modal-root').innerHTML = ''; onDone(); }, 280);
-            };
-        }
+        document.getElementById('ob-ticket-next').onclick = () => { screen = 'terms'; renderTerms(); };
     }
-    render();
+
+    function renderTerms() {
+        document.getElementById('modal-root').innerHTML = `
+            <div class="overlay" style="align-items:center;">
+                <div class="sheet ob-slide-in" style="border-radius:16px; padding:28px 22px; position:relative; overflow:hidden;">
+                    <div class="ticket-notch left" style="background:var(--surface-raised);"></div>
+                    <div class="ticket-notch right" style="background:var(--surface-raised);"></div>
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--coin);">Before you start</div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:19px; margin-top:6px;">Terms of use</div>
+                    </div>
+                    <div class="muted" style="font-size:12.5px; line-height:1.7; text-align:left;">One account per device — multiple accounts result in a ban. No investment needed, ever. A 25% fee applies when converting WTC to USDT. Suspicious or bot-like activity may freeze your balance. You must be 13 or older to use this app.</div>
+                    <div class="ticket-tear" style="margin:18px 0;"></div>
+                    <label style="display:flex; align-items:flex-start; gap:10px; text-align:left; margin-bottom:18px; font-size:13px; color:var(--ink-muted);">
+                        <input type="checkbox" id="ob-confirm-box" style="margin-top:3px;"> I have read and agree to the terms
+                    </label>
+                    <button class="btn btn-primary" id="ob-done" disabled>Get Started</button>
+                </div>
+            </div>`;
+        const box = document.getElementById('ob-confirm-box');
+        const done = document.getElementById('ob-done');
+        box.onchange = () => { done.disabled = !box.checked; };
+        done.onclick = () => {
+            localStorage.setItem(ONBOARD_KEY, '1');
+            triggerBurst(done);
+            setTimeout(() => { document.getElementById('modal-root').innerHTML = ''; onDone(); }, 280);
+        };
+    }
+
+    renderTicket();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1146,23 +1209,27 @@ async function renderHome() {
     const rateUsd = (1 / WTC_PER_USD_DISPLAY); // e.g. 25,000 WTC = $1 -> 1 WTC = $0.00004
     root.innerHTML = `
         <div class="hero-balance anim-in" style="margin:18px 20px 0;">
+            <div class="ticket-notch left"></div>
+            <div class="ticket-notch right"></div>
             <svg class="hero-bolt" viewBox="0 0 60 90" fill="none"><path d="M34 2L6 50h18L24 88L54 36H36L34 2z" fill="var(--accent)"/></svg>
             <div class="hero-top-row">
-                <div class="muted" style="font-size:12.5px;">Your balance</div>
-                <div class="hero-id-chip">ID ${USER_ID}${u.telegramUsername && u.telegramUsername !== 'N/A' ? ` · @${u.telegramUsername}` : ''}</div>
+                <div class="muted" style="font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">Ledger Balance</div>
+                <div class="hero-id-chip mono-num">ID ${USER_ID}${u.telegramUsername && u.telegramUsername !== 'N/A' ? ` · @${u.telegramUsername}` : ''}</div>
             </div>
+
+            <div class="ticket-tear"></div>
 
             <div class="dual-balance-row">
                 <div class="dual-balance-box" style="border-color:var(--coin-soft);">
                     <div class="muted" style="font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase;">🪙 WTC</div>
-                    <div id="home-balance-num" style="font-family:var(--font-display); font-weight:700; font-size:24px; margin-top:4px; color:var(--coin);">${fmtWTC(prevBalance)}</div>
+                    <div id="home-balance-num" class="mono-num" style="font-weight:700; font-size:23px; margin-top:4px; color:var(--coin);">${fmtWTC(prevBalance)}</div>
                 </div>
                 <div class="dual-balance-box" style="border-color:var(--money-soft);">
                     <div class="muted" style="font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase;">💵 USDT</div>
-                    <div style="font-family:var(--font-display); font-weight:700; font-size:24px; margin-top:4px; color:var(--money);">${(u.usdtBalance || 0).toFixed(3)}</div>
+                    <div class="mono-num" style="font-weight:700; font-size:23px; margin-top:4px; color:var(--money);">${(u.usdtBalance || 0).toFixed(3)}</div>
                 </div>
             </div>
-            <div class="hero-rate-line">1 WTC = $${rateUsd.toFixed(5)} &nbsp;·&nbsp; ${fmtWTC(u.wtcBalance)} WTC ≈ $${wtcToUsd(u.wtcBalance)} USD</div>
+            <div class="hero-rate-line mono-num" style="letter-spacing:0;">1 WTC = $${rateUsd.toFixed(5)} &nbsp;·&nbsp; ${fmtWTC(u.wtcBalance)} WTC ≈ $${wtcToUsd(u.wtcBalance)} USD</div>
 
             <div class="hero-actions" style="margin-top:14px;">
                 <button class="action-primary" id="home-withdraw-btn">
@@ -1172,6 +1239,8 @@ async function renderHome() {
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg>
                 </button>
             </div>
+
+            <div class="ticket-barcode"></div>
         </div>
 
         <div class="live-ticker anim-in-2" style="margin-left:20px; margin-right:20px;">
@@ -1383,7 +1452,7 @@ const WITHDRAW_METHODS_UI = {
 // ══════════════════════════════════════════════════════════════
 const CONVERT_MIN_WTC = 500;
 const CONVERT_FEE_PERCENT = 25;
-const CONVERT_RATE = 20000; // WTC per USD — mirrors lib/constants.js WTC_PER_USD
+const CONVERT_RATE = WTC_PER_USD_DISPLAY; // single source of truth — see WTC_PER_USD_DISPLAY above, mirrors lib/constants.js WTC_PER_USD
 
 function openConvertModal() {
     const u = state.user || {};
@@ -1472,6 +1541,7 @@ function openWithdrawModal() {
     let tiers = [];
     let addressLock = null; // { method, address, daysLeft } or null
     let requirements = null; // { adsRequired, adsWatchedToday, adsMet, tasksRequired, tasksHave, tasksMet }
+    let levelInfo = null; // { level, isFinal, withdrawsAllowed, withdrawsUsed, withdrawsLeft, nextLevel, nextLevelReferralsRequired, referralsHave, canLevelUpNow } — hidden until this modal opens
     let loadFailed = false;
     let withdrawalsOpen = true; // ⚠️ NEW — flips to false if the server reports the season's withdrawals are closed
 
@@ -1530,7 +1600,7 @@ function openWithdrawModal() {
                         ${!r ? `
                             <div class="muted" style="text-align:center; padding:28px 0;">${loadFailed ? "Couldn't load — try again." : 'Loading...'}</div>
                         ` : `
-                            ${reqCard(`Complete ${r.tasksRequired} tasks (lifetime)`, r.tasksHave, r.tasksRequired, tasksPct, r.tasksMet, 'var(--task-hue)', `Head to the Tasks tab — ${Math.max(0, r.tasksRequired - r.tasksHave)} more to go.`)}
+                            ${reqCard(`Complete ${r.tasksRequired} tasks (today)`, r.tasksHave, r.tasksRequired, tasksPct, r.tasksMet, 'var(--task-hue)', `Head to the Tasks tab — ${Math.max(0, r.tasksRequired - r.tasksHave)} more to go today.`)}
                             ${reqCard(`Watch ${r.adsRequired} ads (today)`, r.adsWatchedToday, r.adsRequired, adsPct, r.adsMet, 'var(--video-hue)', `Head to the Earn tab — ${Math.max(0, r.adsRequired - r.adsWatchedToday)} more ads today.`)}
                         `}
 
@@ -1542,7 +1612,58 @@ function openWithdrawModal() {
         const nextBtn = document.getElementById('wd-req-next');
         if (!nextBtn) return;
         if (loadFailed) { nextBtn.onclick = () => { loadFailed = false; renderRequirements(); loadRequirements(); }; return; }
-        if (allMet) nextBtn.onclick = () => { step = 'form'; renderForm(); };
+        if (allMet) nextBtn.onclick = () => { step = 'level'; renderLevel(); };
+    }
+
+    // ── STEP 2 — hidden level gate. Only ever shown here, once someone
+    // actually opens the withdraw flow — never surfaced on Home or anywhere
+    // else in the app, per the Season 3 spec. ──
+    function renderLevel() {
+        const lv = levelInfo;
+        if (!lv) { step = 'form'; renderForm(); return; }
+
+        const canProceed = lv.withdrawsLeft > 0 || lv.canLevelUpNow;
+        const barPct = lv.withdrawsAllowed ? Math.min(100, Math.round((lv.withdrawsUsed / lv.withdrawsAllowed) * 100)) : 0;
+
+        document.getElementById('modal-root').innerHTML = `
+            <div class="overlay" onclick="if(event.target===this)this.remove()">
+                <div class="sheet anim-in" style="position:relative; overflow:hidden;">
+                    <div class="jg-glow" style="opacity:0.5;"></div>
+                    <div class="sheet-handle" style="position:relative; z-index:1;"></div>
+                    <div style="position:relative; z-index:1;">
+                        <div class="section-title" style="margin-bottom:4px;">Withdraw level ${lv.level}${lv.isFinal ? ' (max)' : ''}</div>
+                        <div class="muted" style="font-size:12px; margin-bottom:16px;">Referring people unlocks more withdrawals.</div>
+
+                        <div class="card" style="padding:14px; margin-bottom:14px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                                <div style="font-size:13.5px; font-weight:600;">Withdrawals at this level</div>
+                                <span class="mono-num" style="font-size:12.5px; font-weight:600; color:${lv.withdrawsLeft > 0 ? 'var(--success)' : 'var(--danger)'};">${lv.withdrawsUsed}/${lv.withdrawsAllowed}</span>
+                            </div>
+                            <div style="height:6px; border-radius:4px; background:var(--surface); overflow:hidden;">
+                                <div style="height:100%; width:${barPct}%; background:var(--coin); border-radius:4px;"></div>
+                            </div>
+                            ${lv.isFinal ? `<div class="muted" style="font-size:11.5px; margin-top:8px;">Max level — this allowance resets every 6 months.</div>` : ''}
+                        </div>
+
+                        ${!lv.isFinal ? `
+                            <div class="card" style="padding:14px; margin-bottom:14px; border-color:${lv.canLevelUpNow ? 'rgba(34,197,94,0.35)' : 'var(--border)'};">
+                                <div style="font-size:13.5px; font-weight:600; margin-bottom:6px;">Level ${lv.nextLevel} — ${lv.nextLevelReferralsRequired} referrals</div>
+                                <div class="muted" style="font-size:12px;">You have <span class="mono-num" style="color:var(--ink);">${lv.referralsHave}</span> referrals.
+                                    ${lv.canLevelUpNow ? ' You already qualify — leveling up automatically on your next withdraw.' : ` Refer ${Math.max(0, lv.nextLevelReferralsRequired - lv.referralsHave)} more to unlock level ${lv.nextLevel}.`}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <button class="btn btn-money" id="wd-level-next" style="margin-top:2px;" ${canProceed ? '' : 'disabled'}>${canProceed ? '→ Continue to withdraw' : `Refer ${Math.max(0, (lv.nextLevelReferralsRequired||0) - lv.referralsHave)} more to continue`}</button>
+                        <button class="btn btn-outline" id="wd-level-refer" style="margin-top:8px;">Share my referral link</button>
+                    </div>
+                </div>
+            </div>`;
+
+        const nextBtn2 = document.getElementById('wd-level-next');
+        if (nextBtn2 && canProceed) nextBtn2.onclick = () => { step = 'form'; renderForm(); };
+        const referBtn = document.getElementById('wd-level-refer');
+        if (referBtn) referBtn.onclick = () => { document.getElementById('modal-root').innerHTML = ''; switchTab('refer'); };
     }
 
     async function loadRequirements() {
@@ -1563,8 +1684,10 @@ function openWithdrawModal() {
         tiers = r.tiers;
         addressLock = r.addressLock || null;
         requirements = r.withdrawRequirements || { adsRequired: WITHDRAW_ADS_REQUIRED, adsWatchedToday: 0, adsMet: false, tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: 0, tasksMet: false };
+        levelInfo = r.withdrawLevelInfo || null;
         if (addressLock) method = addressLock.method;
         if (step === 'requirements') renderRequirements();
+        if (step === 'level') renderLevel();
     }
 
     // ── STEP 2 — tier + method/address (same UI as before, minus the network call — tiers/addressLock already loaded in step 1) ──
@@ -1576,7 +1699,7 @@ function openWithdrawModal() {
                 <div class="sheet anim-in" style="max-height:86vh; display:flex; flex-direction:column; position:relative; overflow:hidden;">
                     <div class="jg-glow" style="opacity:0.5;"></div>
                     <div class="sheet-handle" style="position:relative; z-index:1;"></div>
-                    <button id="wd-back" style="position:relative; z-index:1; background:none; border:none; color:var(--ink-muted); font-size:12.5px; display:flex; align-items:center; gap:4px; margin-bottom:8px; padding:0;">← Requirements</button>
+                    <button id="wd-back" style="position:relative; z-index:1; background:none; border:none; color:var(--ink-muted); font-size:12.5px; display:flex; align-items:center; gap:4px; margin-bottom:8px; padding:0;">← Back</button>
                     <div class="card" style="position:relative; z-index:1; text-align:center; padding:18px; margin-bottom:14px; border-color:var(--money-soft);">
                         <div class="muted" style="font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">Withdrawable balance</div>
                         <div style="font-family:var(--font-display); font-weight:700; font-size:30px; margin-top:4px; color:var(--money); text-shadow:0 0 18px var(--money-soft);">$${(state.user?.usdtBalance || 0).toFixed(2)} <span style="font-size:14px; color:var(--ink-muted); font-weight:500;">USDT</span></div>
@@ -1602,7 +1725,7 @@ function openWithdrawModal() {
                     <button class="btn btn-money" style="margin-top:16px; position:relative; z-index:1;" id="wd-submit" disabled>Select a tier first</button>
                 </div>
             </div>`;
-        document.getElementById('wd-back').onclick = () => { step = 'requirements'; renderRequirements(); loadRequirements(); };
+        document.getElementById('wd-back').onclick = () => { step = 'level'; renderLevel(); };
         document.getElementById('wd-go-convert').onclick = (e) => { e.preventDefault(); openConvertModal(); };
         document.getElementById('m-binance').onclick = () => { method = 'binance'; renderForm(); };
         document.getElementById('m-tonkeeper').onclick = () => { method = 'tonkeeper'; renderForm(); };
@@ -1671,6 +1794,13 @@ function openWithdrawModal() {
                 toast(r.message || errorText(r.error), 'error');
                 step = 'requirements';
                 renderRequirements();
+                loadRequirements();
+                return;
+            }
+            if (r.error === 'level_up_required' || r.error === 'level_limit_reached') {
+                toast(r.message || errorText(r.error), 'error');
+                step = 'level';
+                renderLevel();
                 loadRequirements();
                 return;
             }
@@ -2394,6 +2524,53 @@ function renderReferTab() {
 // ══════════════════════════════════════════════════════════════
 // USER REFRESH / INIT
 // ══════════════════════════════════════════════════════════════
+// Season 3 — IP-already-in-use gate. Shown before the app root is ever
+// built (init() returns right after this), so there is no state.user yet
+// to protect; this is purely a "come back differently" screen.
+function showIpInUseScreen(owner) {
+    const initials = (owner?.firstName || '?').trim().charAt(0).toUpperCase();
+    const handle = owner?.telegramUsername ? `@${owner.telegramUsername}` : 'private';
+    document.getElementById('app-root').innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:32px 24px; text-align:center;">
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--coin)" stroke-width="2" style="margin-bottom:18px;"><path d="M5 12.5a11 11 0 0114 0M8.5 16a6 6 0 017 0"/><circle cx="12" cy="19.5" r="1.2" fill="var(--coin)" stroke="none"/></svg>
+            <div style="font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--coin);">IP Already In Use</div>
+            <div class="muted" style="font-size:13.5px; line-height:1.7; margin-top:10px; max-width:320px;">This connection is already linked to another account.<br>Switch your VPN or network, or claim it for this account below.</div>
+
+            <div class="card" style="width:100%; max-width:340px; margin-top:24px; text-align:left; display:flex; align-items:center; gap:12px;">
+                <div style="width:42px; height:42px; border-radius:50%; background:var(--coin-soft); color:var(--coin); display:flex; align-items:center; justify-content:center; font-weight:700; font-family:var(--font-display); flex-shrink:0;">${initials}</div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:600; font-size:14px;">${owner?.firstName || 'Unknown user'}</div>
+                    <div class="muted" style="font-size:12px;">${handle} · ID <span class="mono-num">${owner?.id || '—'}</span></div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="ip-retry-btn" style="max-width:340px; margin-top:22px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/></svg> I've switched — try again
+            </button>
+            <button class="btn btn-outline" id="ip-switch-btn" style="max-width:340px; margin-top:10px;">Switch account (resets my balance)</button>
+            <div class="muted" style="font-size:11px; margin-top:14px; max-width:320px; line-height:1.6;">Switching claims this connection for your account but resets your WTC and USDT balance to zero.</div>
+        </div>`;
+
+    document.getElementById('ip-retry-btn').onclick = () => { location.reload(); };
+    document.getElementById('ip-switch-btn').onclick = async (e) => {
+        const confirmed = await new Promise((resolve) => {
+            if (tg?.showConfirm) tg.showConfirm('This will reset your entire balance to zero. Continue?', resolve);
+            else resolve(confirm('This will reset your entire balance to zero. Continue?'));
+        });
+        if (!confirmed) return;
+        e.target.disabled = true;
+        e.target.textContent = 'Switching…';
+        const r = await apiPost('user', { action: 'switchAccount', initData: TG_INIT_DATA });
+        if (r && r.ok) {
+            location.reload();
+        } else {
+            toast(r?.error || 'Could not switch account', 'error');
+            e.target.disabled = false;
+            e.target.textContent = 'Switch account (resets my balance)';
+        }
+    };
+}
+
 async function refreshUser() {
     const r = await apiGet(`user?action=profile&initData=${encodeURIComponent(TG_INIT_DATA)}`);
     if (r.ok) {
@@ -2438,7 +2615,13 @@ async function init() {
         return;
     }
 
-    await apiPost('user', { action: 'init', fingerprint: await generateDeviceFingerprint() });
+    const initRes = await apiPost('user', { action: 'init', fingerprint: await generateDeviceFingerprint() });
+    if (initRes && initRes.ok === false && initRes.error === 'ip_in_use') {
+        const splashEl = document.getElementById('splash');
+        if (splashEl) splashEl.remove();
+        showIpInUseScreen(initRes.owner);
+        return;
+    }
     try {
         await refreshUser();
     } catch (e) {
