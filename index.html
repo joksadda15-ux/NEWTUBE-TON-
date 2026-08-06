@@ -55,31 +55,38 @@
         --danger: #FF5C7A;
         --danger-soft: rgba(255,92,122,0.14);
         --success: #22C55E;
-        /* ── functional colors — different features get their own matching color
-           instead of everything being one blue tint ── */
-        --money: #22C55E;        /* withdraw / cash-out related */
+        /* ── functional colors — SEASON 3: previously each section picked an
+           arbitrary hue independent of the others (bright blue, purple,
+           teal, hot pink...), which is exactly what looked inconsistent
+           page-to-page in review. Now every one of these is a tint drawn
+           FROM the Signal & Ledger palette itself (brass/gold/copper/
+           verdigris/slate family) — still visually distinct per section,
+           but all clearly related, like coins from the same set. ── */
+        --money: #22C55E;        /* withdraw / cash-out related — kept universal green, the one color convention worth keeping */
         --money-soft: rgba(34,197,94,0.16);
-        --video-hue: #E4432C;    /* video / lootbox section — broadcast red */
+        --video-hue: #E4432C;    /* video / lootbox section — broadcast-signal red (the accent color itself) */
         --video-soft: rgba(228,67,44,0.16);
-        --task-hue: #F5A623;     /* regular tasks */
-        --task-soft: rgba(245,166,35,0.16);
-        --faucet-hue: #14B8A6;   /* faucet sites */
-        --faucet-soft: rgba(20,184,166,0.16);
-        --article-hue: #38BDF8; /* articles */
-        --article-soft: rgba(56,189,248,0.16);
-        --gift-hue: #FFB020;     /* admin gifts */
-        --gift-soft: rgba(255,176,32,0.16);
-        --refer-hue: #EC4899;    /* referrals */
-        --refer-soft: rgba(236,72,153,0.16);
-        /* ── NEW — each ad network gets its own unique color, not one shared blue ── */
-        --net-adsgram-daily: #3DA9FF;
-        --net-adsgram-daily-soft: rgba(61,169,255,0.16);
-        --net-adsgram-special: #B463FF;
-        --net-adsgram-special-soft: rgba(180,99,255,0.18);
-        --net-monetag: #22E6B3;
-        --net-monetag-soft: rgba(34,230,179,0.16);
-        --net-giga: #FFD23D;
-        --net-giga-soft: rgba(255,210,61,0.18);
+        --task-hue: #D9A441;     /* regular tasks — warm gold, close kin to --coin */
+        --task-soft: rgba(217,164,65,0.16);
+        --faucet-hue: #7C9070;   /* faucet sites — verdigris (aged brass/copper patina) */
+        --faucet-soft: rgba(124,144,112,0.16);
+        --article-hue: #8B98A6;  /* articles — muted slate (newsprint ink) */
+        --article-soft: rgba(139,152,166,0.16);
+        --gift-hue: #CB9A46;     /* admin gifts — warm gold, one step off --coin */
+        --gift-soft: rgba(203,154,70,0.16);
+        --refer-hue: #B8663F;    /* referrals — copper/terracotta, was hot pink */
+        --refer-soft: rgba(184,102,63,0.16);
+        /* ── each ad network still gets a distinct color to tell them apart at a
+           glance, but now drawn from the same warm palette family used
+           everywhere else instead of an unrelated blue/purple/teal/yellow set ── */
+        --net-adsgram-daily: #C9A15A;
+        --net-adsgram-daily-soft: rgba(201,161,90,0.16);
+        --net-adsgram-special: #B8663F;
+        --net-adsgram-special-soft: rgba(184,102,63,0.18);
+        --net-monetag: #7C9070;
+        --net-monetag-soft: rgba(124,144,112,0.16);
+        --net-giga: #8B98A6;
+        --net-giga-soft: rgba(139,152,166,0.18);
         --font-display: 'Fraunces', serif;
         --font-body: 'Inter', sans-serif;
         --font-mono: 'IBM Plex Mono', monospace;
@@ -106,6 +113,17 @@
        once was doubling up the background animation — a real contributor to
        the "too much animation everywhere" complaint. Removed the duplicate;
        the existing #galaxy-bg is tuned down below instead of replaced. */
+    /* ══════════════════════════════════════════════════════════
+       SEASON 3 update — a fixed, static grain/texture layer for a more
+       tactile, "highly graphic" background (paper/brass texture, matching
+       the ledger theme) without adding MORE motion — it's a still image,
+       layered under everything else, so it doesn't fight the "too much
+       animation" concern from earlier. Subtle by design: opacity 0.05. ══ */
+    #grain-overlay {
+        position: fixed; inset: 0; z-index: -1; pointer-events: none;
+        opacity: 0.05; mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
     button { font-family: inherit; cursor: pointer; }
     input, textarea { font-family: inherit; }
     .hidden { display: none !important; }
@@ -124,10 +142,16 @@
     .icon-btn.has-dot::after { content: ''; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); }
 
     .card { background: linear-gradient(160deg, var(--surface-raised), var(--surface)); border-radius: 16px; padding: 16px 18px; border: 0.5px solid var(--border); box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 28px rgba(0,0,0,0.38), 0 1px 0 rgba(201,161,90,0.06); }
-    .btn { height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; font-size: 14px; border: none; width: 100%; transition: transform 0.12s ease, box-shadow 0.12s ease; }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--coin) 55%, var(--coin-deep)); color: #FFFFFF; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 22px var(--coin-soft); }
-    .btn-primary:active { transform: translateY(2px) scale(0.99); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 3px rgba(0,0,0,0.25), 0 4px 10px var(--coin-soft); }
-    .btn-outline { background: transparent; border: 0.5px solid var(--border-strong); color: var(--ink); }
+    /* ══ SEASON 3 — button "face" refresh: a proper embossed cap (bright top
+       edge, dark underside) instead of a flat gradient, so buttons read as
+       physical pressable objects — coin/ticket-punch feel, matching the
+       ledger theme. Press transition uses a snappier custom curve instead
+       of linear ease, so it feels more tactile without adding duration. ══ */
+    .btn { height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; font-size: 14px; border: none; width: 100%; position: relative; transition: transform 0.16s cubic-bezier(.34,1.4,.64,1), box-shadow 0.16s ease; }
+    .btn-primary::before, .btn-money::before { content: ''; position: absolute; top: 1px; left: 6%; right: 6%; height: 40%; border-radius: 12px 12px 40% 40% / 12px 12px 100% 100%; background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0)); pointer-events: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--coin) 55%, var(--coin-deep)); color: #FFFFFF; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 3px 0 var(--coin-deep), 0 10px 22px var(--coin-soft); }
+    .btn-primary:active { transform: translateY(3px) scale(0.99); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 3px rgba(0,0,0,0.25), 0 0 0 var(--coin-deep), 0 4px 10px var(--coin-soft); }
+    .btn-outline { background: linear-gradient(160deg, rgba(255,255,255,0.03), transparent); border: 0.5px solid var(--border-strong); color: var(--ink); }
 
     /* ══════════════════════════════════════════════════════════
        HOME REDESIGN — replaces the old "stack of identical rounded
@@ -169,6 +193,8 @@
     .ticket-barcode { position: relative; z-index: 1; height: 20px; margin-top: 14px; border-radius: 3px; opacity: 0.55;
         background: repeating-linear-gradient(90deg, var(--ink-faint) 0 2px, transparent 2px 5px, var(--ink-faint) 5px 6px, transparent 6px 11px, var(--ink-faint) 11px 14px, transparent 14px 17px); }
     .mono-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    /* ── 777 lottery reel windows ── */
+    .lottery-reel { width: 62px; height: 62px; border-radius: 12px; background: var(--surface); border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5); }
     .hero-top-row { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
     .hero-id-chip { font-size: 10.5px; color: var(--ink-faint); background: rgba(0,0,0,0.18); border: 0.5px solid var(--border); padding: 3px 8px; border-radius: 999px; }
     .hero-amount-row { display: flex; align-items: flex-end; gap: 9px; margin-top: 10px; position: relative; z-index: 1; }
@@ -176,11 +202,13 @@
     .hero-divider { margin: 14px 0 12px; height: 1px; background: linear-gradient(90deg, transparent, var(--border-strong), transparent); position: relative; z-index: 1; }
     .hero-withdrawable-row { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; margin-bottom: 14px; }
     .hero-actions { display: flex; gap: 8px; position: relative; z-index: 1; }
-    .action-primary { flex: 1; height: 44px; border-radius: 12px; border: 0.5px solid var(--money-soft); display: flex; align-items: center; justify-content: center; gap: 7px; font-weight: 600; font-size: 13.5px; color: var(--ink); background: linear-gradient(150deg, var(--money), var(--surface-pop) 78%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.18), 0 6px 16px rgba(34,197,94,0.16); }
+    .action-primary { flex: 1; height: 44px; border-radius: 12px; border: 0.5px solid var(--coin-soft); display: flex; align-items: center; justify-content: center; gap: 7px; font-weight: 600; font-size: 13.5px; color: #14100A; background: linear-gradient(150deg, var(--coin), var(--coin-deep) 78%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 3px 0 var(--coin-deep), 0 6px 16px var(--coin-soft); position: relative; transition: transform 0.16s cubic-bezier(.34,1.4,.64,1); }
+    .action-primary:active { transform: translateY(2px); }
     /* ── shared "confirm/withdraw" CTA — surface-blended glow instead of a flat
        solid-color pill, matches the an-watch-btn / action-primary treatment
        used everywhere else instead of standing out as a different pattern ── */
-    .btn-money { background: linear-gradient(150deg, var(--money), var(--surface-pop) 78%); border: 0.5px solid var(--money-soft); box-shadow: inset 0 1px 1px rgba(255,255,255,0.18), 0 6px 16px rgba(34,197,94,0.16); color: var(--ink); }
+    .btn-money { background: linear-gradient(150deg, var(--money), var(--surface-pop) 78%); border: 0.5px solid var(--money-soft); box-shadow: inset 0 1px 1px rgba(255,255,255,0.18), 0 3px 0 #16803D, 0 6px 16px rgba(34,197,94,0.16); color: var(--ink); }
+    .btn-money:active { transform: translateY(3px); box-shadow: inset 0 1px 1px rgba(255,255,255,0.14), 0 0 0 #16803D, 0 3px 8px rgba(34,197,94,0.16); }
     .btn-money:disabled { opacity: 0.5; }
     .action-icon-btn { width: 44px; height: 44px; border-radius: 12px; border: 0.5px solid var(--border-strong); background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; color: var(--ink-muted); flex-shrink: 0; }
     .action-icon-btn:active, .action-primary:active { transform: scale(0.95); }
@@ -258,20 +286,31 @@
     /* ── splash screen ── */
     #splash { position: fixed; inset: 0; background: radial-gradient(circle at 50% 38%, #14200F 0%, var(--bg) 68%); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, transform 0.5s ease; }
     #splash.out { opacity: 0; transform: scale(1.06); pointer-events: none; }
-    .splash-orbit { position: absolute; width: 208px; height: 208px; border-radius: 50%; border: 1px solid rgba(201,161,90,0.16); animation: splash-orbit-spin 7s linear infinite; z-index: 0; }
-    .splash-orbit::before, .splash-orbit::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--coin); box-shadow: 0 0 10px rgba(201,161,90,0.9); }
-    .splash-orbit::before { top: -3px; left: 50%; margin-left: -3px; }
-    .splash-orbit::after { bottom: -3px; left: 50%; margin-left: -3px; background: var(--signal); box-shadow: 0 0 10px rgba(56,189,248,0.9); }
-    @keyframes splash-orbit-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    /* orbiting dotted-ring loader removed — see the tune-dial rules above instead */
+    /* ══════════════════════════════════════════════════════════
+       SPLASH — SEASON 3: the old "orbiting dots + double pulse-ring
+       around a badge" combo is dropped — that exact pattern (concentric
+       ring pulse behind a centered logo) shows up in a huge share of
+       app splash screens and was starting to feel like every other
+       loader. Replaced with something that actually plays on "TUNE IN":
+       a tuning-dial needle sweeps across a frequency track, hunts,
+       and SNAPS into place once — firing a single signal-lock flash on
+       the badge in sync, instead of an infinite generic pulse loop. ══ */
+    .tune-dial { position: relative; width: 184px; height: 20px; margin: 22px auto 2px; z-index: 1; }
+    .tune-track { position: absolute; top: 9px; left: 0; right: 0; height: 2px; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--border-strong) 0 2px, transparent 2px 9px); }
+    .tune-needle { position: absolute; top: 2px; width: 2px; height: 16px; border-radius: 1px; background: var(--coin); box-shadow: 0 0 9px rgba(201,161,90,0.85); animation: tune-sweep 1.7s cubic-bezier(.6,0,.35,1) 0.35s 1 both; }
+    @keyframes tune-sweep { 0% { left: 0%; opacity: 0; } 8% { opacity: 1; } 52% { left: 96%; } 74% { left: 34%; } 88% { left: 54%; } 100% { left: 50%; } }
+    .tune-freq { text-align: center; font-size: 10px; letter-spacing: 0.08em; color: var(--ink-faint); margin-top: 9px; opacity: 0; animation: tune-freq-in 0.4s ease 2.05s 1 forwards; }
+    @keyframes tune-freq-in { to { opacity: 1; } }
     .splash-badge { position: relative; width: 88px; height: 88px; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, #1C2416, #05070D); box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -8px 16px rgba(0,0,0,0.5), 0 20px 44px rgba(0,0,0,0.55); animation: splash-pop 0.7s cubic-bezier(.34,1.56,.64,1); z-index: 1; }
     .splash-badge-inner { width: 100%; height: 100%; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, rgba(201,161,90,0.18), rgba(201,161,90,0.02) 65%); color: var(--coin); position: relative; overflow: hidden; }
     .splash-badge-inner .splash-play { filter: drop-shadow(0 0 10px rgba(201,161,90,0.65)); position: relative; z-index: 1; }
     .splash-badge-sheen { position: absolute; inset: -40% -10%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.14) 50%, transparent 60%); transform: translateX(-120%); animation: splash-sheen-sweep 2.4s ease-in-out 0.4s infinite; }
     @keyframes splash-sheen-sweep { 0% { transform: translateX(-130%); } 45%,100% { transform: translateX(130%); } }
-    .splash-badge::before, .splash-badge::after { content: ''; position: absolute; inset: -7px; border-radius: 32px; border: 1.5px solid var(--coin); opacity: 0; animation: splash-ring 2s ease-out infinite; }
-    .splash-badge::after { animation-delay: 0.65s; }
+    /* one-shot "signal lock" flash, timed to fire right as the tuning needle settles — not an infinite pulse */
+    .splash-badge::before { content: ''; position: absolute; inset: -7px; border-radius: 32px; border: 1.5px solid var(--coin); opacity: 0; animation: signal-lock 0.9s ease-out 2s 1 both; }
     @keyframes splash-pop { 0% { transform: scale(0) rotate(-25deg); opacity: 0; } 60% { transform: scale(1.15) rotate(4deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
-    @keyframes splash-ring { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.55); opacity: 0; } }
+    @keyframes signal-lock { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.4); opacity: 0; } }
     .splash-name { margin-top: 20px; font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.5px; opacity: 0; animation: fade-up 0.6s ease 0.35s forwards; }
     .splash-name .accent { color: var(--coin); text-shadow: 0 0 16px rgba(201,161,90,0.5); }
     .splash-tagline { margin-top: 6px; font-size: 12px; color: var(--ink-muted); opacity: 0; animation: fade-up 0.6s ease 0.5s forwards; }
@@ -345,7 +384,7 @@
     .jg-link-card { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 10px; border-radius: 16px; border: 1px solid var(--border-strong); background: linear-gradient(160deg, var(--surface-raised), var(--surface)); text-decoration: none; color: var(--ink); transition: transform 0.12s ease, border-color 0.15s ease; }
     .jg-link-card:active { transform: translateY(2px) scale(0.98); }
     .jg-link-card.jg-channel { border-color: rgba(201,161,90,0.35); }
-    .jg-link-card.jg-community { border-color: rgba(56,189,248,0.35); }
+    .jg-link-card.jg-community { border-color: rgba(139,152,166,0.35); }
     .jg-link-icon { font-size: 22px; }
     .jg-link-label { font-size: 12px; font-weight: 600; }
     .jg-check-btn { opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.28s forwards; background: linear-gradient(135deg, var(--accent), var(--coin) 60%, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px var(--accent-soft); }
@@ -500,17 +539,19 @@
     <div class="star-layer far" id="star-layer-far"></div>
     <div class="star-layer near" id="star-layer-near"></div>
 </div>
+<div id="grain-overlay"></div>
 
 <div id="splash">
     <div class="splash-glow"></div>
     <div class="splash-particles"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="splash-orbit"></div>
     <div class="splash-badge">
         <div class="splash-badge-inner">
             <div class="splash-badge-sheen"></div>
             <svg class="splash-play" width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
         </div>
     </div>
+    <div class="tune-dial"><div class="tune-track"></div><div class="tune-needle"></div></div>
+    <div class="tune-freq mono-num">98.7 FM — LOCKED</div>
     <div class="splash-name">NEW<span class="accent">TUBE</span></div>
     <div class="splash-tagline mono-num" style="letter-spacing:0.04em;">TUNE IN · EARN · CASH OUT</div>
 </div>
@@ -590,6 +631,7 @@ const WITHDRAW_ADS_REQUIRED = 10; // ⚠️ SEASON 3 CHANGE — was 8
 // truth for actual conversion (see api/withdraw.js's convert action).
 const WTC_PER_USD_DISPLAY = 25000;
 const WITHDRAW_TASKS_REQUIRED = 8; // ⚠️ SEASON 3 CHANGE — was 10, and now checked TODAY not lifetime
+const LOTTERY_SYMBOLS_UI = ['7', '💎', '⭐', '🔔', '🍒', '🍋']; // ⚠️ NEW — mirrors lib/constants.js LOTTERY_SYMBOLS, display-only for the spin animation
 
 const tg = window.Telegram?.WebApp;
 if (tg) { try { tg.ready(); } catch (e) {} try { tg.expand(); } catch (e) {} try { tg.setHeaderColor('#0A0F0C'); } catch (e) {} }
@@ -704,6 +746,7 @@ const ERROR_MESSAGES = {
     referral_required: 'This tier needs more referrals — check the tier list.',
     level_up_required: "You've used your withdrawals at this level — refer more people to level up.",
     level_limit_reached: "You've used all withdrawals available at your level for this period.",
+    insufficient_tickets: "You don't have any lottery tickets — refer someone to earn one.",
     tier_monthly_limit_reached: "You've used all claims for this tier — resets every 6 months.",
     address_locked: 'Your withdraw address is locked — check the note in the withdraw sheet.',
     invalid_tier: 'Please select a valid tier.',
@@ -2153,7 +2196,7 @@ function renderEarningTab() {
             <div class="muted" style="font-size:12px; margin-bottom:14px;">Each network has its own daily limit — watch them all for maximum earnings.</div>
             <div class="subnav">
                 <button class="subnav-btn ${state.earnSubTab === 'ads' ? 'active' : ''}" data-subtab="ads">📺 Ads</button>
-                <button class="subnav-btn ${state.earnSubTab === 'articles' ? 'active' : ''}" data-subtab="articles">📰 Articles</button>
+                <button class="subnav-btn ${state.earnSubTab === 'lottery' ? 'active' : ''}" data-subtab="lottery">🎰 777</button>
             </div>
             <div style="display:flex; flex-direction:column; gap:10px;" id="earn-page-list">
                 <div class="muted" style="text-align:center; padding:20px 0;">Loading...</div>
@@ -2198,6 +2241,13 @@ function renderEarningTab() {
         return;
     }
 
+    // ── 777 Lottery page — Season 3. Spends 1 🎟 luckyTicket per spin,
+    // tickets are only earned via referrals (see lib/referral.js). Result
+    // is entirely server-decided (api/earn.js handleLotterySpin) — this
+    // just animates reels then displays whatever the server returned.
+    // Replaces the old Articles sub-tab per this season's spec.
+    if (state.earnSubTab === 'lottery') { renderLotteryGame(); return; }
+
     // ── Articles page — reuses the same task system (category: 'article').
     // Reading + claim flow is identical to a regular task; the only special
     // behavior is that completeTask() fires a passive ad afterward for
@@ -2213,6 +2263,96 @@ function renderEarningTab() {
         listEl.innerHTML = articles.map(t => taskCardHtml(t)).join('');
         listEl.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
     })();
+}
+
+// ══════════════════════════════════════════════════════════════
+// 777 LOTTERY — Season 3
+// ══════════════════════════════════════════════════════════════
+function renderLotteryGame() {
+    const root = document.getElementById('earn-page-list');
+    if (!root) return;
+    const tickets = state.user?.luckyTickets || 0;
+
+    root.innerHTML = `
+        <div class="card" style="text-align:center; padding:22px 16px; position:relative; overflow:hidden;">
+            <div style="position:absolute; inset:0; background:radial-gradient(circle at 50% 0%, var(--coin-soft), transparent 65%); pointer-events:none;"></div>
+            <div style="position:relative; z-index:1;">
+                <div style="font-family:var(--font-display); font-weight:700; font-size:22px; letter-spacing:0.02em;">🎰 LUCKY <span style="color:var(--coin);">777</span></div>
+                <div class="muted" style="font-size:12px; margin-top:2px;">Spend a referral ticket for a shot at the jackpot.</div>
+
+                <div style="display:flex; gap:8px; justify-content:center; margin:20px 0 14px;">
+                    ${[0, 1, 2].map(i => `<div class="lottery-reel" id="reel-${i}"><span id="reel-sym-${i}">?</span></div>`).join('')}
+                </div>
+
+                <div id="lottery-result" class="muted" style="font-size:12.5px; min-height:18px; margin-bottom:14px;"></div>
+
+                <button class="btn btn-primary" id="lottery-spin-btn" style="width:100%;" ${tickets < 1 ? 'disabled' : ''}>
+                    ${tickets < 1 ? '🎟 No tickets — refer a friend' : `🎟 Spin (1 ticket) — you have ${tickets}`}
+                </button>
+                <div class="muted" style="font-size:11px; margin-top:10px;">Tickets are earned only by referring people — see the Refer tab.</div>
+            </div>
+        </div>
+
+        <div class="card" style="padding:14px;">
+            <div style="font-weight:600; font-size:13px; margin-bottom:8px;">Payouts</div>
+            <div style="display:flex; flex-direction:column; gap:6px; font-size:12.5px;">
+                <div style="display:flex; justify-content:space-between;"><span>7️⃣ 7️⃣ 7️⃣ Mega reward</span><span class="mono-num" style="color:var(--coin); font-weight:600;">1,000 WTC</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>💎 💎 💎</span><span class="mono-num">400 WTC</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>⭐ ⭐ ⭐</span><span class="mono-num">150 WTC</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>🔔 🔔 🔔</span><span class="mono-num">60 WTC</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>🍒 🍒 🍒</span><span class="mono-num">25 WTC</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Any 2 matching</span><span class="mono-num">5 WTC</span></div>
+            </div>
+        </div>`;
+
+    const spinBtn = document.getElementById('lottery-spin-btn');
+    if (spinBtn) spinBtn.onclick = runLotterySpin;
+}
+
+let lotterySpinning = false;
+async function runLotterySpin() {
+    if (lotterySpinning) return;
+    lotterySpinning = true;
+    const btn = document.getElementById('lottery-spin-btn');
+    const resultEl = document.getElementById('lottery-result');
+    if (btn) { btn.disabled = true; btn.textContent = 'Spinning...'; }
+    if (resultEl) resultEl.textContent = '';
+
+    // Reels spin visually (random symbols) while the request is in flight — pure animation, no bearing on the real (server-decided) outcome.
+    const spinTimers = [0, 1, 2].map(i => setInterval(() => {
+        const el = document.getElementById(`reel-sym-${i}`);
+        if (el) el.textContent = LOTTERY_SYMBOLS_UI[Math.floor(Math.random() * LOTTERY_SYMBOLS_UI.length)];
+    }, 80));
+
+    const [r] = await Promise.all([
+        apiPost('earn', { action: 'lotterySpin' }),
+        new Promise(resolve => setTimeout(resolve, 900)),
+    ]);
+    spinTimers.forEach(clearInterval);
+    lotterySpinning = false;
+
+    if (!r.ok) {
+        if (resultEl) resultEl.textContent = errorText(r.error);
+        toast(errorText(r.error), 'error');
+        if (btn) { btn.disabled = false; btn.textContent = `🎟 Spin (1 ticket) — you have ${state.user?.luckyTickets || 0}`; }
+        return;
+    }
+
+    [0, 1, 2].forEach(i => { const el = document.getElementById(`reel-sym-${i}`); if (el) el.textContent = r.reels[i]; });
+    await refreshUser();
+
+    if (r.reward > 0) {
+        const isMega = r.reward >= 1000;
+        if (resultEl) resultEl.innerHTML = `<span style="color:var(--coin); font-weight:600;">${isMega ? '🎉 MEGA REWARD!' : '🎉 You won'} +${r.reward.toLocaleString()} WTC!</span>`;
+        triggerBurst(document.getElementById('reel-1'));
+        showCongrats(`+${r.reward.toLocaleString()} WTC`, isMega ? '🏆' : '🎰');
+    } else if (r.blocked) {
+        if (resultEl) resultEl.textContent = 'Reward on hold — verify channel/community membership to collect it.';
+    } else {
+        if (resultEl) resultEl.textContent = 'No win this time — good luck next spin!';
+    }
+
+    if (state.activeTab === 'earning' && state.earnSubTab === 'lottery') renderLotteryGame();
 }
 
 // ⚠️ SECURITY FIX — now requests a signed ad-token from the server BEFORE
@@ -2296,9 +2436,9 @@ function taskCardHtml(t) {
     const isArticle = t.category === 'article';
     const icon = verified ? '📢' : isFaucet ? '🚰' : isArticle ? '📰' : '🌐';
     const badgeText = verified ? '✓ Verified' : isFaucet ? 'Faucet' : isArticle ? 'Article' : 'Link';
-    // ── each task type gets its own matching color instead of one blue tint everywhere ──
-    const hue = isFaucet ? 'var(--faucet-hue)' : isArticle ? 'var(--article-hue)' : verified ? 'var(--signal)' : 'var(--task-hue)';
-    const hueSoft = isFaucet ? 'var(--faucet-soft)' : isArticle ? 'var(--article-soft)' : verified ? 'var(--signal-soft)' : 'var(--task-soft)';
+    // ── each task type gets its own matching color, drawn from the same theme family — "verified" tasks used to get a jarring off-white button, now they share the task gold tone (the ✓ Verified badge already signals the distinction) ──
+    const hue = isFaucet ? 'var(--faucet-hue)' : isArticle ? 'var(--article-hue)' : 'var(--task-hue)';
+    const hueSoft = isFaucet ? 'var(--faucet-soft)' : isArticle ? 'var(--article-soft)' : 'var(--task-soft)';
     return `
     <div class="card task-card-big" data-task-card="${t._id}">
         <div class="tc-icon" style="background:${hueSoft}; border-color:${hueSoft};">${icon}</div>
@@ -2438,7 +2578,7 @@ function renderReferTab() {
                     <div class="pill" style="background:var(--refer-soft); color:var(--refer-hue); margin-bottom:18px;">📈 plus a share of what they earn</div>
                     <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; padding:12px; font-size:12px; word-break:break-all; margin-bottom:12px;">${link}</div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                        <button class="btn btn-primary" id="refer-share" style="background:linear-gradient(160deg, var(--refer-hue), #C2185B 70%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 20px var(--refer-soft);">🔗 Share</button>
+                        <button class="btn btn-primary" id="refer-share" style="background:linear-gradient(160deg, var(--refer-hue), #8A4A2A 70%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 20px var(--refer-soft);">🔗 Share</button>
                         <button class="btn btn-outline" id="refer-copy" style="border-color:var(--refer-soft);">Copy</button>
                     </div>
                 </div>
@@ -2453,6 +2593,14 @@ function renderReferTab() {
                     <div class="muted" style="font-size:12px; margin-bottom:4px;">Referral earnings</div>
                     <div style="font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--money);">${fmtWTC(u.referralWtcEarned || 0)}<span style="font-size:11px; color:var(--ink-muted); font-weight:500;"> WTC</span></div>
                 </div>
+            </div>
+
+            <div class="card" style="margin-top:10px; padding:14px 15px; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                    <div class="muted" style="font-size:12px; margin-bottom:2px;">🎟 Lucky tickets</div>
+                    <div class="muted" style="font-size:11px;">1 earned per verified referral — spend them on 🎰 777.</div>
+                </div>
+                <div style="font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--coin);">${u.luckyTickets || 0}</div>
             </div>
 
             <div class="section-title" style="margin:22px 0 12px;">How the bonus works</div>
