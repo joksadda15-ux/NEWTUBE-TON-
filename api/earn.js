@@ -35,6 +35,7 @@
 //   { action: 'claimAdReward', initData, network, startTime, signature }
 //   { action: 'taskComplete',  initData, taskId }
 //   { action: 'claimPromo',    initData, code }
+//   { action: 'lotterySpin',   initData }   — ⚠️ NEW, Season 3 "777" game, spends 1 luckyTicket
 
 import crypto from 'crypto';
 import { ObjectId } from 'mongodb';
@@ -45,7 +46,7 @@ import { maybeAwardReferralMilestones } from '../lib/referral.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     LOOTBOX_CLAIM_MIN, LOOTBOX_CLAIM_MAX, DAILY_VIDEO_WTC_MAX, VIDEO_WTC_PER_SECOND,
-    AD_NETWORK_REWARDS, AD_MIN_WATCH_SECONDS,
+    AD_NETWORK_REWARDS, AD_MIN_WATCH_SECONDS, LOTTERY_SPIN_COST_TICKETS, rollLottery,
 } from '../lib/constants.js';
 
 const SECRET = process.env.VIDEO_SIGNING_SECRET;
@@ -351,80 +352,4 @@ async function handleTaskComplete(req, res, db, userId) {
 }
 
 // ── claimPromo ── ⚠️ NOW GATED
-async function handleClaimPromo(req, res, db, userId) {
-    const { code } = req.body;
-    if (!code) return res.status(400).json({ ok: false, error: 'missing_fields' });
-
-    const promos = db.collection('promos');
-    const users = db.collection('users');
-
-    const promo = await promos.findOne({ code: String(code).trim() });
-    if (!promo) return res.status(404).json({ ok: false, error: 'invalid_code' });
-    if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) return res.status(400).json({ ok: false, error: 'expired' });
-
-    const user = await users.findOne({ _id: userId });
-    if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
-    if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
-
-    const maxUses = promo.maxUses || 9999;
-    const promoGate = await promos.findOneAndUpdate(
-        { _id: promo._id, usedCount: { $lt: maxUses }, redeemedBy: { $ne: userId } },
-        { $inc: { usedCount: 1 }, $addToSet: { redeemedBy: userId } },
-        { returnDocument: 'after' }
-    );
-    if (!promoGate) {
-        const fresh = await promos.findOne({ _id: promo._id });
-        if ((fresh.redeemedBy || []).includes(userId)) return res.status(400).json({ ok: false, error: 'already_used' });
-        return res.status(400).json({ ok: false, error: 'fully_used' });
-    }
-
-    // ⚠️ NEW: the promo code itself is already marked used above (promoGate)
-    // even if the credit below is blocked by REWARD_ELIGIBLE_FILTER —
-    // otherwise a flagged user could keep retrying the same code after
-    // verifying, defeating the code's single-use-per-user limit. Trade-off:
-    // a flagged user "burns" a promo code with zero reward if they redeem it
-    // while still unverified. Accepted, since promo codes are typically
-    // low-value and this closes an easy retry-abuse path.
-    const reward = promo.reward || 0;
-    const creditResult = await users.updateOne(
-        { _id: userId, ...REWARD_ELIGIBLE_FILTER },
-        { $inc: { wtcBalance: reward, lifetimeWtcEarned: reward } }
-    );
-    if (creditResult.matchedCount === 0) {
-        return res.status(403).json({ ok: false, error: 'account_under_review' });
-    }
-
-    return res.status(200).json({ ok: true, reward });
-}
-
-export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-
-    const { action } = req.body || {};
-
-    // videoStart only HMAC-signs a timestamp — no DB, no user data touched.
-    // Keeping it outside initData verification prevents session renewal failures
-    // when TG_INIT_DATA expires mid-session (which would break the 30-second ticker).
-    if (action === 'videoStart') {
-        if (!SECRET) return res.status(500).json({ success: false, error: 'video_secret_missing' });
-        const startTime = Date.now();
-        const userId = req.body?.userId || 'anon';
-        return res.status(200).json({ success: true, startTime, signature: sign(userId, startTime) });
-    }
-
-    // All other actions require a valid Telegram session
-    const verified = verifyTelegramInitData(req.body?.initData);
-    if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
-    const userId = String(verified.user.id);
-
-    const { db } = await connectToDatabase();
-    switch (action) {
-        case 'videoClaim':     return handleVideoClaim(req, res, db, userId);
-        case 'claimLootbox':   return handleClaimLootbox(req, res, db, userId);
-        case 'adStart':        return handleAdStart(req, res, db, userId);
-        case 'claimAdReward':  return handleClaimAdReward(req, res, db, userId);
-        case 'taskComplete':   return handleTaskComplete(req, res, db, userId);
-        case 'claimPromo':     return handleClaimPromo(req, res, db, userId);
-        default: return res.status(400).json({ ok: false, error: 'unknown_action' });
-    }
-}
+async function handleClaimPromo(req, res, db, userId)
