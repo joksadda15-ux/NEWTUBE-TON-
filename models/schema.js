@@ -160,16 +160,13 @@
 // ──────────────────────────────────────────────────────────────────
 // { _id: ObjectId, code: "482913", reward: 50, maxUses: 50, usedCount: 0, redeemedBy: [], expiresAt: Date, createdAt: Date }
 //
-// ⚠️ NEW — a TTL index on `expiresAt` (see setupIndexes below) makes MongoDB
-// auto-delete a promo document once its `expiresAt` timestamp has passed —
-// no separate cleanup job needed. MongoDB's TTL background sweep runs
-// roughly every 60 seconds, so deletion happens within about a minute of
-// expiry (well inside the "24hr" the admin asked for) rather than exactly
-// at 24hr — the code was already dead/unusable the instant it expired
-// anyway, so slightly-earlier deletion costs nothing. This matters
-// specifically because the admin is on MongoDB Atlas's free (M0) tier,
-// which caps total storage — expired promo docs piling up forever was
-// wasted space for data with zero further use.
+// A code stops being redeemable 24h after createdAt (`expiresAt`, checked in
+// api/earn.js's handleClaimPromo). The DOCUMENT itself lives 24h longer than
+// that — 48h total from createdAt — so an expired code's redemption
+// stats/history are still visible in the admin panel's "📋 View Promos"
+// list for a day after it stops working, instead of vanishing the instant
+// it expires. See the TTL index on `expiresAt` below (expireAfterSeconds:
+// 86400 — i.e. 24h past the expiresAt value itself).
 //
 // ──────────────────────────────────────────────────────────────────
 // COLLECTION: weeklyReferralReports  (⚠️ NEW — history of past weekly
@@ -238,13 +235,13 @@ async function setupIndexes() {
         { expireAfterSeconds: 7776000, partialFilterExpression: { status: 'rejected' } }
     );
     await db.collection('promos').createIndex({ code: 1 }, { unique: true });
-    // ⚠️ NEW — TTL index: MongoDB auto-deletes a promo doc once `expiresAt`
-    // is in the past. expireAfterSeconds:0 means "delete exactly at the
-    // stored expiresAt time" (not 0 seconds after creation — the field
-    // itself already holds the future expiry timestamp, set in bot.js as
-    // createdAt + 24h). This is what keeps expired-and-useless promo codes
-    // from sitting in the free-tier database forever.
-    await db.collection('promos').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+    // ⚠️ CHANGED — TTL index: was expireAfterSeconds:0 (deleted the INSTANT
+    // expiresAt passed). Now waits an extra 24h past expiresAt before
+    // deleting (48h total lifetime from createdAt: 24h usable + 24h grace),
+    // so an expired code's redemption stats/history are still visible in
+    // the admin panel's "📋 View Promos" list for a day after it stops
+    // working, instead of vanishing the moment it expires.
+    await db.collection('promos').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 86400 });
     // ⚠️ NEW — TTL index: a fingerprint doc auto-deletes 180 days after its
     // last signup activity. Old/inactive-device fingerprints have no further
     // multi-account-detection value and were accumulating forever on the
