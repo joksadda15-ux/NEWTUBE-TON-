@@ -46,13 +46,26 @@ async function handleInit(req, res, db) {
     const existing = await users.findOne({ _id: userId });
     if (existing) {
         if (ipCheck.unclaimed) await claimIp(db, clientIp, userId); // link a fresh IP to a returning user
+        // ⚠️ NEW — refresh the "still alive" clock every time the app opens.
+        // Powers the 90-day dead-account TTL below: 3 months with the app
+        // never once opened and the whole doc auto-deletes (see
+        // models/schema.js). If this same Telegram ID opens the app again
+        // after that, `existing` here comes back null and they fall straight
+        // into the newUser branch below — a genuinely fresh account, same as
+        // if they'd never used the app at all.
+        await users.updateOne({ _id: userId }, { $set: { lastActiveAt: new Date() } });
         return res.status(200).json({ ok: true, alreadyExists: true });
     }
 
-    // after 60 days, a banned user's full `users` document auto-deletes
-    // (see models/schema.js TTL index) to free up free-tier storage.
-    // Without this check, that would silently look like a brand new user
-    // here and hand them a fresh, un-banned account — undoing the ban.
+    // Two different auto-deletes can land a returning Telegram ID here with
+    // `existing === null` even though they've used the app before:
+    //   1) a banned user's doc, 60 days after bannedAt (see models/schema.js) — the
+    //      stillBanned check right below catches this via the separate,
+    //      never-expiring `bannedTelegramIds` registry, so the ban still holds.
+    //   2) a genuinely inactive user's doc, 90 days after lastActiveAt (also
+    //      models/schema.js) — NOT banned, so nothing blocks them below: they
+    //      fall straight into creating newUser and get a real fresh start,
+    //      which is the intended behavior for a "dead" (not banned) account.
     const stillBanned = await db.collection('bannedTelegramIds').findOne({ _id: userId });
     if (stillBanned) return res.status(403).json({ ok: false, error: 'banned' });
 
@@ -87,10 +100,12 @@ async function handleInit(req, res, db) {
         lastResetDate: todayBD(),
         welcomeBonusClaimed: false,
         createdAt: new Date(),
+        lastActiveAt: new Date(), // ⚠️ NEW — see the dead-account TTL note above / models/schema.js
         multiAccountFlag: false,
         multiAccountSiblings: [],
         withdrawLevel: 1,          // ⚠️ NEW — Season 3 level system, see lib/constants.js WITHDRAW_LEVELS
         withdrawsUsedAtLevel: 0,
+        luckyTickets: 0,            // ⚠️ NEW — Season 3 "777" lottery, earned via referrals (see lib/referral.js)
     };
 
     try {
