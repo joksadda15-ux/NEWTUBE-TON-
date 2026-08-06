@@ -49,6 +49,12 @@
 //   multiAccountFlag: false,
 //   multiAccountSiblings: [],           // অন্য userId গুলো যারা একই fingerprint শেয়ার করে
 //   multiAccountFingerprint: "..."      // (optional) যে হ্যাশ ম্যাচ করেছে
+//
+//   // ── SEASON 3 ──
+//   withdrawLevel: 1,                   // see lib/constants.js WITHDRAW_LEVELS
+//   withdrawsUsedAtLevel: 0,
+//   luckyTickets: 0,                    // 🎟 777 lottery — earned 1 per verified referral, see lib/referral.js
+//   lastActiveAt: Date,                  // ⚠️ NEW — refreshed on every app open, powers the 90-day dead-account TTL below
 // }
 //
 // ⚠️ NEW — a partial TTL index on `bannedAt` (see setupIndexes below) makes
@@ -88,7 +94,7 @@
 // ──────────────────────────────────────────────────────────────────
 // COLLECTION: ipRegistry  (⚠️ NEW — SEASON 3, pure IP one-account gate)
 // ──────────────────────────────────────────────────────────────────
-// { _id: "<ip address>", userId: "<current owner telegram id>", claimedAt: Date }
+// { _id: "<ip address>", userId: "<current owner telegram id>", claimedAt: Date, lastSeenAt: Date }
 //
 // One doc per IP; whoever it points to is the only Telegram account allowed
 // to use the app from that IP right now. Checked on EVERY api/user.js
@@ -97,6 +103,10 @@
 // the season's active enforcement path; `fingerprints` below is left in
 // place for the multiAccountFlag admin-review data it already produced, but
 // no longer auto-suspends anyone on its own — IP is now the hard gate.
+//
+// ⚠️ NEW — a TTL index on `lastSeenAt` (refreshed every time the owner's own
+// check passes) auto-deletes a doc 120 days after that IP goes completely
+// quiet — most IPs are dynamic and get reassigned to someone else eventually.
 //
 // ──────────────────────────────────────────────────────────────────
 // COLLECTION: videos
@@ -121,8 +131,14 @@
 //   details: "address/uid",
 //   wtcAmount: 2000, feeWtc: 100, feePercent: 5, netWtc: 1900,
 //   cashAmount: 0.095, currency: "USDT" | "TON",
-//   adsRequired: 15, status: "pending" | "approved" | "rejected", createdAt: Date
+//   adsRequired: 15, status: "pending" | "approved" | "rejected", createdAt: Date, processedAt: Date
 // }
+//
+// ⚠️ NEW — a partial TTL index on `processedAt` (see setupIndexes below)
+// auto-deletes a withdrawal doc 90 days after it's REJECTED — a rejected
+// request already refunds the WTC in full at reject time, so it has no
+// further use beyond a brief audit trail. 'pending'/'approved' withdrawals
+// are real financial records and are never touched by this index.
 //
 // ──────────────────────────────────────────────────────────────────
 // COLLECTION: gifts  (admin-sent surprise gifts — see api/gift.js)
@@ -134,6 +150,10 @@
 // MongoDB auto-delete a gift doc 30 days after it's claimed. Pending gifts
 // (no claimedAt) are never touched by this index — only claimed-and-done
 // gifts get cleaned up, freeing free-tier storage with zero functional risk.
+//
+// ⚠️ NEW — a second partial TTL index on `createdAt` auto-deletes a gift
+// that's STILL 'pending' 180 days after it was sent and never claimed —
+// realistically abandoned at that point.
 //
 // ──────────────────────────────────────────────────────────────────
 // COLLECTION: promos
@@ -190,10 +210,33 @@ async function setupIndexes() {
         { bannedAt: 1 },
         { expireAfterSeconds: 5184000, partialFilterExpression: { isBanned: true } }
     );
+    // ⚠️ NEW — "dead account" cleanup, per admin's Season 3 spec: 3 months
+    // (90 days) with the app never once reopened auto-deletes the WHOLE
+    // user doc — not partial/scoped like the other TTLs, applies to every
+    // user regardless of ban status. `lastActiveAt` is refreshed on every
+    // action:init (api/user.js), i.e. every time the app is opened, so this
+    // is a rolling 90-day-since-last-open window, not a fixed date.
+    // If a banned user is ALSO caught by this, no harm — the separate,
+    // never-expiring `bannedTelegramIds` registry (lib/banRegistry.js) is
+    // what actually enforces the ban and isn't touched by this index, so
+    // the ban survives even if this fires before the bannedAt TTL above does.
+    // If this same Telegram ID reopens the app after deletion, api/user.js's
+    // handleInit sees no existing doc and creates a genuinely fresh account
+    // — that's the intended "dead user gets a new account" behavior.
+    await db.collection('users').createIndex({ lastActiveAt: 1 }, { expireAfterSeconds: 7776000 });
     await db.collection('videos').createIndex({ isActive: 1, createdAt: -1 });
     await db.collection('tasks').createIndex({ isApproved: 1, category: 1, createdAt: -1 });
     await db.collection('withdrawals').createIndex({ userId: 1, createdAt: -1 });
     await db.collection('withdrawals').createIndex({ details: 1 });
+    // ⚠️ NEW — partial TTL index: ONLY 'rejected' withdrawals expire (90 days
+    // after processedAt). A rejected withdrawal already fully refunds the
+    // user's WTC at reject time (see api/bot.js) and has no further use
+    // beyond a brief audit trail — unlike 'approved'/'pending', which are
+    // real financial records and are never touched by this index.
+    await db.collection('withdrawals').createIndex(
+        { processedAt: 1 },
+        { expireAfterSeconds: 7776000, partialFilterExpression: { status: 'rejected' } }
+    );
     await db.collection('promos').createIndex({ code: 1 }, { unique: true });
     // ⚠️ NEW — TTL index: MongoDB auto-deletes a promo doc once `expiresAt`
     // is in the past. expireAfterSeconds:0 means "delete exactly at the
@@ -217,6 +260,22 @@ async function setupIndexes() {
         { claimedAt: 1 },
         { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'claimed' } }
     );
+    // ⚠️ NEW — partial TTL index: an unclaimed ('pending') gift auto-expires
+    // 180 days after createdAt if it's just never been claimed — very
+    // generous, since a legitimate gift is normally claimed within days, but
+    // an abandoned pending gift sitting for 6 months is realistically never
+    // coming back to be claimed and has no further use. 'claimed' gifts are
+    // untouched by this index — they're governed by the claimedAt TTL above.
+    await db.collection('gifts').createIndex(
+        { createdAt: 1 },
+        { expireAfterSeconds: 15552000, partialFilterExpression: { status: 'pending' } }
+    );
+    // ⚠️ NEW — SEASON 3: TTL for lib/ipRegistry.js's per-IP claim docs. Most
+    // IPs are dynamic (mobile carriers, home routers) and get reassigned to
+    // a different person eventually — an IP nobody in this app has touched
+    // in 120 days has no ongoing gate-keeping value and would otherwise sit
+    // here forever, one document per IP ever seen.
+    await db.collection('ipRegistry').createIndex({ lastSeenAt: 1 }, { expireAfterSeconds: 10368000 });
     // ⚠️ NEW — speeds up a_weekly_history's "most recent report" lookup
     await db.collection('weeklyReferralReports').createIndex({ weekEndedAt: -1 });
 
