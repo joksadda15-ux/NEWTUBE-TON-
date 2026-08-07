@@ -620,6 +620,11 @@ const API_BASE = 'https://newtube-ton.vercel.app/api';
 const MINI_APP_BASE = 'https://t.me/NewTube12_bot/WatchTo_Earn';
 const OFFICIAL_CHANNEL = 'Newtube_offcial'; // ⚠️ SEASON 3 CHANGE — mirrors lib/telegram.js
 const COMMUNITY_GROUP = 'newtube_commonity';
+// ⚠️ TODO — REPLACE THIS: placeholder only. This must be the real Telegram
+// username of your payment-proof channel, or the "Pay Channel" home button
+// will send users to a channel that doesn't exist / isn't yours.
+const PAY_CHANNEL = 'PASTE_YOUR_PAYMENT_CHANNEL_USERNAME_HERE';
+const WITHDRAW_METHOD_LABELS = { binance: 'Binance UID', tonkeeper: 'Tonkeeper Address' }; // mirrors lib/constants.js WITHDRAW_METHODS labels
 const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video section only (6 min)
 // ⚠️ NEW — mirrors lib/constants.js WITHDRAW_ADS_REQUIRED / FIRST_WITHDRAW_MIN_TASKS.
 // Frontend-only copies for instant UI rendering (progress bars, requirement
@@ -1119,8 +1124,8 @@ async function openHistoryModal() {
                 <div class="card" style="margin-bottom:10px; opacity:0; animation: jg-rise 0.35s ease ${Math.min(i * 0.05, 0.4)}s forwards;">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <div>
-                            <div style="font-weight:700; font-size:15px;">${fmtWTC(h.wtcAmount)} WTC</div>
-                            <div class="muted" style="font-size:12px; margin-top:2px;">≈ ${Number(h.cashAmount || 0).toFixed(4)} ${h.currency || ''} · ${date}</div>
+                            <div style="font-weight:700; font-size:15px;">$${Number(h.cashAmount ?? h.usdAmount ?? 0).toFixed(2)} ${h.currency || 'USDT'}</div>
+                            <div class="muted" style="font-size:12px; margin-top:2px;">${(WITHDRAW_METHOD_LABELS[h.method] || h.method || '')} · ${date}</div>
                         </div>
                         <div style="display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:${st.color}22; color:${st.color}; font-size:12px; font-weight:700; white-space:nowrap;">
                             ${st.icon} ${st.label}
@@ -1316,6 +1321,17 @@ async function renderHome() {
             </button>
         </div>
 
+        <div class="anim-in-3" style="display:flex; gap:10px; margin:10px 20px 0;">
+            <button class="btn btn-outline milestone-lb-btn" id="home-official-channel-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                Official Channel
+            </button>
+            <button class="btn btn-outline milestone-lb-btn" id="home-pay-channel-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gift-hue)" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                Pay Channel
+            </button>
+        </div>
+
         <div class="section-pad anim-in-4" style="margin-top:22px;">
             <div class="section-title" style="margin-bottom:12px;">Platform stats</div>
             <div class="stat-strip" id="home-platform-stats">
@@ -1349,6 +1365,8 @@ async function renderHome() {
     );
     document.getElementById('home-milestone-btn').onclick = () => toast('Referral milestones — coming soon!', 'info');
     document.getElementById('home-leaderboard-btn').onclick = openLeaderboardModal;
+    document.getElementById('home-official-channel-btn').onclick = () => window.open(`https://t.me/${OFFICIAL_CHANNEL}`, '_blank');
+    document.getElementById('home-pay-channel-btn').onclick = () => window.open(`https://t.me/${PAY_CHANNEL}`, '_blank');
     startWithdrawTicker();
 
     // Platform-wide stats: total videos/tasks currently available. Reuses the
