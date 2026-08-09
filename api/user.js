@@ -103,8 +103,8 @@ async function handleInit(req, res, db) {
         lastActiveAt: new Date(), // ⚠️ NEW — see the dead-account TTL note above / models/schema.js
         multiAccountFlag: false,
         multiAccountSiblings: [],
-        withdrawLevel: 1,          // ⚠️ NEW — Season 3 level system, see lib/constants.js WITHDRAW_LEVELS
-        withdrawsUsedAtLevel: 0,
+        validReferralCount: 0,      // ⚠️ NEW — Season 4, +1 when a referral completes all 3 steps (lib/referral.js)
+        usedValidReferrals: 0,      // ⚠️ NEW — Season 4, +1 each withdraw after the user's first (free) one
         luckyTickets: 0,            // ⚠️ NEW — Season 3 "777" lottery, earned via referrals (see lib/referral.js)
     };
 
@@ -219,4 +219,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-}
+        }
