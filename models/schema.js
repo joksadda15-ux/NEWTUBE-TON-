@@ -51,9 +51,11 @@
 //   multiAccountFingerprint: "..."      // (optional) যে হ্যাশ ম্যাচ করেছে
 //
 //   // ── SEASON 3 ──
-//   withdrawLevel: 1,                   // see lib/constants.js WITHDRAW_LEVELS
-//   withdrawsUsedAtLevel: 0,
 //   luckyTickets: 0,                    // 🎟 777 lottery — earned 1 per verified referral, see lib/referral.js
+//
+//   // ── SEASON 4 — simplified single-step withdraw ──
+//   validReferralCount: 0,              // lifetime, +1 when a referral completes all 3 steps (lib/referral.js)
+//   usedValidReferrals: 0,              // +1 each withdraw after the user's first (free) one — see api/withdraw.js
 //   lastActiveAt: Date,                  // ⚠️ NEW — refreshed on every app open, powers the 90-day dead-account TTL below
 // }
 //
@@ -129,9 +131,9 @@
 // {
 //   _id: ObjectId, userId: "123456789", method: "binance" | "tonkeeper",
 //   details: "address/uid",
-//   wtcAmount: 2000, feeWtc: 100, feePercent: 5, netWtc: 1900,
-//   cashAmount: 0.095, currency: "USDT" | "TON",
-//   adsRequired: 15, status: "pending" | "approved" | "rejected", createdAt: Date, processedAt: Date
+//   wtcAmount: 2000, grossUsd: 0.08, cashAmount: 0.057, currency: "USDT",
+//   referralConsumed: false,            // true if this withdraw spent one of the user's valid referrals (all but their 1st)
+//   status: "pending" | "approved" | "rejected", createdAt: Date, processedAt: Date
 // }
 //
 // ⚠️ NEW — a partial TTL index on `processedAt` (see setupIndexes below)
