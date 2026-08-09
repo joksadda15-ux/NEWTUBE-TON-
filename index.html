@@ -55,6 +55,8 @@
         --danger: #FF5C7A;
         --danger-soft: rgba(255,92,122,0.14);
         --success: #22C55E;
+        --pending: #FBBF24;      /* clear bright amber-yellow for "not yet complete" indicators — no dark/transparent mixing */
+        --pending-ink: #241A02;  /* dark text/icon color to sit on top of --pending fills */
         /* ── functional colors — SEASON 3: previously each section picked an
            arbitrary hue independent of the others (bright blue, purple,
            teal, hot pink...), which is exactly what looked inconsistent
@@ -81,12 +83,16 @@
            everywhere else instead of an unrelated blue/purple/teal/yellow set ── */
         --net-adsgram-daily: #C9A15A;
         --net-adsgram-daily-soft: rgba(201,161,90,0.16);
+        --net-adsgram-daily-deep: #7A5F2E; /* same-hue darker stop for the Watch button gradient — was fading into the unrelated --surface-pop before, which read as "half yellow half black" */
         --net-adsgram-special: #B8663F;
         --net-adsgram-special-soft: rgba(184,102,63,0.18);
+        --net-adsgram-special-deep: #6E3C24;
         --net-monetag: #7C9070;
         --net-monetag-soft: rgba(124,144,112,0.16);
+        --net-monetag-deep: #495443;
         --net-giga: #8B98A6;
         --net-giga-soft: rgba(139,152,166,0.18);
+        --net-giga-deep: #4E5761;
         --font-display: 'Fraunces', serif;
         --font-body: 'Inter', sans-serif;
         --font-mono: 'IBM Plex Mono', monospace;
@@ -333,7 +339,29 @@
     .count-pop { display: inline-block; animation: count-pop 0.35s ease; }
     @keyframes count-pop { 0% { transform: scale(1.18); color: var(--coin); } 100% { transform: scale(1); } }
 
-    /* ── floating lootbox ── */
+    /* ── VIDEO / LOOTBOX SECTION — Season 3 restyle only: neon-violet "mining
+       terminal" look, lifted from the reference screenshot. Scoped entirely to
+       .vid-neon-* classes below — nothing outside the Video tab is touched,
+       and the underlying earn/claim/ad logic is unchanged. ── */
+    --vid-neon-1: #8B2FD6;
+    --vid-neon-2: #C042E8;
+    --vid-neon-3: #FF6EC7;
+    --vid-neon-glow: rgba(176,60,232,0.45);
+    .vid-neon-wrap { background: radial-gradient(circle at 15% 0%, rgba(139,47,214,0.16), transparent 55%), var(--bg); }
+    .vid-neon-card { background: linear-gradient(165deg, #1D0E33, #120725); border: 1px solid rgba(176,60,232,0.35); border-radius: 18px; padding: 16px; position: relative; overflow: hidden; box-shadow: 0 0 0 1px rgba(176,60,232,0.08) inset, 0 10px 26px rgba(76,10,120,0.35); }
+    .vid-neon-card::before { content: ''; position: absolute; inset: -40%; background: radial-gradient(circle at 25% 15%, rgba(176,60,232,0.28), transparent 60%); pointer-events: none; }
+    .vid-neon-title { font-family: var(--font-display); font-weight: 700; font-size: 13.5px; color: #E7C9FF; display: flex; align-items: center; gap: 8px; position: relative; z-index: 1; }
+    .vid-neon-pts { font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--vid-neon-3); text-shadow: 0 0 14px var(--vid-neon-glow); position: relative; z-index: 1; }
+    .vid-neon-bar-track { height: 9px; border-radius: 6px; background: rgba(176,60,232,0.14); overflow: hidden; margin-top: 10px; position: relative; z-index: 1; }
+    .vid-neon-bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--vid-neon-1), var(--vid-neon-2), var(--vid-neon-3)); box-shadow: 0 0 10px var(--vid-neon-glow); transition: width 0.4s ease; }
+    .vid-neon-sub { font-size: 11px; color: #B79FD1; margin-top: 8px; position: relative; z-index: 1; }
+    .vid-neon-list-item { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid rgba(176,60,232,0.14); cursor: pointer; }
+    .vid-neon-list-item:last-child { border-bottom: none; }
+    .vid-neon-thumb-sm { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; flex-shrink: 0; background: #1D0E33; border: 1px solid rgba(176,60,232,0.3); position: relative; }
+    .vid-neon-thumb-sm img { width: 100%; height: 100%; object-fit: cover; }
+    .vid-neon-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); color: #fff; font-size: 12px; }
+    .vid-neon-reward { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: #4FE8C4; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+    #floating-lootbox.vid-neon-fab { background: linear-gradient(160deg, #2A1245, #150A24) !important; box-shadow: 0 8px 22px rgba(76,10,120,0.5), 0 0 0 1px rgba(176,60,232,0.3) inset !important; }
     #floating-lootbox { transition: transform 0.2s ease; animation: lootbox-bob 2.4s ease-in-out infinite; }
     #floating-lootbox:active { transform: scale(0.9); }
     @keyframes lootbox-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
@@ -366,28 +394,42 @@
     .ob-icon { font-size: 40px; animation: ob-icon-bounce 0.6s cubic-bezier(.34,1.56,.64,1) 0.1s both; }
     @keyframes ob-icon-bounce { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-    /* ── join-gate (entry / "join channel & community" screen) ── */
+    /* ── join-gate (entry / "join channel & community" screen) — Season 3 redesign:
+       radar-pulse signal badge instead of a generic emoji, cleaner link cards with
+       colored icon chips + arrow affordance, and a breathing (not static) CTA so the
+       gate doesn't read as a dead-end blocker. ── */
     .jg-glow { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 0; }
     .jg-glow::before, .jg-glow::after { content: ''; position: absolute; width: 220px; height: 220px; border-radius: 50%; filter: blur(48px); opacity: 0.35; animation: jg-glow-drift 6s ease-in-out infinite; }
     .jg-glow::before { background: var(--coin); top: -80px; left: -60px; }
     .jg-glow::after { background: var(--accent); bottom: -90px; right: -60px; animation-delay: 1.4s; }
     @keyframes jg-glow-drift { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(14px,-10px) scale(1.12); } }
-    .jg-icon-wrap { width: 96px; height: 96px; border-radius: 50%; margin: 0 auto 20px; position: relative; display: flex; align-items: center; justify-content: center; background: linear-gradient(150deg, var(--coin-soft), var(--accent-soft)); z-index: 1; }
-    .jg-icon-wrap::before { content: ''; position: absolute; inset: -8px; border-radius: 50%; background: conic-gradient(from 0deg, var(--coin), var(--accent), var(--signal), var(--coin)); opacity: 0.55; animation: jg-ring-spin 3.5s linear infinite; z-index: -1; }
-    .jg-icon-wrap::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--surface); z-index: -1; }
-    @keyframes jg-ring-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .jg-icon { font-size: 42px; position: relative; z-index: 1; animation: ob-icon-bounce 0.6s cubic-bezier(.34,1.56,.64,1) 0.1s both; }
+    .jg-badge { width: 88px; height: 88px; margin: 0 auto 20px; position: relative; display: flex; align-items: center; justify-content: center; z-index: 1; }
+    .jg-badge-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--accent); opacity: 0; animation: jg-radar-ping 2.4s cubic-bezier(.2,.7,.3,1) infinite; }
+    .jg-badge-ring:nth-child(2) { animation-delay: 0.8s; }
+    .jg-badge-ring:nth-child(3) { animation-delay: 1.6s; }
+    @keyframes jg-radar-ping { 0% { transform: scale(0.55); opacity: 0.65; border-color: var(--accent); } 70% { opacity: 0.12; } 100% { transform: scale(1.35); opacity: 0; border-color: var(--coin); } }
+    .jg-badge-core { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(150deg, var(--coin), var(--accent) 130%); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -4px 8px rgba(0,0,0,0.25), 0 8px 22px var(--accent-soft); animation: jg-badge-breathe 2.4s ease-in-out infinite; z-index: 1; }
+    @keyframes jg-badge-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .jg-badge-core svg { width: 30px; height: 30px; }
+    .jg-heading { font-family: var(--font-display); font-weight: 700; font-size: 19px; margin-bottom: 8px; position: relative; z-index: 1; opacity: 0; animation: jg-rise 0.45s cubic-bezier(.22,.9,.32,1) 0.05s forwards; }
+    .jg-sub { color: var(--ink-muted); font-size: 13px; line-height: 1.6; margin-bottom: 22px; position: relative; z-index: 1; opacity: 0; animation: jg-rise 0.45s cubic-bezier(.22,.9,.32,1) 0.1s forwards; }
     .jg-row { display: flex; gap: 10px; margin-bottom: 12px; opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) forwards; }
-    .jg-row:nth-of-type(1) { animation-delay: 0.05s; }
-    .jg-row:nth-of-type(2) { animation-delay: 0.15s; }
+    .jg-row:nth-of-type(1) { animation-delay: 0.18s; }
+    .jg-row:nth-of-type(2) { animation-delay: 0.28s; }
     @keyframes jg-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-    .jg-link-card { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 10px; border-radius: 16px; border: 1px solid var(--border-strong); background: linear-gradient(160deg, var(--surface-raised), var(--surface)); text-decoration: none; color: var(--ink); transition: transform 0.12s ease, border-color 0.15s ease; }
-    .jg-link-card:active { transform: translateY(2px) scale(0.98); }
+    .jg-link-card { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 10px 13px; border-radius: 16px; border: 1px solid var(--border-strong); background: linear-gradient(160deg, var(--surface-raised), var(--surface)); text-decoration: none; color: var(--ink); transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease; position: relative; overflow: hidden; }
+    .jg-link-card:active { transform: translateY(2px) scale(0.97); }
     .jg-link-card.jg-channel { border-color: rgba(201,161,90,0.35); }
-    .jg-link-card.jg-community { border-color: rgba(139,152,166,0.35); }
-    .jg-link-icon { font-size: 22px; }
-    .jg-link-label { font-size: 12px; font-weight: 600; }
-    .jg-check-btn { opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.28s forwards; background: linear-gradient(135deg, var(--accent), var(--coin) 60%, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px var(--accent-soft); }
+    .jg-link-card.jg-channel:active { box-shadow: 0 0 0 2px var(--coin-soft); }
+    .jg-link-card.jg-community { border-color: rgba(237,230,211,0.25); }
+    .jg-link-card.jg-community:active { box-shadow: 0 0 0 2px var(--signal-soft); }
+    .jg-link-chip { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .jg-channel .jg-link-chip { background: var(--coin-soft); }
+    .jg-community .jg-link-chip { background: var(--signal-soft); }
+    .jg-link-label { font-size: 12.5px; font-weight: 600; }
+    .jg-link-arrow { position: absolute; top: 10px; right: 10px; font-size: 11px; color: var(--ink-faint); opacity: 0.7; }
+    .jg-check-btn { opacity: 0; animation: jg-rise 0.5s cubic-bezier(.22,.9,.32,1) 0.4s forwards, jg-cta-breathe 2.6s ease-in-out 1.2s infinite; background: linear-gradient(135deg, var(--accent), var(--coin) 60%, var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px var(--accent-soft); }
+    @keyframes jg-cta-breathe { 0%,100% { box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 24px var(--accent-soft); } 50% { box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 10px 30px rgba(228,67,44,0.4); } }
 
     /* ── gift-box (admin surprise gift) ── */
     .gb-glow { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 0; }
@@ -620,10 +662,7 @@ const API_BASE = 'https://newtube-ton.vercel.app/api';
 const MINI_APP_BASE = 'https://t.me/NewTube12_bot/WatchTo_Earn';
 const OFFICIAL_CHANNEL = 'Newtube_offcial'; // ⚠️ SEASON 3 CHANGE — mirrors lib/telegram.js
 const COMMUNITY_GROUP = 'newtube_commonity';
-// ⚠️ TODO — REPLACE THIS: placeholder only. This must be the real Telegram
-// username of your payment-proof channel, or the "Pay Channel" home button
-// will send users to a channel that doesn't exist / isn't yours.
-const PAY_CHANNEL = 'PASTE_YOUR_PAYMENT_CHANNEL_USERNAME_HERE';
+const PAY_CHANNEL = 'fruit_cut_payment'; // https://t.me/fruit_cut_payment
 const WITHDRAW_METHOD_LABELS = { binance: 'Binance UID', tonkeeper: 'Tonkeeper Address' }; // mirrors lib/constants.js WITHDRAW_METHODS labels
 const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video section only (6 min)
 // ⚠️ NEW — mirrors lib/constants.js WITHDRAW_ADS_REQUIRED / FIRST_WITHDRAW_MIN_TASKS.
@@ -998,17 +1037,30 @@ function showJoinGate(opts, onJoined) {
         <div class="overlay" style="align-items:center;">
             <div class="sheet ob-slide-in" style="border-radius:22px; text-align:center; padding: 36px 22px 30px; position:relative; overflow:hidden;">
                 <div class="jg-glow"></div>
-                <div class="jg-icon-wrap"><span class="jg-icon">🚀</span></div>
-                <div style="font-family:var(--font-display); font-weight:700; font-size:19px; margin-bottom:8px; position:relative; z-index:1;">${heading}</div>
-                <div class="muted" style="font-size:13px; line-height:1.6; margin-bottom:22px; position:relative; z-index:1;">${sub}</div>
+                <div class="jg-badge">
+                    <div class="jg-badge-ring"></div>
+                    <div class="jg-badge-ring"></div>
+                    <div class="jg-badge-ring"></div>
+                    <div class="jg-badge-core">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#14100A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 11a9 9 0 0 1 9-9"/><path d="M4 11a5 5 0 0 1 5-5"/>
+                            <circle cx="5" cy="19" r="2" fill="#14100A" stroke="none"/>
+                            <path d="M5 19 19 5"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="jg-heading">${heading}</div>
+                <div class="jg-sub">${sub}</div>
                 <div style="position:relative; z-index:1;">
                     <div class="jg-row">
                         <a href="https://t.me/${OFFICIAL_CHANNEL}" target="_blank" class="jg-link-card jg-channel">
-                            <span class="jg-link-icon">📢</span>
+                            <span class="jg-link-arrow">↗</span>
+                            <span class="jg-link-chip">📢</span>
                             <span class="jg-link-label">Join Channel</span>
                         </a>
                         <a href="https://t.me/${COMMUNITY_GROUP}" target="_blank" class="jg-link-card jg-community">
-                            <span class="jg-link-icon">💬</span>
+                            <span class="jg-link-arrow">↗</span>
+                            <span class="jg-link-chip">💬</span>
                             <span class="jg-link-label">Join Community</span>
                         </a>
                     </div>
@@ -1634,16 +1686,16 @@ function openWithdrawModal() {
 
         function reqCard(label, have, need, pct, met, hue, hint) {
             return `
-            <div class="card" style="padding:14px; margin-bottom:10px; border-color:${met ? 'rgba(34,197,94,0.35)' : 'var(--border)'};">
+            <div class="card" style="padding:14px; margin-bottom:10px; border-color:${met ? 'rgba(34,197,94,0.35)' : 'rgba(251,191,36,0.35)'};">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
                     <div style="display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600;">
-                        <span style="width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:11px; ${met ? 'background:var(--success); color:#04140A;' : 'border:1.5px solid var(--border-strong);'}">${met ? '✓' : ''}</span>
+                        <span style="width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:12px; font-weight:700; box-shadow:0 0 0 1px rgba(0,0,0,0.15) inset; ${met ? 'background:var(--success); color:#04140A;' : 'background:var(--pending); color:var(--pending-ink);'}">${met ? '✓' : '!'}</span>
                         ${label}
                     </div>
-                    <span style="font-size:12.5px; font-weight:600; color:${met ? 'var(--success)' : 'var(--ink-muted)'};">${have}/${need}</span>
+                    <span style="font-size:12.5px; font-weight:600; color:${met ? 'var(--success)' : 'var(--pending)'};">${have}/${need}</span>
                 </div>
                 <div style="height:6px; border-radius:4px; background:var(--surface); overflow:hidden;">
-                    <div style="height:100%; width:${pct}%; background:${met ? 'var(--success)' : hue}; border-radius:4px; transition:width 0.3s ease;"></div>
+                    <div style="height:100%; width:${pct}%; background:${met ? 'var(--success)' : 'var(--pending)'}; border-radius:4px; transition:width 0.3s ease;"></div>
                 </div>
                 ${!met && hint ? `<div class="muted" style="font-size:11.5px; margin-top:8px;">${hint}</div>` : ''}
             </div>`;
@@ -1911,9 +1963,19 @@ function openPromoModal() {
 async function renderVideoTab() {
     const root = document.getElementById('tab-content');
     root.innerHTML = `
-        <div class="section-pad" style="margin-top:18px;">
-            <div class="section-title" style="margin-bottom:14px;">Watch videos, earn WTC</div>
-            <div id="video-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"></div>
+        <div class="section-pad vid-neon-wrap" style="margin-top:18px; padding-top:2px; padding-bottom:14px;">
+            <div class="vid-neon-card" style="margin-bottom:16px;">
+                <div class="vid-neon-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C042E8" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6"/></svg>
+                    Mining Terminal
+                    <span style="margin-left:auto; font-size:10.5px; color:#B79FD1; font-weight:600;">Max 25 Pts/Box</span>
+                </div>
+                <div class="vid-neon-pts" id="vid-neon-pending-pts">0.0 Pts</div>
+                <div class="vid-neon-bar-track"><div class="vid-neon-bar-fill" id="vid-neon-bar-fill" style="width:0%;"></div></div>
+                <div class="vid-neon-sub" id="vid-neon-sub-label">Watch videos below to fill the box, then tap the floating orb to claim.</div>
+            </div>
+            <div class="section-title" style="margin-bottom:10px; color:#E7C9FF;">Available Streams</div>
+            <div id="video-grid" class="vid-neon-card" style="padding:6px 12px;"></div>
         </div>`;
 
     const r = await apiGet('data?type=videos');
@@ -1921,20 +1983,36 @@ async function renderVideoTab() {
     state.videos = r.ok ? r.videos : [];
 
     if (!state.videos.length) {
-        grid.style.display = 'block';
-        grid.innerHTML = `<div class="muted" style="text-align:center; padding:30px 0; grid-column:1/-1;">No videos available yet.</div>`;
+        grid.innerHTML = `<div class="muted" style="text-align:center; padding:30px 0;">No videos available yet.</div>`;
     } else {
         grid.innerHTML = state.videos.map((v, i) => `
-            <div class="video-thumb" data-idx="${i}" style="cursor:pointer;">
-                <div style="position:relative; border-radius:12px; overflow:hidden; background:var(--surface); aspect-ratio:16/9;">
-                    <img src="${v.thumbnail || ''}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
-                    <div style="position:absolute; right:6px; bottom:6px; background:rgba(0,0,0,0.65); border-radius:6px; padding:2px 6px; font-size:10px;">▶</div>
+            <div class="vid-neon-list-item" data-idx="${i}">
+                <div class="vid-neon-thumb-sm">
+                    <img src="${v.thumbnail || ''}" onerror="this.style.display='none'">
+                    <div class="vid-neon-play">▶</div>
                 </div>
-                <div style="font-size:12px; font-weight:500; margin-top:6px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${v.title}</div>
+                <div style="flex:1; font-size:12.5px; font-weight:500; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${v.title}</div>
+                <div class="vid-neon-reward">⚡ 40/Hr</div>
             </div>`).join('');
-        document.querySelectorAll('.video-thumb').forEach(el => { el.onclick = () => openVideoPlayer(state.videos[el.dataset.idx]); });
+        document.querySelectorAll('.vid-neon-list-item').forEach(el => { el.onclick = () => openVideoPlayer(state.videos[el.dataset.idx]); });
     }
     renderFloatingLootbox();
+    updateMiningTerminalUI();
+}
+
+// ── keeps the "Mining Terminal" card in sync with the same pendingVideoWTC
+// value the floating lootbox already tracks — same source of truth, no new
+// backend call, just mirrored into the new card's UI. ──
+function updateMiningTerminalUI() {
+    const ptsEl = document.getElementById('vid-neon-pending-pts');
+    const fillEl = document.getElementById('vid-neon-bar-fill');
+    const subEl = document.getElementById('vid-neon-sub-label');
+    if (!ptsEl || !fillEl) return;
+    const pending = state.user?.pendingVideoWTC || 0;
+    const claimable = pending >= 25;
+    ptsEl.textContent = `${fmtWTC(pending)} Pts`;
+    fillEl.style.width = `${Math.min(100, (pending / 25) * 100)}%`;
+    if (subEl) subEl.textContent = claimable ? '🎁 Box full — tap the floating orb to claim!' : 'Watch videos below to fill the box, then tap the floating orb to claim.';
 }
 
 function renderFloatingLootbox() {
@@ -1942,11 +2020,12 @@ function renderFloatingLootbox() {
     if (!el) {
         el = document.createElement('button');
         el.id = 'floating-lootbox';
+        el.className = 'vid-neon-fab';
         el.style.cssText = 'position:fixed; right:18px; bottom:120px; width:64px; height:64px; border-radius:50%; background:var(--surface-raised); display:flex; align-items:center; justify-content:center; z-index:50; box-shadow:0 8px 20px rgba(0,0,0,0.4);';
         el.innerHTML = `
             <svg width="64" height="64" viewBox="0 0 64 64" style="position:absolute; inset:0; transform:rotate(-90deg);">
-                <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border-strong)" stroke-width="4"></circle>
-                <circle id="lb-progress-ring" cx="32" cy="32" r="28" fill="none" stroke="var(--video-hue)" stroke-width="4" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" style="transition: stroke-dashoffset 0.5s ease;"></circle>
+                <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(176,60,232,0.2)" stroke-width="4"></circle>
+                <circle id="lb-progress-ring" cx="32" cy="32" r="28" fill="none" stroke="var(--vid-neon-2)" stroke-width="4" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" style="transition: stroke-dashoffset 0.5s ease; filter:drop-shadow(0 0 4px var(--vid-neon-glow));"></circle>
             </svg>
             <div style="display:flex; flex-direction:column; align-items:center; position:relative; z-index:1;">
                 <div style="font-size:15px;" id="lb-coin-icon">🪙</div>
@@ -1961,7 +2040,7 @@ function renderFloatingLootbox() {
     const circumference = 176; // 2 * PI * 28, rounded
 
     document.getElementById('lb-amount').textContent = fmtWTC(pending);
-    document.getElementById('lb-amount').style.color = claimable ? 'var(--video-hue)' : 'var(--ink-muted)';
+    document.getElementById('lb-amount').style.color = claimable ? 'var(--vid-neon-3)' : 'var(--ink-muted)';
     document.getElementById('lb-progress-ring').style.strokeDashoffset = circumference - (circumference * pct);
     el.classList.toggle('claimable', claimable);
 
@@ -2025,6 +2104,7 @@ async function claimLootboxNow() {
         showCongrats(`+${fmtWTC(r.pointsAdded)} WTC`, '🪙');
         await refreshUser();
         renderFloatingLootbox();
+        updateMiningTerminalUI();
         if (state.activeTab === 'home') renderHome();
     } else { toast(errorText(r.error), 'error'); }
 }
@@ -2043,12 +2123,12 @@ function openVideoPlayer(video) {
                     <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${video.videoId}?autoplay=1&playsinline=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                 </div>
                 <div class="section-pad" style="margin-top:18px;">
-                    <div class="card" style="text-align:center;">
-                        <div class="muted" style="font-size:12px; margin-bottom:6px;">Earned this session</div>
-                        <div style="font-family:var(--font-display); font-weight:700; font-size:24px; color:var(--coin);" id="vp-session-wtc">0 WTC</div>
-                        <div class="muted" style="font-size:11px; margin-top:6px;" id="vp-session-sub">40 WTC earned per hour watched</div>
+                    <div class="vid-neon-card" style="text-align:center;">
+                        <div style="font-size:11px; color:#B79FD1; margin-bottom:6px; position:relative; z-index:1;">Earned this session</div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:24px; color:var(--vid-neon-3); text-shadow:0 0 14px var(--vid-neon-glow); position:relative; z-index:1;" id="vp-session-wtc">0 WTC</div>
+                        <div class="vid-neon-sub" style="margin-top:6px;" id="vp-session-sub">40 WTC earned per hour watched</div>
                     </div>
-                    <div id="vp-lootbox-full-banner" style="display:none; margin-top:10px; padding:10px 14px; border-radius:12px; background:var(--signal-soft); border:1px solid var(--signal); text-align:center; font-size:12.5px; font-weight:600;">
+                    <div id="vp-lootbox-full-banner" style="display:none; margin-top:10px; padding:10px 14px; border-radius:12px; background:rgba(176,60,232,0.14); border:1px solid rgba(176,60,232,0.4); color:#E7C9FF; text-align:center; font-size:12.5px; font-weight:600;">
                         🎁 Lootbox full — go claim it to keep earning!
                     </div>
                 </div>
@@ -2172,6 +2252,7 @@ async function startVideoSession() {
             if (out) out.textContent = `${sessionDisplayWTC.toFixed(1)} WTC`;
             if (state.user) state.user.pendingVideoWTC = r.pendingVideoWTC;
             renderFloatingLootbox();
+            updateMiningTerminalUI();
             showLootboxGain(claimable);
             const fresh = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
             if (fresh.success) state.videoSession = { startTime: fresh.startTime, signature: fresh.signature };
@@ -2197,10 +2278,10 @@ function closeVideoPlayer() {
 // EARNING SECTION
 // ══════════════════════════════════════════════════════════════
 const AD_NETWORKS_UI = [
-    { id: 'adsgramDaily',   label: 'Adsgram Daily',   reward: 10, limit: 10, counterField: 'adsgramDailyCountToday', icon: '⚡', hue: 'var(--net-adsgram-daily)', hueSoft: 'var(--net-adsgram-daily-soft)' },
-    { id: 'adsgramSpecial', label: 'Adsgram Special', reward: 20, limit: 5,  counterField: 'adsgramSpecialCountToday', icon: '✨', hue: 'var(--net-adsgram-special)', hueSoft: 'var(--net-adsgram-special-soft)' },
-    { id: 'monetag',        label: 'Monetag',         reward: 15, limit: 20, counterField: 'monetagCountToday', icon: '🎬', hue: 'var(--net-monetag)', hueSoft: 'var(--net-monetag-soft)' },
-    { id: 'giga',           label: 'GigaPub',         reward: 15, limit: 20, counterField: 'gigaCountToday', icon: '📺', hue: 'var(--net-giga)', hueSoft: 'var(--net-giga-soft)' },
+    { id: 'adsgramDaily',   label: 'Adsgram Daily',   reward: 10, limit: 10, counterField: 'adsgramDailyCountToday', icon: '⚡', hue: 'var(--net-adsgram-daily)', hueSoft: 'var(--net-adsgram-daily-soft)', hueDeep: 'var(--net-adsgram-daily-deep)' },
+    { id: 'adsgramSpecial', label: 'Adsgram Special', reward: 20, limit: 5,  counterField: 'adsgramSpecialCountToday', icon: '✨', hue: 'var(--net-adsgram-special)', hueSoft: 'var(--net-adsgram-special-soft)', hueDeep: 'var(--net-adsgram-special-deep)' },
+    { id: 'monetag',        label: 'Monetag',         reward: 15, limit: 20, counterField: 'monetagCountToday', icon: '🎬', hue: 'var(--net-monetag)', hueSoft: 'var(--net-monetag-soft)', hueDeep: 'var(--net-monetag-deep)' },
+    { id: 'giga',           label: 'GigaPub',         reward: 15, limit: 20, counterField: 'gigaCountToday', icon: '📺', hue: 'var(--net-giga)', hueSoft: 'var(--net-giga-soft)', hueDeep: 'var(--net-giga-deep)' },
 ];
 
 function renderEarningTab() {
@@ -2248,7 +2329,7 @@ function renderEarningTab() {
                         <div class="an-progress-track"><div class="an-progress-fill" style="width:${pct}%; ${maxed ? 'background:var(--ink-faint);' : `background:linear-gradient(90deg, ${n.hue}, var(--accent));`}"></div></div>
                         <div class="muted" style="font-size:11px; margin-top:3px;">${count}/${n.limit} today</div>
                     </div>
-                    <button class="btn an-watch-btn ${maxed ? 'an-watch-done' : ''}" data-network="${n.id}" ${maxed ? 'disabled' : ''} style="${maxed ? '' : `background:linear-gradient(160deg, ${n.hue}, var(--surface-pop)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px ${n.hueSoft};`}">
+                    <button class="btn an-watch-btn ${maxed ? 'an-watch-done' : ''}" data-network="${n.id}" ${maxed ? 'disabled' : ''} style="${maxed ? '' : `background:linear-gradient(160deg, ${n.hue}, ${n.hueDeep}); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px ${n.hueSoft};`}">
                         ${maxed ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
                         ${maxed ? 'Done' : 'Watch'}
                     </button>
@@ -2645,16 +2726,6 @@ function renderReferTab() {
                     <div class="pill pill-coin" style="font-family:var(--font-display); font-weight:700;">+130</div>
                 </div>
             </div>
-
-            <div style="display:flex; align-items:center; justify-content:space-between; margin:22px 0 12px;">
-                <div class="section-title" style="margin:0;">Top referrers</div>
-                <div class="pill" style="background:var(--refer-soft); color:var(--refer-hue);" id="refer-lb-count">🔥</div>
-            </div>
-            <div id="refer-leaderboard" class="card" style="padding:4px 18px;">
-                <div class="skel" style="height:14px; width:70%; margin:10px 0;"></div>
-                <div class="skel" style="height:14px; width:50%; margin:10px 0;"></div>
-                <div class="skel" style="height:14px; width:60%; margin:10px 0;"></div>
-            </div>
         </div>`;
 
     document.getElementById('refer-share').onclick = () => {
@@ -2662,29 +2733,6 @@ function renderReferTab() {
         window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`, '_blank');
     };
     document.getElementById('refer-copy').onclick = () => { navigator.clipboard.writeText(link); toast('Link copied!', 'success'); };
-
-    // Top referrers — reuses the same leaderboard endpoint already powering
-    // the Home tab's "Top Referrers" list, just shown here too for the
-    // SnakeVerse-style "Top frens" layout. No new backend logic.
-    (async () => {
-        const board = document.getElementById('refer-leaderboard');
-        const countEl = document.getElementById('refer-lb-count');
-        const r = await apiGet('data?type=leaderboard');
-        if (!board) return;
-        if (r.ok && r.leaderboard?.length) {
-            if (countEl) countEl.textContent = `🔥 ${r.leaderboard.length}`;
-            board.innerHTML = r.leaderboard.slice(0, 8).map((p, i) => `
-                <div style="display:flex; align-items:center; gap:12px; padding:10px 0; opacity:0; animation:rise-in 0.4s ease ${Math.min(i * 0.04, 0.5)}s forwards; ${i < Math.min(r.leaderboard.length, 8) - 1 ? 'border-bottom:0.5px solid var(--border);' : ''}">
-                    <div style="width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:12px; ${i < 3 ? 'background:var(--refer-soft); color:var(--refer-hue);' : 'background:var(--surface-raised); color:var(--ink-faint);'}">${i + 1}</div>
-                    <div style="width:34px; height:34px; border-radius:50%; background:var(--refer-soft); color:var(--refer-hue); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;">${(p.firstName || '?')[0].toUpperCase()}</div>
-                    <div style="flex:1; font-size:14px; font-weight:500;">${p.firstName || 'User'}</div>
-                    <div style="font-size:13px; color:var(--refer-hue); font-family:var(--font-display); font-weight:600;">${p.referralCount || 0} refs</div>
-                </div>`).join('');
-        } else {
-            if (countEl) countEl.textContent = '🔥 0';
-            board.innerHTML = `<div class="muted" style="padding:14px 0; font-size:13px; text-align:center;">No referrers yet — be the first!</div>`;
-        }
-    })();
 }
 
 // ══════════════════════════════════════════════════════════════
