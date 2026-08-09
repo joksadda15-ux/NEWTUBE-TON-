@@ -68,9 +68,24 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true, items });
         }
 
+        // ⚠️ NEW — Weekly Referral Contest (mini app "Milestones" button). Reads
+        // the SAME live `weeklyReferralCount` field the admin panel's a_weekly
+        // screen uses, so it automatically reflects the admin's manual
+        // "🔄 Reset week now" (bot.js a_weekly_reset_confirm) — no separate
+        // reset needed here, it's the same field/collection.
+        if (type === 'weeklyContest') {
+            const top = await db.collection('users')
+                .find({ isBanned: { $ne: true }, weeklyReferralCount: { $gt: 0 } })
+                .project({ telegramUsername: 1, firstName: 1, weeklyReferralCount: 1 })
+                .sort({ weeklyReferralCount: -1 })
+                .limit(10)
+                .toArray();
+            return res.status(200).json({ ok: true, top });
+        }
+
         return res.status(400).json({ ok: false, error: 'unknown_type' });
     } catch (err) {
         console.error('data error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-}
+        }
