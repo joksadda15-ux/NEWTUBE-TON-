@@ -1915,6 +1915,13 @@ async function tryClaimLootbox() {
     const pending = state.user?.pendingVideoWTC || 0;
     if (pending < 25) { toast(`You need at least 25 WTC to claim (currently ${fmtWTC(pending)}).`, 'info'); return; }
 
+    // ⚠️ SECURITY FIX — request a signed token FIRST (before the ad even
+    // loads), same pattern as watchAdNetwork's adStart. The server checks
+    // real elapsed time between this and the claim call, so the ad can't be
+    // skipped by calling claimLootbox directly.
+    const startRes = await apiPost('earn', { action: 'lootboxAdStart' });
+    if (!startRes.ok) { toast(errorText(startRes.error), 'error'); return; }
+
     // Show one random real ad (Adsgram or Monetag) before granting the reward —
     // the reward only fires after the ad SDK's promise actually resolves.
     const candidates = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
@@ -1922,14 +1929,14 @@ async function tryClaimLootbox() {
     toast('Loading ad...', 'info');
     try {
         await pick();
-        await claimLootboxNow();
+        await claimLootboxNow(startRes.startTime, startRes.signature);
     } catch (e) {
         toast(errorText(e.message), 'error');
     }
 }
 
-async function claimLootboxNow() {
-    const r = await apiPost('earn', { action: 'claimLootbox', adWatched: true });
+async function claimLootboxNow(startTime, signature) {
+    const r = await apiPost('earn', { action: 'claimLootbox', startTime, signature });
     if (r.ok) {
         state._lootboxNudgeShown = false;
         toast(`+${fmtWTC(r.pointsAdded)} WTC added to your balance!`, 'success');
