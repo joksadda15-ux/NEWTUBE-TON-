@@ -224,12 +224,12 @@
     .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--money); flex-shrink: 0; box-shadow: 0 0 6px var(--money); animation: live-dot-pulse 1.8s ease-in-out infinite; }
     @keyframes live-dot-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-    /* unified stat strip — one card, divided columns, instead of 4 separate cards */
-    .stat-strip { display: flex; border-radius: 16px; overflow: hidden; border: 0.5px solid var(--border); background: linear-gradient(165deg, var(--surface-raised), var(--surface)); }
-    .stat-strip-item { flex: 1; padding: 13px 6px; text-align: center; border-right: 0.5px solid var(--border); }
-    .stat-strip-item:last-child { border-right: none; }
-    .stat-strip-num { font-family: var(--font-display); font-weight: 700; font-size: 16px; margin-top: 3px; }
-    .stat-strip-label { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.01em; }
+    /* platform stats — separate rounded boxes in a 3-col grid (Home) */
+    .stat-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat-strip-item { padding: 16px 6px 14px; text-align: center; border-radius: 16px; border: 0.5px solid var(--border); background: linear-gradient(165deg, var(--surface-raised), var(--surface)); }
+    .stat-strip-icon { width: 34px; height: 34px; margin: 0 auto; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; background: var(--coin-soft); }
+    .stat-strip-num { font-family: var(--font-display); font-weight: 700; font-size: 19px; margin-top: 8px; }
+    .stat-strip-label { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.01em; margin-top: 2px; }
 
     /* leaderboard podium — top 3 get visual weight instead of being plain list rows */
     .podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding: 18px 8px 6px; }
@@ -293,30 +293,43 @@
     #splash { position: fixed; inset: 0; background: radial-gradient(circle at 50% 38%, #14200F 0%, var(--bg) 68%); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, transform 0.5s ease; }
     #splash.out { opacity: 0; transform: scale(1.06); pointer-events: none; }
     /* orbiting dotted-ring loader removed — see the tune-dial rules above instead */
-    .splash-loadbar-wrap { width: 200px; margin: 22px auto 4px; z-index: 1; position: relative; opacity: 0; animation: fade-up 0.5s ease 1.1s forwards; }
-    .splash-loadbar-label { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 6px; }
+    .splash-loadbar-wrap { width: 230px; margin: 34px auto 4px; z-index: 1; position: relative; opacity: 0; animation: fade-up 0.5s ease 1.1s forwards; }
+    .splash-loadbar-label { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 7px; }
     .splash-loadbar-label .pct { color: var(--coin); font-weight: 700; }
-    .splash-loadbar-track { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; }
-    .splash-loadbar-fill { height: 100%; border-radius: 3px; width: 0%; background: linear-gradient(90deg, var(--coin-deep), var(--coin)); box-shadow: 0 0 10px var(--coin-soft); animation: splash-load-fill 2.1s cubic-bezier(.3,.7,.4,1) 0.4s 1 forwards; }
+    .splash-loadbar-track { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .splash-loadbar-fill { height: 100%; border-radius: 3px; width: 0%; background: linear-gradient(90deg, var(--coin-deep), var(--coin)); box-shadow: 0 0 12px var(--coin-soft); animation: splash-load-fill 2.1s cubic-bezier(.3,.7,.4,1) 0.4s 1 forwards; }
     @keyframes splash-load-fill { 0% { width: 0%; } 100% { width: 92%; } }
-    .splash-features { display: flex; gap: 26px; margin-top: 26px; z-index: 1; opacity: 0; animation: fade-up 0.5s ease 1.3s forwards; }
-    .splash-feature { display: flex; flex-direction: column; align-items: center; gap: 7px; }
-    .splash-feature-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--coin-soft); background: radial-gradient(circle, var(--coin-soft), transparent 75%); color: var(--coin); filter: drop-shadow(0 0 6px var(--coin-soft)); }
-    .splash-feature-label { font-size: 9.5px; letter-spacing: 0.04em; color: var(--ink-muted); text-align: center; line-height: 1.3; }
+    .splash-features { display: flex; gap: 30px; margin-top: 30px; z-index: 1; opacity: 0; animation: fade-up 0.5s ease 1.3s forwards; }
+    .splash-feature { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .splash-feature-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--coin-soft); background: radial-gradient(circle, var(--coin-soft), transparent 75%); color: var(--coin); filter: drop-shadow(0 0 7px var(--coin-soft)); }
+    .splash-feature-label { font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink-muted); text-align: center; line-height: 1.3; }
     .splash-feature-label b { display: block; color: var(--coin); font-weight: 600; }
-    .splash-badge { position: relative; width: 88px; height: 88px; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, #1C2416, #05070D); box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -8px 16px rgba(0,0,0,0.5), 0 20px 44px rgba(0,0,0,0.55); animation: splash-pop 0.7s cubic-bezier(.34,1.56,.64,1); z-index: 1; }
-    .splash-badge-inner { width: 100%; height: 100%; border-radius: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, var(--coin-soft), rgba(124,252,60,0.02) 65%); color: var(--coin); position: relative; overflow: hidden; }
-    .splash-badge-inner .splash-play { filter: drop-shadow(0 0 10px var(--coin-soft)); position: relative; z-index: 1; }
+    .splash-icon-stage { position: relative; display: flex; align-items: center; justify-content: center; z-index: 1; }
+    .splash-badge { position: relative; width: 118px; height: 118px; border-radius: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, #1C2416, #05070D); box-shadow: inset 0 1px 1px rgba(255,255,255,0.08), inset 0 -8px 16px rgba(0,0,0,0.5), 0 26px 56px rgba(0,0,0,0.55); animation: splash-pop 0.7s cubic-bezier(.34,1.56,.64,1); z-index: 2; }
+    .splash-badge-inner { width: 100%; height: 100%; border-radius: 32px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, var(--coin-soft), rgba(124,252,60,0.02) 65%); color: var(--coin); position: relative; overflow: hidden; }
+    .splash-badge-inner .splash-play { filter: drop-shadow(0 0 14px var(--coin-soft)); position: relative; z-index: 1; }
     .splash-badge-sheen { position: absolute; inset: -40% -10%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.14) 50%, transparent 60%); transform: translateX(-120%); animation: splash-sheen-sweep 2.4s ease-in-out 0.4s infinite; }
     @keyframes splash-sheen-sweep { 0% { transform: translateX(-130%); } 45%,100% { transform: translateX(130%); } }
     /* one-shot "signal lock" flash, timed to fire right as the loading bar settles */
-    .splash-badge::before { content: ''; position: absolute; inset: -7px; border-radius: 32px; border: 1.5px solid var(--coin); opacity: 0; animation: signal-lock 0.9s ease-out 2s 1 both; }
+    .splash-badge::before { content: ''; position: absolute; inset: -9px; border-radius: 38px; border: 1.5px solid var(--coin); opacity: 0; animation: signal-lock 0.9s ease-out 2s 1 both; }
     @keyframes splash-pop { 0% { transform: scale(0) rotate(-25deg); opacity: 0; } 60% { transform: scale(1.15) rotate(4deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
     @keyframes signal-lock { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.4); opacity: 0; } }
-    .splash-name { margin-top: 20px; font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.5px; opacity: 0; animation: fade-up 0.6s ease 0.35s forwards; }
-    .splash-name .accent { color: var(--coin); text-shadow: 0 0 16px var(--coin-soft); }
-    .splash-tagline { margin-top: 6px; font-size: 12px; color: var(--ink-muted); opacity: 0; animation: fade-up 0.6s ease 0.5s forwards; }
+    .splash-name { margin-top: 34px; font-family: var(--font-display); font-weight: 700; font-size: 27px; letter-spacing: 0.5px; opacity: 0; animation: fade-up 0.6s ease 0.35s forwards; }
+    .splash-name .accent { color: var(--coin); text-shadow: 0 0 18px var(--coin-soft); }
+    .splash-tagline { margin-top: 7px; font-size: 13px; letter-spacing: 0.12em; color: var(--ink-muted); opacity: 0; animation: fade-up 0.6s ease 0.5s forwards; }
     @keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── beam falling from above into the badge, + water-ripple pool underneath ── */
+    .splash-beam { position: absolute; bottom: 100%; left: 50%; width: 3px; height: 190px; transform: translateX(-50%) scaleY(0); transform-origin: bottom; background: linear-gradient(to bottom, transparent 0%, rgba(124,252,60,0.05) 20%, rgba(124,252,60,0.85) 82%, var(--coin) 100%); box-shadow: 0 0 18px 3px rgba(124,252,60,0.5), 0 0 54px 10px rgba(124,252,60,0.22); z-index: 0; animation: beam-fall 0.9s cubic-bezier(.2,.75,.3,1) 0.1s forwards, beam-flicker 2.6s ease-in-out 1.05s infinite; }
+    @keyframes beam-fall { 0% { transform: translateX(-50%) scaleY(0); opacity: 0; } 100% { transform: translateX(-50%) scaleY(1); opacity: 1; } }
+    @keyframes beam-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .splash-ripple-pool { position: absolute; top: 100%; left: 50%; width: 240px; height: 76px; transform: translate(-50%, -18px); z-index: 0; pointer-events: none; }
+    .splash-ripple-pool .core { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle, rgba(200,255,170,0.95), rgba(124,252,60,0.5) 55%, transparent 75%); transform: translate(-50%,-50%); filter: blur(0.5px); animation: ripple-core-pulse 2.6s ease-in-out 0.9s infinite; }
+    @keyframes ripple-core-pulse { 0%,100% { opacity: 0.55; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.35); } }
+    .splash-ripple { position: absolute; left: 50%; top: 50%; width: 46px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(124,252,60,0.6); transform: translate(-50%,-50%) scale(0.25); opacity: 0; animation: ripple-expand 2.6s ease-out 0.9s infinite; }
+    .splash-ripple.r2 { animation-delay: 1.75s; }
+    .splash-ripple.r3 { animation-delay: 2.6s; }
+    @keyframes ripple-expand { 0% { transform: translate(-50%,-50%) scale(0.2); opacity: 0; border-color: rgba(124,252,60,0.9); } 14% { opacity: 0.8; } 100% { transform: translate(-50%,-50%) scale(5.2); opacity: 0; border-color: rgba(124,252,60,0); } }
 
     /* ── generic entrance utilities ── */
     .anim-in { animation: rise-in 0.45s cubic-bezier(.22,.9,.32,1) both; }
@@ -479,7 +492,7 @@
        SPLASH — extra glow + rising sparkle particles (purely
        decorative, layered behind the existing logo/text).
        ══════════════════════════════════════════════════════════ */
-    .splash-glow { position: absolute; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(124,252,60,0.16), transparent 72%); animation: splash-glow-pulse 2.6s ease-in-out infinite; z-index: 0; }
+    .splash-glow { position: absolute; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(124,252,60,0.18), transparent 72%); animation: splash-glow-pulse 2.6s ease-in-out infinite; z-index: 0; }
     @keyframes splash-glow-pulse { 0%,100% { opacity: 0.4; transform: scale(0.92); } 50% { opacity: 0.7; transform: scale(1.1); } }
     .splash-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
     .splash-particles span { position: absolute; bottom: -10px; width: 5px; height: 5px; border-radius: 50%; background: var(--coin); opacity: 0.75; box-shadow: 0 0 8px rgba(124,252,60,0.7); animation: splash-particle-rise 3.4s ease-in infinite; }
@@ -538,6 +551,40 @@
     @keyframes galaxy-scroll { from { transform: translateY(0); } to { transform: translateY(-1000px); } }
     #galaxy-bg .star-twinkle { position: absolute; border-radius: 50%; background: #fff; animation: galaxy-twinkle 3.2s ease-in-out infinite; }
     @keyframes galaxy-twinkle { 0%,100% { opacity: 0.15; } 50% { opacity: 1; } }
+
+    /* ══════════════════════════════════════════════════════════
+       HOME v2 — glass hero card, hexagon badge, quick-link grid,
+       and a bottom quick-action row (visual layer only — every id
+       used by JS below is preserved so no function is touched).
+       ══════════════════════════════════════════════════════════ */
+    .bal-hero { position: relative; border-radius: 22px; padding: 20px 18px 18px; overflow: hidden; background: linear-gradient(165deg, var(--surface-raised) 0%, var(--surface) 100%); border: 1px solid var(--coin-soft); box-shadow: 0 0 0 1px rgba(124,252,60,0.06), 0 20px 40px rgba(0,0,0,0.35); }
+    .bal-hero-glow { position: absolute; top: -60px; right: -50px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, var(--coin-soft), transparent 70%); pointer-events: none; z-index: 0; }
+    .bal-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; position: relative; z-index: 1; }
+    .bal-hero-badge { width: 52px; height: 52px; flex-shrink: 0; border-radius: 16px; background: linear-gradient(155deg, var(--coin-soft), var(--surface-pop) 75%); border: 1px solid var(--coin-soft); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 21px; color: var(--coin); box-shadow: 0 0 18px var(--coin-soft), inset 0 1px 1px rgba(255,255,255,0.15); }
+    .bal-hero-chip { font-size: 10.5px; color: var(--ink-faint); background: rgba(0,0,0,0.18); border: 0.5px solid var(--border); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+    .bal-hero-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 30px; color: var(--coin); margin-top: 2px; }
+    .bal-hero-ledger-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; position: relative; z-index: 1; }
+    .bal-hero-ledger { font-size: 10.5px; color: var(--ink-faint); background: rgba(0,0,0,0.18); border: 0.5px solid var(--border); padding: 4px 10px; border-radius: 999px; }
+    .bal-hero-ledger b { color: var(--ink-muted); font-weight: 600; font-family: var(--font-mono); }
+    .bal-hero-rate { margin-top: 8px; font-size: 11px; color: var(--ink-faint); position: relative; z-index: 1; }
+
+    /* quick-link 2x2 grid — Weekly Contest / Leaderboard / Official / Pay */
+    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .quick-grid-card { display: flex; align-items: center; gap: 10px; padding: 12px 12px; border-radius: 16px; border: 0.5px solid var(--border); background: linear-gradient(165deg, var(--surface-raised), var(--surface)); text-align: left; }
+    .quick-grid-card:active { transform: scale(0.97); }
+    .quick-grid-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .quick-grid-title { font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.25; }
+    .quick-grid-sub { font-size: 10px; color: var(--ink-faint); margin-top: 1px; }
+
+    /* bottom quick-action row — 5 circular icons, 2 wired live, 3 "coming soon" */
+    .qa-row { display: flex; justify-content: space-between; gap: 4px; }
+    .qa-item { display: flex; flex-direction: column; align-items: center; gap: 7px; flex: 1; position: relative; background: none; border: none; padding: 0; }
+    .qa-item:active .qa-icon { transform: scale(0.92); }
+    .qa-icon { position: relative; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1.5px solid var(--border-strong); background: var(--surface-raised); transition: transform 0.14s ease; }
+    .qa-icon.qa-active { background: radial-gradient(circle, var(--coin-soft), var(--surface-raised) 78%); border-color: var(--coin-soft); box-shadow: 0 0 14px var(--coin-soft); }
+    .qa-label { font-size: 10.5px; font-weight: 600; color: var(--ink); text-align: center; line-height: 1.2; }
+    .qa-sub { font-size: 9px; color: var(--ink-faint); text-align: center; }
+    .qa-soon-badge { position: absolute; top: -4px; right: 2px; background: var(--pending); color: var(--pending-ink); font-size: 7.5px; font-weight: 700; letter-spacing: 0.02em; padding: 2px 5px; border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
 </style>
 </head>
 <body>
@@ -554,10 +601,19 @@
 <div id="splash">
     <div class="splash-glow"></div>
     <div class="splash-particles"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="splash-badge">
-        <div class="splash-badge-inner">
-            <div class="splash-badge-sheen"></div>
-            <svg class="splash-play" width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+    <div class="splash-icon-stage">
+        <div class="splash-beam"></div>
+        <div class="splash-badge">
+            <div class="splash-badge-inner">
+                <div class="splash-badge-sheen"></div>
+                <svg class="splash-play" width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            </div>
+        </div>
+        <div class="splash-ripple-pool">
+            <div class="core"></div>
+            <div class="splash-ripple"></div>
+            <div class="splash-ripple r2"></div>
+            <div class="splash-ripple r3"></div>
         </div>
     </div>
     <div class="splash-name">NEW<span class="accent">TUBE</span></div>
@@ -1296,30 +1352,25 @@ async function renderHome() {
     const prevBalance = window.__lastShownBalance ?? u.wtcBalance ?? 0;
     const rateUsd = (1 / WTC_PER_USD_DISPLAY); // e.g. 25,000 WTC = $1 -> 1 WTC = $0.00004
     root.innerHTML = `
-        <div class="hero-balance anim-in" style="margin:18px 20px 0;">
-            <div class="ticket-notch left"></div>
-            <div class="ticket-notch right"></div>
-            <svg class="hero-bolt" viewBox="0 0 60 90" fill="none"><path d="M34 2L6 50h18L24 88L54 36H36L34 2z" fill="var(--accent)"/></svg>
-            <div class="hero-top-row">
-                <div class="muted" style="font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">Ledger Balance</div>
-                <div class="hero-id-chip mono-num">ID ${USER_ID}${u.telegramUsername && u.telegramUsername !== 'N/A' ? ` · @${u.telegramUsername}` : ''}</div>
+        <div class="bal-hero anim-in" style="margin:18px 20px 0;">
+            <div class="bal-hero-glow"></div>
+            <div class="bal-hero-top">
+                <div class="bal-hero-badge">N</div>
+                <div style="flex:1; min-width:0;">
+                    <div class="muted" style="font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;">WTC Balance</div>
+                    <div id="home-balance-num" class="bal-hero-num">${fmtWTC(prevBalance)}</div>
+                </div>
+                ${u.telegramUsername && u.telegramUsername !== 'N/A' ? `<div class="bal-hero-chip">@${u.telegramUsername}</div>` : ''}
             </div>
 
-            <div class="ticket-tear"></div>
-
-            <div class="dual-balance-box" style="border-color:var(--coin-soft); width:100%;">
-                <div class="muted" style="font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase;">🪙 WTC Balance</div>
-                <div id="home-balance-num" class="mono-num" style="font-weight:700; font-size:26px; margin-top:4px; color:var(--coin);">${fmtWTC(prevBalance)}</div>
+            <div class="bal-hero-ledger-row">
+                <div class="bal-hero-ledger">Ledger ID &nbsp;<b>${USER_ID}</b></div>
             </div>
-            <div class="hero-rate-line mono-num" style="letter-spacing:0;">1 WTC = $${rateUsd.toFixed(5)} &nbsp;·&nbsp; ${fmtWTC(u.wtcBalance)} WTC ≈ $${wtcToUsd(u.wtcBalance)} USD</div>
+            <div class="bal-hero-rate mono-num">1 WTC = $${rateUsd.toFixed(5)} &nbsp;·&nbsp; ${fmtWTC(u.wtcBalance)} WTC ≈ $${wtcToUsd(u.wtcBalance)} USD</div>
 
-            <div class="hero-actions" style="margin-top:14px;">
-                <button class="action-primary" id="home-withdraw-btn" style="width:100%;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
-                </button>
-            </div>
-
-            <div class="ticket-barcode"></div>
+            <button class="action-primary" id="home-withdraw-btn" style="width:100%; margin-top:14px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
+            </button>
         </div>
 
         <div class="live-ticker anim-in-2" style="margin-left:20px; margin-right:20px;">
@@ -1341,25 +1392,30 @@ async function renderHome() {
             </div>
         </div>
 
-        <div class="anim-in-3" style="display:flex; gap:10px; margin:16px 20px 0;">
-            <button class="btn btn-outline milestone-lb-btn" id="home-milestone-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--refer-hue)" stroke-width="2"><path d="M12 15a4 4 0 100-8 4 4 0 000 8zM12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
-                Weekly Contest
+        <div class="quick-grid anim-in-3" style="margin:16px 20px 0;">
+            <button class="quick-grid-card" id="home-milestone-btn">
+                <div class="quick-grid-icon" style="background:var(--refer-soft);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--refer-hue)" stroke-width="2"><path d="M12 15a4 4 0 100-8 4 4 0 000 8zM12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
+                </div>
+                <div><div class="quick-grid-title">Weekly Contest</div><div class="quick-grid-sub">Win exciting rewards</div></div>
             </button>
-            <button class="btn btn-outline milestone-lb-btn" id="home-leaderboard-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--task-hue)" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM17 6h2a2 2 0 010 4h-2M7 6H5a2 2 0 000 4h2"/></svg>
-                Leaderboard
+            <button class="quick-grid-card" id="home-leaderboard-btn">
+                <div class="quick-grid-icon" style="background:var(--task-soft);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--task-hue)" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM17 6h2a2 2 0 010 4h-2M7 6H5a2 2 0 000 4h2"/></svg>
+                </div>
+                <div><div class="quick-grid-title">Leaderboard</div><div class="quick-grid-sub">Top earners ranking</div></div>
             </button>
-        </div>
-
-        <div class="anim-in-3" style="display:flex; gap:10px; margin:10px 20px 0;">
-            <button class="btn btn-outline milestone-lb-btn" id="home-official-channel-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                Official Channel
+            <button class="quick-grid-card" id="home-official-channel-btn">
+                <div class="quick-grid-icon" style="background:var(--signal-soft);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                </div>
+                <div><div class="quick-grid-title">Official Channel</div><div class="quick-grid-sub">Join our channel</div></div>
             </button>
-            <button class="btn btn-outline milestone-lb-btn" id="home-pay-channel-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gift-hue)" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                Pay Channel
+            <button class="quick-grid-card" id="home-pay-channel-btn">
+                <div class="quick-grid-icon" style="background:var(--gift-soft);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gift-hue)" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                </div>
+                <div><div class="quick-grid-title">Pay Channel</div><div class="quick-grid-sub">Payment proof</div></div>
             </button>
         </div>
 
@@ -1367,20 +1423,63 @@ async function renderHome() {
             <div class="section-title" style="margin-bottom:12px;">Platform stats</div>
             <div class="stat-strip" id="home-platform-stats">
                 <div class="stat-strip-item">
-                    <div style="font-size:15px;">🎬</div>
-                    <div class="stat-strip-num skel" style="height:18px; width:28px; margin:4px auto 0;"></div>
+                    <div class="stat-strip-icon">🎬</div>
+                    <div class="stat-strip-num skel" style="height:19px; width:28px; margin:8px auto 0;"></div>
                     <div class="stat-strip-label">Videos to watch</div>
                 </div>
                 <div class="stat-strip-item">
-                    <div style="font-size:15px;">✅</div>
-                    <div class="stat-strip-num skel" style="height:18px; width:28px; margin:4px auto 0;"></div>
+                    <div class="stat-strip-icon" style="background:var(--money-soft);">✅</div>
+                    <div class="stat-strip-num skel" style="height:19px; width:28px; margin:8px auto 0;"></div>
                     <div class="stat-strip-label">Tasks available</div>
                 </div>
                 <div class="stat-strip-item">
-                    <div style="font-size:15px;">👥</div>
+                    <div class="stat-strip-icon" style="background:var(--refer-soft);">👥</div>
                     <div class="stat-strip-num" style="color:var(--refer-hue);">${u.referralCount || 0}</div>
                     <div class="stat-strip-label">Your referrals</div>
                 </div>
+            </div>
+        </div>
+
+        <div class="section-pad anim-in-4" style="margin-top:20px; margin-bottom:6px;">
+            <div class="qa-row">
+                <button class="qa-item" id="home-qa-video">
+                    <div class="qa-icon qa-active">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--coin)" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2.5"/><path d="M17 10l4-2.5v9L17 14"/></svg>
+                    </div>
+                    <div class="qa-label">Watch Videos</div>
+                    <div class="qa-sub">Earn WTC</div>
+                </button>
+                <button class="qa-item" id="home-qa-tasks">
+                    <div class="qa-icon">
+                        <span class="qa-soon-badge">SOON</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 11l2 2 4-4"/></svg>
+                    </div>
+                    <div class="qa-label">Complete Tasks</div>
+                    <div class="qa-sub">Earn WTC</div>
+                </button>
+                <button class="qa-item" id="home-qa-spin">
+                    <div class="qa-icon" style="width:58px; height:58px; background:radial-gradient(circle, var(--coin-soft), var(--surface-raised) 78%); border-color:var(--coin-soft); box-shadow:0 0 16px var(--coin-soft);">
+                        <span class="qa-soon-badge">SOON</span>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--coin);">N</div>
+                    </div>
+                    <div class="qa-label">Spins &amp; Win</div>
+                    <div class="qa-sub">Try your luck</div>
+                </button>
+                <button class="qa-item" id="home-qa-refer">
+                    <div class="qa-icon qa-active">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coin)" stroke-width="2"><path d="M17 2l4 4-4 4M21 6H9a4 4 0 00-4 4v1M7 22l-4-4 4-4M3 18h12a4 4 0 004-4v-1"/></svg>
+                    </div>
+                    <div class="qa-label">Refer &amp; Earn</div>
+                    <div class="qa-sub">Invite friends</div>
+                </button>
+                <button class="qa-item" id="home-qa-daily">
+                    <div class="qa-icon">
+                        <span class="qa-soon-badge">SOON</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                    </div>
+                    <div class="qa-label">Daily Bonus</div>
+                    <div class="qa-sub">Claim now</div>
+                </button>
             </div>
         </div>`;
 
@@ -1398,6 +1497,21 @@ async function renderHome() {
     document.getElementById('home-official-channel-btn').onclick = () => window.open(`https://t.me/${OFFICIAL_CHANNEL}`, '_blank');
     document.getElementById('home-pay-channel-btn').onclick = () => window.open(`https://t.me/${PAY_CHANNEL}`, '_blank');
     startWithdrawTicker();
+
+    // Bottom quick-action row — Watch Videos just switches tab (existing Video
+    // tab, nothing new); Refer & Earn opens the same Telegram share sheet the
+    // Refer tab already uses (same link, no new backend). Tasks / Spins /
+    // Daily Bonus are visual-only placeholders for now — just a toast — so
+    // nothing here can touch balances, tasks, or referral data.
+    document.getElementById('home-qa-video').onclick = () => switchTab('video');
+    document.getElementById('home-qa-refer').onclick = () => {
+        const link = `${MINI_APP_BASE}?startapp=${USER_ID}`;
+        const text = encodeURIComponent('🎬 Join NEWTUBE! Watch videos, earn free WTC crypto!');
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`, '_blank');
+    };
+    document.getElementById('home-qa-tasks').onclick = () => toast('🚧 Coming soon!', 'info');
+    document.getElementById('home-qa-spin').onclick = () => toast('🚧 Coming soon!', 'info');
+    document.getElementById('home-qa-daily').onclick = () => toast('🚧 Coming soon!', 'info');
 
     // Platform-wide stats: total videos/tasks currently available. Reuses the
     // SAME data?type=videos / data?type=tasks endpoints the Video and Task
