@@ -572,7 +572,13 @@
     .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .quick-grid-card { display: flex; align-items: center; gap: 10px; padding: 12px 12px; border-radius: 16px; border: 0.5px solid var(--border); background: linear-gradient(165deg, var(--surface-raised), var(--surface)); text-align: left; }
     .quick-grid-card:active { transform: scale(0.97); }
-    .quick-grid-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    /* icon badge switched from rounded-square to a circle with a slow
+       spinning gradient ring (matches the reference UI's circular badges) —
+       icon glyph, its color, and the card's background/text are untouched. */
+    .quick-grid-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; position: relative; }
+    .quick-grid-icon::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; padding: 1.5px; background: conic-gradient(from 0deg, transparent 0%, var(--ring-hue, var(--coin)) 30%, transparent 62%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: qgi-ring-spin 3.2s linear infinite; pointer-events: none; }
+    .quick-grid-icon::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--border-strong); pointer-events: none; }
+    @keyframes qgi-ring-spin { to { transform: rotate(360deg); } }
     .quick-grid-title { font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.25; }
     .quick-grid-sub { font-size: 10px; color: var(--ink-faint); margin-top: 1px; }
 
@@ -1394,25 +1400,25 @@ async function renderHome() {
 
         <div class="quick-grid anim-in-3" style="margin:16px 20px 0;">
             <button class="quick-grid-card" id="home-milestone-btn">
-                <div class="quick-grid-icon" style="background:var(--refer-soft);">
+                <div class="quick-grid-icon" style="background:var(--refer-soft); --ring-hue:var(--refer-hue);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--refer-hue)" stroke-width="2"><path d="M12 15a4 4 0 100-8 4 4 0 000 8zM12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
                 </div>
                 <div><div class="quick-grid-title">Weekly Contest</div><div class="quick-grid-sub">Win exciting rewards</div></div>
             </button>
             <button class="quick-grid-card" id="home-leaderboard-btn">
-                <div class="quick-grid-icon" style="background:var(--task-soft);">
+                <div class="quick-grid-icon" style="background:var(--task-soft); --ring-hue:var(--task-hue);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--task-hue)" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM17 6h2a2 2 0 010 4h-2M7 6H5a2 2 0 000 4h2"/></svg>
                 </div>
                 <div><div class="quick-grid-title">Leaderboard</div><div class="quick-grid-sub">Top earners ranking</div></div>
             </button>
             <button class="quick-grid-card" id="home-official-channel-btn">
-                <div class="quick-grid-icon" style="background:var(--signal-soft);">
+                <div class="quick-grid-icon" style="background:var(--signal-soft); --ring-hue:var(--signal);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                 </div>
                 <div><div class="quick-grid-title">Official Channel</div><div class="quick-grid-sub">Join our channel</div></div>
             </button>
             <button class="quick-grid-card" id="home-pay-channel-btn">
-                <div class="quick-grid-icon" style="background:var(--gift-soft);">
+                <div class="quick-grid-icon" style="background:var(--gift-soft); --ring-hue:var(--gift-hue);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gift-hue)" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                 </div>
                 <div><div class="quick-grid-title">Pay Channel</div><div class="quick-grid-sub">Payment proof</div></div>
