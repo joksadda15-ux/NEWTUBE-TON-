@@ -572,13 +572,7 @@
     .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .quick-grid-card { display: flex; align-items: center; gap: 10px; padding: 12px 12px; border-radius: 16px; border: 0.5px solid var(--border); background: linear-gradient(165deg, var(--surface-raised), var(--surface)); text-align: left; }
     .quick-grid-card:active { transform: scale(0.97); }
-    /* icon badge switched from rounded-square to a circle with a slow
-       spinning gradient ring (matches the reference UI's circular badges) —
-       icon glyph, its color, and the card's background/text are untouched. */
-    .quick-grid-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; position: relative; }
-    .quick-grid-icon::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; padding: 1.5px; background: conic-gradient(from 0deg, transparent 0%, var(--ring-hue, var(--coin)) 30%, transparent 62%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: qgi-ring-spin 3.2s linear infinite; pointer-events: none; }
-    .quick-grid-icon::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--border-strong); pointer-events: none; }
-    @keyframes qgi-ring-spin { to { transform: rotate(360deg); } }
+    .quick-grid-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
     .quick-grid-title { font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.25; }
     .quick-grid-sub { font-size: 10px; color: var(--ink-faint); margin-top: 1px; }
 
@@ -1152,7 +1146,12 @@ function renderShell() {
     root.innerHTML = `
         <div class="topbar">
             <div class="topbar-ring"></div>
-            <div class="brand"><div class="brand-mark">N</div><div class="brand-name">NEWTUBE</div></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="icon-btn" id="menu-btn" aria-label="Menu" title="More — coming soon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <div class="brand"><div class="brand-mark">N</div><div class="brand-name">NEWTUBE</div></div>
+            </div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <button class="icon-btn" id="history-btn" aria-label="History">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109-9 9 9 0 00-9 9z"/><path d="M12 7v5l3 3"/><path d="M3 12h4"/></svg>
@@ -1358,10 +1357,10 @@ async function renderHome() {
     const prevBalance = window.__lastShownBalance ?? u.wtcBalance ?? 0;
     const rateUsd = (1 / WTC_PER_USD_DISPLAY); // e.g. 25,000 WTC = $1 -> 1 WTC = $0.00004
     root.innerHTML = `
-        <div class="bal-hero anim-in" style="margin:18px 20px 0;">
-            <div class="bal-hero-glow"></div>
+        <div class="bal-hero anim-in" style="margin:18px 20px 0; border-image: linear-gradient(120deg, rgba(79,209,245,0.55), rgba(139,92,246,0.5)) 1;">
+            <div class="bal-hero-glow" style="background: radial-gradient(circle, rgba(79,209,245,0.22), transparent 70%);"></div>
             <div class="bal-hero-top">
-                <div class="bal-hero-badge">N</div>
+                <div class="bal-hero-badge" style="background:linear-gradient(155deg, rgba(79,209,245,0.22), var(--surface-pop) 75%); border-color:rgba(79,209,245,0.45); color:#4FD1F5; box-shadow:0 0 18px rgba(79,209,245,0.35), inset 0 1px 1px rgba(255,255,255,0.15);">N</div>
                 <div style="flex:1; min-width:0;">
                     <div class="muted" style="font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;">WTC Balance</div>
                     <div id="home-balance-num" class="bal-hero-num">${fmtWTC(prevBalance)}</div>
@@ -1374,7 +1373,7 @@ async function renderHome() {
             </div>
             <div class="bal-hero-rate mono-num">1 WTC = $${rateUsd.toFixed(5)} &nbsp;·&nbsp; ${fmtWTC(u.wtcBalance)} WTC ≈ $${wtcToUsd(u.wtcBalance)} USD</div>
 
-            <button class="action-primary" id="home-withdraw-btn" style="width:100%; margin-top:14px;">
+            <button class="action-primary" id="home-withdraw-btn" style="width:100%; margin-top:14px; background:linear-gradient(100deg, var(--coin), #8B5CF6 130%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), 0 3px 0 #5B3FAF, 0 10px 22px rgba(139,92,246,0.28);">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw
             </button>
         </div>
@@ -1394,32 +1393,32 @@ async function renderHome() {
             </div>
             <div style="display:flex; gap:8px; margin-top:12px;">
                 <input class="field-input" id="home-promo-input" placeholder="ENTER CODE" style="flex:1; text-align:center; font-family:var(--font-display); font-size:14px; letter-spacing:2px; text-transform:uppercase; margin:0;">
-                <button class="btn" id="home-promo-submit" style="width:auto; padding:0 18px; background:linear-gradient(150deg, var(--gift-hue), var(--surface-pop) 78%); border:0.5px solid var(--gift-soft); color:var(--ink);">Redeem</button>
+                <button class="btn" id="home-promo-submit" style="width:auto; padding:0 18px; background:linear-gradient(120deg, #E8C547, var(--coin) 130%); border:0.5px solid rgba(232,197,71,0.4); color:#0A0F0C; font-weight:700;">Redeem</button>
             </div>
         </div>
 
         <div class="quick-grid anim-in-3" style="margin:16px 20px 0;">
             <button class="quick-grid-card" id="home-milestone-btn">
-                <div class="quick-grid-icon" style="background:var(--refer-soft); --ring-hue:var(--refer-hue);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--refer-hue)" stroke-width="2"><path d="M12 15a4 4 0 100-8 4 4 0 000 8zM12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
+                <div class="quick-grid-icon" style="background:rgba(167,139,250,0.16);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><path d="M12 15a4 4 0 100-8 4 4 0 000 8zM12 3v2M12 19v2M3 12h2M19 12h2"/></svg>
                 </div>
                 <div><div class="quick-grid-title">Weekly Contest</div><div class="quick-grid-sub">Win exciting rewards</div></div>
             </button>
             <button class="quick-grid-card" id="home-leaderboard-btn">
-                <div class="quick-grid-icon" style="background:var(--task-soft); --ring-hue:var(--task-hue);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--task-hue)" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM17 6h2a2 2 0 010 4h-2M7 6H5a2 2 0 000 4h2"/></svg>
+                <div class="quick-grid-icon" style="background:rgba(245,185,66,0.16);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5B942" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM17 6h2a2 2 0 010 4h-2M7 6H5a2 2 0 000 4h2"/></svg>
                 </div>
                 <div><div class="quick-grid-title">Leaderboard</div><div class="quick-grid-sub">Top earners ranking</div></div>
             </button>
             <button class="quick-grid-card" id="home-official-channel-btn">
-                <div class="quick-grid-icon" style="background:var(--signal-soft); --ring-hue:var(--signal);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--signal)" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                <div class="quick-grid-icon" style="background:rgba(79,163,247,0.16);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4FA3F7" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                 </div>
                 <div><div class="quick-grid-title">Official Channel</div><div class="quick-grid-sub">Join our channel</div></div>
             </button>
             <button class="quick-grid-card" id="home-pay-channel-btn">
-                <div class="quick-grid-icon" style="background:var(--gift-soft); --ring-hue:var(--gift-hue);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gift-hue)" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                <div class="quick-grid-icon" style="background:rgba(232,197,71,0.16);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8C547" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                 </div>
                 <div><div class="quick-grid-title">Pay Channel</div><div class="quick-grid-sub">Payment proof</div></div>
             </button>
@@ -1429,7 +1428,7 @@ async function renderHome() {
             <div class="section-title" style="margin-bottom:12px;">Platform stats</div>
             <div class="stat-strip" id="home-platform-stats">
                 <div class="stat-strip-item">
-                    <div class="stat-strip-icon">🎬</div>
+                    <div class="stat-strip-icon" style="background:rgba(167,139,250,0.16);">🎬</div>
                     <div class="stat-strip-num skel" style="height:19px; width:28px; margin:8px auto 0;"></div>
                     <div class="stat-strip-label">Videos to watch</div>
                 </div>
@@ -1439,8 +1438,8 @@ async function renderHome() {
                     <div class="stat-strip-label">Tasks available</div>
                 </div>
                 <div class="stat-strip-item">
-                    <div class="stat-strip-icon" style="background:var(--refer-soft);">👥</div>
-                    <div class="stat-strip-num" style="color:var(--refer-hue);">${u.referralCount || 0}</div>
+                    <div class="stat-strip-icon" style="background:rgba(79,163,247,0.16);">👥</div>
+                    <div class="stat-strip-num" style="color:#4FA3F7;">${u.referralCount || 0}</div>
                     <div class="stat-strip-label">Your referrals</div>
                 </div>
             </div>
@@ -1449,8 +1448,8 @@ async function renderHome() {
         <div class="section-pad anim-in-4" style="margin-top:20px; margin-bottom:6px;">
             <div class="qa-row">
                 <button class="qa-item" id="home-qa-video">
-                    <div class="qa-icon qa-active">
-                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--coin)" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2.5"/><path d="M17 10l4-2.5v9L17 14"/></svg>
+                    <div class="qa-icon qa-active" style="background:radial-gradient(circle, rgba(124,141,250,0.18), var(--surface-raised) 78%); border-color:rgba(124,141,250,0.4); box-shadow:0 0 14px rgba(124,141,250,0.25);">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#7C8DFA" stroke-width="2"><rect x="3" y="6" width="14" height="12" rx="2.5"/><path d="M17 10l4-2.5v9L17 14"/></svg>
                     </div>
                     <div class="qa-label">Watch Videos</div>
                     <div class="qa-sub">Earn WTC</div>
@@ -1464,16 +1463,18 @@ async function renderHome() {
                     <div class="qa-sub">Earn WTC</div>
                 </button>
                 <button class="qa-item" id="home-qa-spin">
-                    <div class="qa-icon" style="width:58px; height:58px; background:radial-gradient(circle, var(--coin-soft), var(--surface-raised) 78%); border-color:var(--coin-soft); box-shadow:0 0 16px var(--coin-soft);">
-                        <span class="qa-soon-badge">SOON</span>
-                        <div style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--coin);">N</div>
+                    <div class="qa-icon" style="width:58px; height:58px; background:conic-gradient(from 180deg, #4FD1F5, #A78BFA, #7CFC3C, #F5B942, #4FD1F5); padding:2px;">
+                        <div style="width:100%; height:100%; border-radius:50%; background:var(--surface-raised); display:flex; align-items:center; justify-content:center; position:relative;">
+                            <span class="qa-soon-badge">SOON</span>
+                            <div style="font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--coin);">N</div>
+                        </div>
                     </div>
                     <div class="qa-label">Spins &amp; Win</div>
                     <div class="qa-sub">Try your luck</div>
                 </button>
                 <button class="qa-item" id="home-qa-refer">
-                    <div class="qa-icon qa-active">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coin)" stroke-width="2"><path d="M17 2l4 4-4 4M21 6H9a4 4 0 00-4 4v1M7 22l-4-4 4-4M3 18h12a4 4 0 004-4v-1"/></svg>
+                    <div class="qa-icon qa-active" style="background:radial-gradient(circle, rgba(139,92,246,0.18), var(--surface-raised) 78%); border-color:rgba(139,92,246,0.4); box-shadow:0 0 14px rgba(139,92,246,0.25);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><path d="M17 2l4 4-4 4M21 6H9a4 4 0 00-4 4v1M7 22l-4-4 4-4M3 18h12a4 4 0 004-4v-1"/></svg>
                     </div>
                     <div class="qa-label">Refer &amp; Earn</div>
                     <div class="qa-sub">Invite friends</div>
