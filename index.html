@@ -81,18 +81,18 @@
         /* ── each ad network still gets a distinct color to tell them apart at a
            glance, but now drawn from the same warm palette family used
            everywhere else instead of an unrelated blue/purple/teal/yellow set ── */
-        --net-adsgram-daily: #7CFC3C;
-        --net-adsgram-daily-soft: rgba(124,252,60,0.16);
-        --net-adsgram-daily-deep: #2E6B0D; /* same-hue darker stop for the Watch button gradient — matches --coin lime-green now */
-        --net-adsgram-special: #B8663F;
-        --net-adsgram-special-soft: rgba(184,102,63,0.18);
-        --net-adsgram-special-deep: #6E3C24;
-        --net-monetag: #7C9070;
-        --net-monetag-soft: rgba(124,144,112,0.16);
-        --net-monetag-deep: #495443;
-        --net-giga: #8B98A6;
-        --net-giga-soft: rgba(139,152,166,0.18);
-        --net-giga-deep: #4E5761;
+        --net-adsgram-daily: #4FA3F7;    /* blue — matches reference */
+        --net-adsgram-daily-soft: rgba(79,163,247,0.16);
+        --net-adsgram-daily-deep: #1F5FA8;
+        --net-adsgram-special: #F2994A;  /* orange */
+        --net-adsgram-special-soft: rgba(242,153,74,0.18);
+        --net-adsgram-special-deep: #B85E1A;
+        --net-monetag: #4ADE80;          /* green */
+        --net-monetag-soft: rgba(74,222,128,0.16);
+        --net-monetag-deep: #1E8E4F;
+        --net-giga: #8B5CF6;             /* purple */
+        --net-giga-soft: rgba(139,92,246,0.18);
+        --net-giga-deep: #5B3FAF;
         --font-display: 'Fraunces', serif;
         --font-body: 'Inter', sans-serif;
         --font-mono: 'IBM Plex Mono', monospace;
@@ -2260,13 +2260,15 @@ function renderEarningTab() {
     if (!state.earnSubTab) state.earnSubTab = 'ads';
     const root = document.getElementById('tab-content');
     const u = state.user || {};
+    const todayEarned = AD_NETWORKS_UI.reduce((sum, n) => sum + Math.min(u[n.counterField] || 0, n.limit) * n.reward, 0);
     root.innerHTML = `
         <div class="section-pad" style="margin-top:18px;">
             <div class="section-title" style="margin-bottom:4px;">Watch ads to earn</div>
             <div class="muted" style="font-size:12px; margin-bottom:14px;">Each network has its own daily limit — watch them all for maximum earnings.</div>
-            <div class="subnav">
+            <div class="subnav" style="align-items:center;">
                 <button class="subnav-btn ${state.earnSubTab === 'ads' ? 'active' : ''}" data-subtab="ads">📺 Ads</button>
                 <button class="subnav-btn ${state.earnSubTab === 'lottery' ? 'active' : ''}" data-subtab="lottery">🎰 777</button>
+                ${state.earnSubTab === 'ads' ? `<div style="flex:1.4; text-align:right; padding-right:6px; font-size:11.5px; white-space:nowrap;"><span class="muted">Today: </span><span style="color:var(--coin); font-weight:700;">+${fmtWTC(todayEarned)} WTC</span></div>` : ''}
             </div>
             <div style="display:flex; flex-direction:column; gap:10px;" id="earn-page-list">
                 <div class="muted" style="text-align:center; padding:20px 0;">Loading...</div>
@@ -2636,20 +2638,29 @@ function renderReferTab() {
 
     root.innerHTML = `
         <div class="section-pad anim-in" style="margin-top:18px;">
-            <div class="card" style="position:relative; overflow:hidden; text-align:center; padding:26px 18px 22px; border-color:var(--refer-soft);">
+            <div class="card" style="position:relative; overflow:hidden; text-align:center; padding:26px 18px 22px; border-color:rgba(139,92,246,0.35); border-image: linear-gradient(140deg, rgba(79,209,245,0.45), rgba(139,92,246,0.4)) 1;">
                 <div style="position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0;">
-                    <div style="position:absolute; width:180px; height:180px; border-radius:50%; filter:blur(46px); opacity:0.35; background:var(--refer-hue); top:-70px; left:-40px; animation:jg-glow-drift 6s ease-in-out infinite;"></div>
-                    <div style="position:absolute; width:150px; height:150px; border-radius:50%; filter:blur(46px); opacity:0.3; background:var(--coin); bottom:-70px; right:-30px; animation:jg-glow-drift 6s ease-in-out infinite 1.4s;"></div>
+                    <div style="position:absolute; width:180px; height:180px; border-radius:50%; filter:blur(46px); opacity:0.35; background:#8B5CF6; top:-70px; left:-40px; animation:jg-glow-drift 6s ease-in-out infinite;"></div>
+                    <div style="position:absolute; width:150px; height:150px; border-radius:50%; filter:blur(46px); opacity:0.3; background:#4FD1F5; bottom:-70px; right:-30px; animation:jg-glow-drift 6s ease-in-out infinite 1.4s;"></div>
                 </div>
                 <div style="position:relative; z-index:1;">
-                    <div style="width:58px; height:58px; margin:0 auto 12px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; background:linear-gradient(155deg, var(--refer-soft), var(--refer-soft)); border:1px solid var(--refer-hue); box-shadow:0 0 22px var(--refer-soft);">👥</div>
+                    <div style="width:60px; height:44px; margin:0 auto 14px; position:relative;">
+                        <div style="position:absolute; left:0; top:4px; width:36px; height:36px; border-radius:50%; background:linear-gradient(155deg, #4FD1F5, #2178A8); box-shadow:0 6px 14px rgba(79,209,245,0.35), inset 0 1px 1px rgba(255,255,255,0.35);"></div>
+                        <div style="position:absolute; right:0; top:0; width:36px; height:36px; border-radius:50%; background:linear-gradient(155deg, #A78BFA, #6D3FC9); box-shadow:0 6px 14px rgba(167,139,250,0.4), inset 0 1px 1px rgba(255,255,255,0.35);"></div>
+                        <div style="position:absolute; left:50%; bottom:-4px; transform:translateX(-50%); width:18px; height:18px; border-radius:5px; background:linear-gradient(155deg, var(--coin), var(--coin-deep)); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:9px; color:#0A0F0C; box-shadow:0 0 8px var(--coin-soft);">N</div>
+                    </div>
                     <div class="muted" style="font-size:11px; letter-spacing:0.08em; text-transform:uppercase;">Total bonus per friend</div>
-                    <div style="font-family:var(--font-display); font-weight:700; font-size:38px; margin:4px 0 2px; color:var(--refer-hue); text-shadow:0 0 20px var(--refer-soft);">220 <span style="font-size:16px; color:var(--ink-muted); font-weight:500;">WTC</span></div>
-                    <div class="pill" style="background:var(--refer-soft); color:var(--refer-hue); margin-bottom:18px;">📈 plus a share of what they earn</div>
-                    <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; padding:12px; font-size:12px; word-break:break-all; margin-bottom:12px;">${link}</div>
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:38px; margin:4px 0 2px; background:linear-gradient(90deg, var(--coin), #F5B942); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 20px rgba(124,252,60,0.25);">220 <span style="font-size:16px; color:var(--ink-muted); font-weight:500; -webkit-text-fill-color:var(--ink-muted);">WTC</span></div>
+                    <div class="pill" style="background:rgba(79,163,247,0.14); color:#4FA3F7; margin-bottom:18px;">📈 plus a share of what they earn</div>
+                    <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; padding:12px; font-size:12px; word-break:break-all; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                        <span style="flex:1; text-align:left;">${link}</span>
+                        <button id="refer-copy-inline" style="flex-shrink:0; width:26px; height:26px; border-radius:7px; border:0.5px solid var(--border-strong); background:var(--surface-pop); color:var(--ink-muted); display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+                        </button>
+                    </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                        <button class="btn btn-primary" id="refer-share" style="background:linear-gradient(160deg, var(--refer-hue), #8A4A2A 70%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 20px var(--refer-soft);">🔗 Share</button>
-                        <button class="btn btn-outline" id="refer-copy" style="border-color:var(--refer-soft);">Copy</button>
+                        <button class="btn btn-primary" id="refer-share" style="background:linear-gradient(100deg, var(--coin), #8B5CF6 130%); box-shadow: inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 20px rgba(139,92,246,0.25);">🔗 Share Now</button>
+                        <button class="btn btn-outline" id="refer-copy">Copy Link</button>
                     </div>
                 </div>
             </div>
@@ -2657,45 +2668,45 @@ function renderReferTab() {
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
                 <div class="card" style="padding:14px 15px;">
                     <div class="muted" style="font-size:12px; margin-bottom:4px;">Total referrals</div>
-                    <div style="font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--refer-hue);">${u.referralCount || 0}</div>
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:20px; color:#4FA3F7;">${u.referralCount || 0}</div>
                 </div>
                 <div class="card" style="padding:14px 15px;">
                     <div class="muted" style="font-size:12px; margin-bottom:4px;">Referral earnings</div>
-                    <div style="font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--money);">${fmtWTC(u.referralWtcEarned || 0)}<span style="font-size:11px; color:var(--ink-muted); font-weight:500;"> WTC</span></div>
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--coin);">${fmtWTC(u.referralWtcEarned || 0)}<span style="font-size:11px; color:var(--ink-muted); font-weight:500;"> WTC</span></div>
                     <div class="muted mono-num" style="font-size:11px; margin-top:2px;">≈ $${wtcToUsd(u.referralWtcEarned || 0)} USD</div>
                 </div>
             </div>
 
             <div class="card" style="margin-top:10px; padding:14px 15px; display:flex; align-items:center; justify-content:space-between;">
                 <div>
-                    <div class="muted" style="font-size:12px; margin-bottom:2px;">🎟 Lucky tickets</div>
+                    <div class="muted" style="font-size:12px; margin-bottom:2px; color:#EC4899;">🎟 Lucky tickets</div>
                     <div class="muted" style="font-size:11px;">1 earned per verified referral — spend them on 🎰 777.</div>
                 </div>
-                <div style="font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--coin);">${u.luckyTickets || 0}</div>
+                <div style="font-family:var(--font-display); font-weight:700; font-size:22px; color:#EC4899;">${u.luckyTickets || 0}</div>
             </div>
 
             <div class="section-title" style="margin:22px 0 12px;">How the bonus works</div>
             <div class="card" style="padding:6px 16px;">
                 <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:0.5px solid var(--border);">
-                    <div style="width:32px; height:32px; border-radius:50%; background:var(--refer-soft); color:var(--refer-hue); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; box-shadow:0 0 10px var(--refer-soft);">1</div>
+                    <div style="width:32px; height:32px; border-radius:50%; background:rgba(167,139,250,0.16); color:#A78BFA; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; box-shadow:0 0 10px rgba(167,139,250,0.2);">1</div>
                     <div style="flex:1;">
                         <div style="font-size:13px; font-weight:500;">Friend joins channel + community and verifies</div>
                     </div>
-                    <div class="pill pill-coin" style="font-family:var(--font-display); font-weight:700;">+30</div>
+                    <div class="pill" style="font-family:var(--font-display); font-weight:700; background:rgba(79,209,245,0.14); color:#4FD1F5;">+30</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:0.5px solid var(--border);">
-                    <div style="width:32px; height:32px; border-radius:50%; background:var(--refer-soft); color:var(--refer-hue); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; box-shadow:0 0 10px var(--refer-soft);">2</div>
+                    <div style="width:32px; height:32px; border-radius:50%; background:rgba(167,139,250,0.16); color:#A78BFA; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; box-shadow:0 0 10px rgba(167,139,250,0.2);">2</div>
                     <div style="flex:1;">
                         <div style="font-size:13px; font-weight:500;">Friend completes 10 tasks</div>
                     </div>
-                    <div class="pill pill-coin" style="font-family:var(--font-display); font-weight:700;">+60</div>
+                    <div class="pill" style="font-family:var(--font-display); font-weight:700; background:rgba(79,209,245,0.14); color:#4FD1F5;">+60</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px; padding:10px 0;">
-                    <div style="width:32px; height:32px; border-radius:50%; background:var(--refer-soft); color:var(--refer-hue); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; box-shadow:0 0 10px var(--refer-soft);">3</div>
+                    <div style="width:32px; height:32px; border-radius:50%; background:rgba(167,139,250,0.16); color:#A78BFA; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; box-shadow:0 0 10px rgba(167,139,250,0.2);">3</div>
                     <div style="flex:1;">
                         <div style="font-size:13px; font-weight:500;">Friend watches 25 ads</div>
                     </div>
-                    <div class="pill pill-coin" style="font-family:var(--font-display); font-weight:700;">+130</div>
+                    <div class="pill" style="font-family:var(--font-display); font-weight:700; background:rgba(79,209,245,0.14); color:#4FD1F5;">+130</div>
                 </div>
             </div>
         </div>`;
@@ -2705,6 +2716,7 @@ function renderReferTab() {
         window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`, '_blank');
     };
     document.getElementById('refer-copy').onclick = () => { navigator.clipboard.writeText(link); toast('Link copied!', 'success'); };
+    document.getElementById('refer-copy-inline').onclick = () => { navigator.clipboard.writeText(link); toast('Link copied!', 'success'); };
 }
 
 // ══════════════════════════════════════════════════════════════
