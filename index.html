@@ -23,8 +23,11 @@
      loading once, staying loaded for the whole session. -->
 <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
 <script src="https://ad.gigapub.tech/script?id=846"></script>
-<!-- ⚠️ NEW — USL Ads (TowerAds) SDK, now live per admin-provided credentials. -->
-<script src="https://uslads.com/sdk/tower-ads-v4.js"></script>
+<!-- ⚠️ FIX — USL Ads (TowerAds) SDK is now loaded with `defer` so a slow/blocked
+     uslads.com does NOT freeze the entire page's HTML parsing (a plain
+     blocking <script> tag here was stalling init() and stranding users on
+     the splash screen — the actual bug, not the splash animation itself). -->
+<script defer src="https://uslads.com/sdk/tower-ads-v4.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
