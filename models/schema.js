@@ -21,8 +21,9 @@
 //   totalInvites: 0,
 //   referredBy: null,
 //   referralStep1Done: false,           // verify করলে (30 WTC referrer পায়)
-//   referralStep2Done: false,           // 10 task করলে (60 WTC)
-//   referralStep3Done: false,           // 25 ads করলে (130 WTC)
+//   referralStep2Done: false,           // 10 task করলে (100 WTC)
+//   referralStep3Done: false,           // 20 ads করলে (180 WTC)
+//   referralCommissionEarned: 0,        // ⚠️ NEW — lifetime sum of 10% withdraw commissions earned from referrals (see api/withdraw.js)
 //
 //   completedTasks: [],
 //   isBanned: false,
@@ -133,6 +134,8 @@
 //   details: "address/uid",
 //   wtcAmount: 2000, grossUsd: 0.08, cashAmount: 0.057, currency: "USDT",
 //   referralConsumed: false,            // true if this withdraw spent one of the user's valid referrals (all but their 1st)
+//   referrerId: "123456789" | null,     // ⚠️ NEW — snapshot of user.referredBy at withdraw time, for audit
+//   referrerCommissionPaid: 0,          // ⚠️ NEW — 10% of wtcAmount credited to referrerId, 0 if no referrer
 //   status: "pending" | "approved" | "rejected", createdAt: Date, processedAt: Date
 // }
 //
