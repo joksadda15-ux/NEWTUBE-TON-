@@ -23,6 +23,8 @@
      loading once, staying loaded for the whole session. -->
 <script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
 <script src="https://ad.gigapub.tech/script?id=846"></script>
+<!-- ⚠️ NEW — USL Ads (TowerAds) SDK, now live per admin-provided credentials. -->
+<script src="https://uslads.com/sdk/tower-ads-v4.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -84,15 +86,15 @@
         --net-adsgram-daily: #4FA3F7;    /* blue — matches reference */
         --net-adsgram-daily-soft: rgba(79,163,247,0.16);
         --net-adsgram-daily-deep: #1F5FA8;
-        --net-adsgram-special: #F2994A;  /* orange */
-        --net-adsgram-special-soft: rgba(242,153,74,0.18);
-        --net-adsgram-special-deep: #B85E1A;
         --net-monetag: #4ADE80;          /* green */
         --net-monetag-soft: rgba(74,222,128,0.16);
         --net-monetag-deep: #1E8E4F;
         --net-giga: #8B5CF6;             /* purple */
         --net-giga-soft: rgba(139,92,246,0.18);
         --net-giga-deep: #5B3FAF;
+        --net-usl: #F2994A;               /* orange — reused now that adsgramSpecial is gone */
+        --net-usl-soft: rgba(242,153,74,0.18);
+        --net-usl-deep: #B85E1A;
         --font-display: 'Fraunces', serif;
         --font-body: 'Inter', sans-serif;
         --font-mono: 'IBM Plex Mono', monospace;
@@ -709,7 +711,7 @@ const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video
 // Frontend-only copies for instant UI rendering (progress bars, requirement
 // text) — the server is still the source of truth via withdraw?action=status'
 // `withdrawRequirements` field; these are just the display fallback/labels.
-const WITHDRAW_ADS_REQUIRED = 10;
+const WITHDRAW_ADS_REQUIRED = 8;
 // ⚠️ NEW — mirrors lib/constants.js WTC_PER_USD, for the Home hero card's
 // "1 WTC = $X" rate line. Display-only; the server is always the source of
 // truth for actual conversion (see api/withdraw.js).
@@ -758,10 +760,6 @@ const showAdsgramDailyAd = () => new Promise((res, rej) => {
     if (window.Adsgram) { window.Adsgram.init({ blockId: "int-27565" }).show().then(res).catch(rej); }
     else { rej(new Error('sdk_not_loaded')); }
 });
-const showAdsgramSpecialAd = () => new Promise((res, rej) => {
-    if (window.Adsgram) { window.Adsgram.init({ blockId: "27566" }).show().then(res).catch(rej); }
-    else { rej(new Error('sdk_not_loaded')); }
-});
 // ⚠️ Monetag is loaded statically now (see <head>) — no more load/unload per
 // click. This keeps the SDK warm across the whole session, which fixed a
 // wave of "ad not available" no-fill errors that started once we switched to
@@ -802,7 +800,41 @@ const showGigaPubAd = () => new Promise((res, rej) => {
     window.showGiga("main").then(res).catch(rej);
 });
 
-const AD_SHOW_FUNCTIONS = { adsgramDaily: showAdsgramDailyAd, adsgramSpecial: showAdsgramSpecialAd, monetag: showMonetagAd, giga: showGigaPubAd };
+const AD_SHOW_FUNCTIONS = { adsgramDaily: showAdsgramDailyAd, monetag: showMonetagAd, giga: showGigaPubAd, usl: showUslAd };
+
+// ⚠️ NEW — USL Ads (TowerAds SDK). Unlike the other 3 networks, TowerAds
+// reports success via an onRewardEarned(reward) callback rather than
+// resolving loadAndShow()'s own promise — so this wraps that callback
+// pattern into the same Promise-based shape watchAdNetwork() expects from
+// every other network (resolve = reward earned, reject = no reward / error).
+// A single TowerAds instance is created once and reused; onRewardEarned /
+// onError are reassigned per-call since only one ad plays at a time.
+let towerAdsInstance = null;
+function getTowerAdsInstance() {
+    if (towerAdsInstance) return towerAdsInstance;
+    if (typeof TowerAds === 'undefined') return null;
+    towerAdsInstance = new TowerAds({
+        apiKey: "7026aead7ac6efd19b9ac5ba46c01689",
+        placementId: "plc_8ead9e16ac8a14d4",
+        onRewardEarned() {},
+        onError() {},
+    });
+    return towerAdsInstance;
+}
+const showUslAd = () => new Promise((resolve, reject) => {
+    const instance = getTowerAdsInstance();
+    if (!instance) { reject(new Error('sdk_not_loaded')); return; }
+    let settled = false;
+    // 60s safety-net — same pattern as Monetag's, in case the SDK never
+    // calls back either callback.
+    const t = setTimeout(() => { if (!settled) { settled = true; reject(new Error('timeout')); } }, 60000);
+    instance.onRewardEarned = (reward) => { if (settled) return; settled = true; clearTimeout(t); resolve(reward); };
+    instance.onError = (error) => { if (settled) return; settled = true; clearTimeout(t); reject(error instanceof Error ? error : new Error(String(error || 'usl_ad_error'))); };
+    instance.loadAndShow().catch((error) => {
+        if (settled) return; settled = true; clearTimeout(t);
+        reject(error instanceof Error ? error : new Error(String(error || 'usl_ad_error')));
+    });
+});
 
 // Adexium — passive, no-reward interstitial, shows itself automatically app-wide
 try {
@@ -833,7 +865,8 @@ const ERROR_MESSAGES = {
     ad_required: 'Please watch an ad first.',
     insufficient_balance: 'Insufficient balance.',
     insufficient_ads: `Watch ${WITHDRAW_ADS_REQUIRED} ads today before withdrawing.`,
-    need_tasks: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks today before withdrawing.`,
+    need_tasks: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks (lifetime, one-time) before you can withdraw.`,
+    coming_soon: 'This ad network is coming soon — not available yet.',
     referral_required: 'Your first withdrawal was free — every withdrawal after that needs 1 valid referral.',
     insufficient_tickets: "You don't have any lottery tickets — refer someone to earn one.",
     withdraw_already_pending: 'You already have a withdrawal request being processed. Please wait for it to be approved or rejected.',
@@ -1545,7 +1578,7 @@ async function redeemPromoCode(code, btn, onSuccess) {
     const originalLabel = btn.textContent;
     btn.textContent = 'Loading ad...'; btn.disabled = true;
 
-    const candidates = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
+    const candidates = [showAdsgramDailyAd, showGigaPubAd, showMonetagAd]; // ⚠️ FIX — showAdsgramSpecialAd no longer exists (network removed); swapped in showGigaPubAd
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
     try {
         await pick();
@@ -1958,7 +1991,7 @@ async function renderVideoTab() {
                 </div>
                 <div style="display:flex; gap:10px; margin-top:8px; align-items:flex-start;">
                     <div style="flex:1; font-size:13.5px; font-weight:500; line-height:1.4;">${v.title}</div>
-                    <div style="font-size:11.5px; font-weight:600; color:var(--coin); white-space:nowrap; flex-shrink:0; margin-top:1px;">⚡ 40 WTC/hr</div>
+                    <div style="font-size:11.5px; font-weight:600; color:var(--coin); white-space:nowrap; flex-shrink:0; margin-top:1px;">⚡ 60 WTC/hr</div>
                 </div>
             </div>`).join('');
         document.querySelectorAll('.video-thumb').forEach(el => { el.onclick = () => openVideoPlayer(state.videos[el.dataset.idx]); });
@@ -2057,7 +2090,7 @@ async function tryClaimLootbox() {
 
     // Show one random real ad (Adsgram or Monetag) before granting the reward —
     // the reward only fires after the ad SDK's promise actually resolves.
-    const candidates = [showAdsgramDailyAd, showAdsgramSpecialAd, showMonetagAd];
+    const candidates = [showAdsgramDailyAd, showGigaPubAd, showMonetagAd]; // ⚠️ FIX — showAdsgramSpecialAd no longer exists (network removed); swapped in showGigaPubAd
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
     toast('Loading ad...', 'info');
     try {
@@ -2098,7 +2131,7 @@ function openVideoPlayer(video) {
                     <div class="vid-neon-card" style="text-align:center;">
                         <div style="font-size:11px; color:#B79FD1; margin-bottom:6px; position:relative; z-index:1;">Earned this session</div>
                         <div style="font-family:var(--font-display); font-weight:700; font-size:24px; color:var(--vid-neon-3); text-shadow:0 0 14px var(--vid-neon-glow); position:relative; z-index:1;" id="vp-session-wtc">0 WTC</div>
-                        <div class="vid-neon-sub" style="margin-top:6px;" id="vp-session-sub">40 WTC earned per hour watched</div>
+                        <div class="vid-neon-sub" style="margin-top:6px;" id="vp-session-sub">60 WTC earned per hour watched</div>
                     </div>
                     <div id="vp-lootbox-full-banner" style="display:none; margin-top:10px; padding:10px 14px; border-radius:12px; background:rgba(176,60,232,0.14); border:1px solid rgba(176,60,232,0.4); color:#E7C9FF; text-align:center; font-size:12.5px; font-weight:600;">
                         🎁 Lootbox full — go claim it to keep earning!
@@ -2155,7 +2188,7 @@ function updateLootboxFullUI(isFull) {
     const sub = document.getElementById('vp-session-sub');
     if (!banner || !sub) return;
     banner.style.display = isFull ? 'block' : 'none';
-    sub.textContent = isFull ? 'Paused — claim your lootbox to resume earning' : '40 WTC earned per hour watched';
+    sub.textContent = isFull ? 'Paused — claim your lootbox to resume earning' : '60 WTC earned per hour watched';
 }
 
 async function startVideoSession() {
@@ -2168,12 +2201,12 @@ async function startVideoSession() {
     state.videoSession = { startTime: startRes.startTime, signature: startRes.signature };
     updateLootboxFullUI((state.user?.pendingVideoWTC || 0) >= 25);
 
-    // ── Visual counter: every 10 seconds, adds 0.111 WTC (= 40 WTC/hr / 360 ticks/hr)
+    // ── Visual counter: every 10 seconds, adds 0.167 WTC (= 60 WTC/hr / 360 ticks/hr)
     // This is purely for display — it makes the UI feel like a miner ticking up.
     // The real WTC is only credited by the 30-second backend call below.
     // ⚠️ FIX: this used to keep climbing even after the backend stopped crediting
     // (once pendingVideoWTC hits the 25 WTC claim threshold), so the video page
-    // could show e.g. "60 WTC" for a full hour watched while the real claimable
+    // could show e.g. "90 WTC" for a full hour watched while the real claimable
     // amount silently capped out much lower — a confusing "where did my WTC go"
     // moment when the user went back to actually claim. Now the ticker freezes
     // (and shows the same lootbox-full banner) the instant the real cap is hit,
@@ -2181,7 +2214,7 @@ async function startVideoSession() {
     state.videoDisplayInterval = setInterval(() => {
         if (!state.videoSession) return;
         if ((state.user?.pendingVideoWTC || 0) >= 25) { updateLootboxFullUI(true); return; }
-        sessionDisplayWTC = parseFloat((sessionDisplayWTC + 0.111).toFixed(3));
+        sessionDisplayWTC = parseFloat((sessionDisplayWTC + 0.167).toFixed(3));
         const out = document.getElementById('vp-session-wtc');
         if (out) out.textContent = `${sessionDisplayWTC.toFixed(1)} WTC`;
     }, 10000);
@@ -2198,7 +2231,7 @@ async function startVideoSession() {
         }
 
         const elapsedSec = Math.floor((Date.now() - state.videoSession.startTime) / 1000);
-        const claimable = Math.floor(elapsedSec * (1 / 60));
+        const claimable = Math.floor(elapsedSec * (1 / 60)); // 60 WTC/hr = 1 WTC/min = 1/60 WTC/sec — matches backend VIDEO_WTC_PER_SECOND
         if (claimable <= 0) return;
 
         // ⚠️ NEW: once 25+ WTC is already sitting unclaimed in the lootbox, the
@@ -2250,9 +2283,11 @@ function closeVideoPlayer() {
 // ══════════════════════════════════════════════════════════════
 const AD_NETWORKS_UI = [
     { id: 'adsgramDaily',   label: 'Adsgram Daily',   reward: 10, limit: 10, counterField: 'adsgramDailyCountToday', icon: '⚡', hue: 'var(--net-adsgram-daily)', hueSoft: 'var(--net-adsgram-daily-soft)', hueDeep: 'var(--net-adsgram-daily-deep)' },
-    { id: 'adsgramSpecial', label: 'Adsgram Special', reward: 20, limit: 5,  counterField: 'adsgramSpecialCountToday', icon: '✨', hue: 'var(--net-adsgram-special)', hueSoft: 'var(--net-adsgram-special-soft)', hueDeep: 'var(--net-adsgram-special-deep)' },
     { id: 'monetag',        label: 'Monetag',         reward: 15, limit: 20, counterField: 'monetagCountToday', icon: '🎬', hue: 'var(--net-monetag)', hueSoft: 'var(--net-monetag-soft)', hueDeep: 'var(--net-monetag-deep)' },
     { id: 'giga',           label: 'GigaPub',         reward: 15, limit: 20, counterField: 'gigaCountToday', icon: '📺', hue: 'var(--net-giga)', hueSoft: 'var(--net-giga-soft)', hueDeep: 'var(--net-giga-deep)' },
+    // ⚠️ CHANGED — USL Ads is now LIVE (TowerAds SDK wired in, see
+    // showUslAd()/getTowerAdsInstance() above). comingSoon removed.
+    { id: 'usl',             label: 'USL Ads',          reward: 15, limit: 10, counterField: 'uslCountToday', icon: '🗼', hue: 'var(--net-usl)', hueSoft: 'var(--net-usl-soft)', hueDeep: 'var(--net-usl-deep)' },
 ];
 
 function renderEarningTab() {
@@ -2288,8 +2323,8 @@ function renderEarningTab() {
         // network a card belongs to.
         list.innerHTML = AD_NETWORKS_UI.map((n, i) => {
             const count = u[n.counterField] || 0;
-            const maxed = count >= n.limit;
-            const pct = Math.min(100, Math.round((count / n.limit) * 100));
+            const maxed = n.comingSoon ? true : count >= n.limit;
+            const pct = n.comingSoon ? 0 : Math.min(100, Math.round((count / n.limit) * 100));
             return `
             <div class="card an-card" style="opacity:0; border-left:2.5px solid ${maxed ? 'var(--border-strong)' : n.hue}; animation: jg-rise 0.4s cubic-bezier(.22,.9,.32,1) ${Math.min(i * 0.07, 0.3)}s forwards;">
                 <div style="display:flex; align-items:center; gap:12px;">
@@ -2299,17 +2334,23 @@ function renderEarningTab() {
                             <div style="font-weight:600; font-size:14px;">${n.label}</div>
                             <div style="font-size:11.5px; color:${n.hue}; font-weight:600; white-space:nowrap;">+${n.reward} WTC</div>
                         </div>
-                        <div class="an-progress-track"><div class="an-progress-fill" style="width:${pct}%; ${maxed ? 'background:var(--ink-faint);' : `background:linear-gradient(90deg, ${n.hue}, var(--accent));`}"></div></div>
-                        <div class="muted" style="font-size:11px; margin-top:3px;">${count}/${n.limit} today</div>
+                        ${n.comingSoon
+                            ? `<div class="muted" style="font-size:11px; margin-top:3px;">Coming soon — ads approved হলে চালু হবে</div>`
+                            : `<div class="an-progress-track"><div class="an-progress-fill" style="width:${pct}%; ${maxed ? 'background:var(--ink-faint);' : `background:linear-gradient(90deg, ${n.hue}, var(--accent));`}"></div></div>
+                        <div class="muted" style="font-size:11px; margin-top:3px;">${count}/${n.limit} today</div>`}
                     </div>
                     <button class="btn an-watch-btn ${maxed ? 'an-watch-done' : ''}" data-network="${n.id}" ${maxed ? 'disabled' : ''} style="${maxed ? '' : `background:linear-gradient(160deg, ${n.hue}, ${n.hueDeep}); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px ${n.hueSoft};`}">
-                        ${maxed ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
-                        ${maxed ? 'Done' : 'Watch'}
+                        ${n.comingSoon ? '' : (maxed ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>')}
+                        ${n.comingSoon ? 'Coming Soon' : (maxed ? 'Done' : 'Watch')}
                     </button>
                 </div>
             </div>`;
         }).join('');
-        list.querySelectorAll('button[data-network]').forEach(btn => { btn.onclick = () => watchAdNetwork(btn.dataset.network); });
+        list.querySelectorAll('button[data-network]').forEach(btn => {
+            const net = AD_NETWORKS_UI.find(n => n.id === btn.dataset.network);
+            if (net?.comingSoon) return; // no click handler — button is disabled anyway
+            btn.onclick = () => watchAdNetwork(btn.dataset.network);
+        });
         return;
     }
 
@@ -2650,8 +2691,8 @@ function renderReferTab() {
                         <div style="position:absolute; left:50%; bottom:-4px; transform:translateX(-50%); width:18px; height:18px; border-radius:5px; background:linear-gradient(155deg, var(--coin), var(--coin-deep)); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:9px; color:#0A0F0C; box-shadow:0 0 8px var(--coin-soft);">N</div>
                     </div>
                     <div class="muted" style="font-size:11px; letter-spacing:0.08em; text-transform:uppercase;">Total bonus per friend</div>
-                    <div style="font-family:var(--font-display); font-weight:700; font-size:38px; margin:4px 0 2px; background:linear-gradient(90deg, var(--coin), #F5B942); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 20px rgba(124,252,60,0.25);">220 <span style="font-size:16px; color:var(--ink-muted); font-weight:500; -webkit-text-fill-color:var(--ink-muted);">WTC</span></div>
-                    <div class="pill" style="background:rgba(79,163,247,0.14); color:#4FA3F7; margin-bottom:18px;">📈 plus a share of what they earn</div>
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:38px; margin:4px 0 2px; background:linear-gradient(90deg, var(--coin), #F5B942); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 20px rgba(124,252,60,0.25);">310 <span style="font-size:16px; color:var(--ink-muted); font-weight:500; -webkit-text-fill-color:var(--ink-muted);">WTC</span></div>
+                    <div class="pill" style="background:rgba(79,163,247,0.14); color:#4FA3F7; margin-bottom:18px;">💰 + 10% of everything they withdraw, forever</div>
                     <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; padding:12px; font-size:12px; word-break:break-all; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                         <span style="flex:1; text-align:left;">${link}</span>
                         <button id="refer-copy-inline" style="flex-shrink:0; width:26px; height:26px; border-radius:7px; border:0.5px solid var(--border-strong); background:var(--surface-pop); color:var(--ink-muted); display:flex; align-items:center; justify-content:center; cursor:pointer;">
@@ -2685,6 +2726,17 @@ function renderReferTab() {
                 <div style="font-family:var(--font-display); font-weight:700; font-size:22px; color:#EC4899;">${u.luckyTickets || 0}</div>
             </div>
 
+            <div class="card" style="margin-top:10px; padding:14px 15px; display:flex; align-items:center; justify-content:space-between; border-color:rgba(124,252,60,0.3);">
+                <div>
+                    <div class="muted" style="font-size:12px; margin-bottom:2px; color:var(--coin);">💰 Withdrawal commission</div>
+                    <div class="muted" style="font-size:11px;">10% of every withdrawal your referrals make — for as long as they keep withdrawing.</div>
+                </div>
+                <div style="text-align:right; flex-shrink:0; margin-left:10px;">
+                    <div style="font-family:var(--font-display); font-weight:700; font-size:18px; color:var(--coin);">${fmtWTC(u.referralCommissionEarned || 0)}</div>
+                    <div class="muted mono-num" style="font-size:10.5px;">≈ $${wtcToUsd(u.referralCommissionEarned || 0)} USD</div>
+                </div>
+            </div>
+
             <div class="section-title" style="margin:22px 0 12px;">How the bonus works</div>
             <div class="card" style="padding:6px 16px;">
                 <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:0.5px solid var(--border);">
@@ -2699,14 +2751,21 @@ function renderReferTab() {
                     <div style="flex:1;">
                         <div style="font-size:13px; font-weight:500;">Friend completes 10 tasks</div>
                     </div>
-                    <div class="pill" style="font-family:var(--font-display); font-weight:700; background:rgba(79,209,245,0.14); color:#4FD1F5;">+60</div>
+                    <div class="pill" style="font-family:var(--font-display); font-weight:700; background:rgba(79,209,245,0.14); color:#4FD1F5;">+100</div>
                 </div>
-                <div style="display:flex; align-items:center; gap:12px; padding:10px 0;">
+                <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:0.5px solid var(--border);">
                     <div style="width:32px; height:32px; border-radius:50%; background:rgba(167,139,250,0.16); color:#A78BFA; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; box-shadow:0 0 10px rgba(167,139,250,0.2);">3</div>
                     <div style="flex:1;">
-                        <div style="font-size:13px; font-weight:500;">Friend watches 25 ads</div>
+                        <div style="font-size:13px; font-weight:500;">Friend watches 20 ads</div>
                     </div>
-                    <div class="pill" style="font-family:var(--font-display); font-weight:700; background:rgba(79,209,245,0.14); color:#4FD1F5;">+130</div>
+                    <div class="pill" style="font-family:var(--font-display); font-weight:700; background:rgba(79,209,245,0.14); color:#4FD1F5;">+180</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; padding:10px 0;">
+                    <div style="width:32px; height:32px; border-radius:50%; background:rgba(124,252,60,0.16); color:var(--coin); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; box-shadow:0 0 10px rgba(124,252,60,0.2);">💰</div>
+                    <div style="flex:1;">
+                        <div style="font-size:13px; font-weight:500;">Every time they withdraw, after that</div>
+                    </div>
+                    <div class="pill" style="font-family:var(--font-display); font-weight:700; background:rgba(124,252,60,0.14); color:var(--coin);">+10%</div>
                 </div>
             </div>
         </div>`;
