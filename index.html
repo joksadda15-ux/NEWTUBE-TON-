@@ -4,30 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>NEWTUBE — Watch & Earn</title>
+<!-- Telegram's own WebApp bridge stays here, loaded first and normally (not
+     deferred/moved) — the app reads `window.Telegram.WebApp` into a
+     top-level `const tg` as soon as its main script runs, so this SDK must
+     finish loading before that point. This was never the problem; it was
+     already working fine before this morning. -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<!-- ══════════════════════════════════════════════════════════
-     AD NETWORK SDKs — real integration, matching the original app's
-     working zone/block IDs (extracted from your previous main.html)
-     ══════════════════════════════════════════════════════════ -->
-<script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-<!-- ⚠️ Monetag (libtl.com) is loaded statically again (back to how it
-     originally was). It was switched to lazy-load earlier to stop its
-     global click-listener from firing on GigaPub/Adsgram clicks — but in
-     practice, forcing a full cold script reload on every single watch
-     attempt (load → use → immediately remove) gave Monetag's ad server no
-     time to warm up / prefetch inventory, causing frequent genuine "ad not
-     available" no-fill errors and far fewer impressions than Adsgram. That
-     reliability loss outweighs the click-hijacking risk, so it's back to
-     loading once, staying loaded for the whole session. -->
-<script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
-<script src="https://ad.gigapub.tech/script?id=846"></script>
-<!-- ⚠️ FIX — USL Ads (TowerAds) SDK is now loaded with `defer` so a slow/blocked
-     uslads.com does NOT freeze the entire page's HTML parsing (a plain
-     blocking <script> tag here was stalling init() and stranding users on
-     the splash screen — the actual bug, not the splash animation itself). -->
-<script defer src="https://uslads.com/sdk/tower-ads-v4.js"></script>
+<!-- ⚠️ FIX — the 5 ad-network SDK <script src> tags that used to sit here
+     were plain BLOCKING scripts: the browser halts ALL page parsing at each
+     one until it finishes downloading (success OR failure) — including the
+     app's own inline script further down that calls init(). If any single
+     ad network's domain is briefly slow, rate-limited, or unreachable
+     (today: uslads.com, newly added this morning), the entire app is stuck
+     showing nothing but the static splash screen forever, since nothing
+     after that tag ever runs. Moved them to just before </body> (after the
+     app's own script) instead — none of these SDKs are touched until the
+     user actually taps "Watch" on an ad network (all guarded with
+     typeof/window checks), so the app now boots immediately and
+     independently of every ad network's availability. Their original
+     synchronous (non-deferred) tags are preserved so any SDK that uses
+     document.write internally still works correctly. See the bottom of
+     this file. -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -2937,6 +2935,29 @@ async function generateDeviceFingerprint() {
 
 init();
 </script>
+
+<!-- ══════════════════════════════════════════════════════════
+     AD NETWORK SDKs — real integration, matching the original app's
+     working zone/block IDs (extracted from your previous main.html).
+     ⚠️ MOVED HERE from <head> (see comment up there) so a slow/unreachable
+     ad network can never block the app itself from loading — by this point
+     init() has already run and the app is already on screen.
+     ══════════════════════════════════════════════════════════ -->
+<script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<!-- ⚠️ Monetag (libtl.com) is loaded statically again (back to how it
+     originally was). It was switched to lazy-load earlier to stop its
+     global click-listener from firing on GigaPub/Adsgram clicks — but in
+     practice, forcing a full cold script reload on every single watch
+     attempt (load → use → immediately remove) gave Monetag's ad server no
+     time to warm up / prefetch inventory, causing frequent genuine "ad not
+     available" no-fill errors and far fewer impressions than Adsgram. That
+     reliability loss outweighs the click-hijacking risk, so it's back to
+     loading once, staying loaded for the whole session. -->
+<script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
+<script src="https://ad.gigapub.tech/script?id=846"></script>
+<!-- ⚠️ NEW — USL Ads (TowerAds) SDK, now live per admin-provided credentials. -->
+<script src="https://uslads.com/sdk/tower-ads-v4.js"></script>
 
 </body>
 </html>
