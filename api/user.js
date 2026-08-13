@@ -92,9 +92,9 @@ async function handleInit(req, res, db) {
         lifetimeAdsWatched: 0,
         adsWatchedToday: 0,
         adsgramDailyCountToday: 0,
-        adsgramSpecialCountToday: 0,
         monetagCountToday: 0,
         gigaCountToday: 0,
+        uslCountToday: 0, // ⚠️ NEW — ready for when the "usl" network is enabled
         dailyVideoWtcMined: 0,
         tasksCompletedToday: 0,
         lastResetDate: todayBD(),
