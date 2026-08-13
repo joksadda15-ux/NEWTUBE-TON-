@@ -814,8 +814,6 @@ const showGigaPubAd = () => new Promise((res, rej) => {
     window.showGiga("main").then(res).catch(rej);
 });
 
-const AD_SHOW_FUNCTIONS = { adsgramDaily: showAdsgramDailyAd, monetag: showMonetagAd, giga: showGigaPubAd, usl: showUslAd };
-
 // ⚠️ NEW — USL Ads (TowerAds SDK). Unlike the other 3 networks, TowerAds
 // reports success via an onRewardEarned(reward) callback rather than
 // resolving loadAndShow()'s own promise — so this wraps that callback
@@ -849,6 +847,20 @@ const showUslAd = () => new Promise((resolve, reject) => {
         reject(error instanceof Error ? error : new Error(String(error || 'usl_ad_error')));
     });
 });
+
+// ⚠️ FIX — this object used to be declared right after showGiga's function
+// (line ~817 in the old file), but it referenced showUslAd, which at that
+// point in the file hadn't been declared yet. `const` declarations are NOT
+// hoisted the way `function`/`var` are — the variable exists in a "temporal
+// dead zone" from the top of the script until its own declaration line runs.
+// Reading it early throws `ReferenceError: Cannot access 'showUslAd' before
+// initialization` — a fatal, uncaught error at the TOP LEVEL of the script.
+// A top-level throw stops the ENTIRE script dead on the spot: nothing below
+// this line — not init(), not the 20s failsafe timer, nothing — ever runs.
+// That's why the splash was stuck at 92% forever with zero error, on every
+// device, every network, VPN on or off: the JS itself never even started
+// past this line. Moving this object to AFTER showUslAd's declaration fixes it.
+const AD_SHOW_FUNCTIONS = { adsgramDaily: showAdsgramDailyAd, monetag: showMonetagAd, giga: showGigaPubAd, usl: showUslAd };
 
 // Adexium — passive, no-reward interstitial, shows itself automatically app-wide
 try {
