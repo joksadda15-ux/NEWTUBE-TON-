@@ -280,11 +280,40 @@
     .pill-signal { background: var(--signal-soft); color: var(--signal); }
     .pill-coin { background: var(--coin-soft); color: var(--coin); }
 
-    .bottomnav { position: fixed; bottom: 14px; left: 0; right: 0; max-width: 440px; margin: 0 auto; background: var(--surface-raised); border-radius: 14px; border-top: 1.5px dashed var(--border-strong); display: flex; align-items: center; justify-content: space-around; padding: 10px 6px; box-shadow: 0 8px 30px rgba(0,0,0,0.45); z-index: 40; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--ink-faint); width: 56px; background: none; border: none; padding: 4px 0; }
+    /* ══════════════════════════════════════════════════════════
+       BOTTOM NAV v2 — "floating glass dock". Frosted 3D bar, each
+       icon sits in its own glowing capsule that gently hovers, with
+       a lightning-flicker ring on the active tab. All GPU-cheap
+       (transform/opacity/filter only), so it stays smooth in the
+       Telegram WebView. ══════════════════════════════════════════ */
+    .bottomnav { position: fixed; bottom: 14px; left: 0; right: 0; max-width: 440px; margin: 0 auto; background: linear-gradient(180deg, rgba(24,32,22,0.88), rgba(15,20,13,0.92)); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-radius: 22px; border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: space-around; padding: 10px 6px; box-shadow: 0 4px 0 rgba(255,255,255,0.03) inset, 0 -1px 0 rgba(0,0,0,0.4) inset, 0 14px 34px rgba(0,0,0,0.55), 0 0 26px rgba(124,252,60,0.08); z-index: 40; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--ink-faint); width: 56px; background: none; border: none; padding: 4px 0; }
     .nav-item.active { color: var(--coin); }
-    .nav-label { font-size: 10px; font-weight: 500; }
-    .nav-earn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--coin) 55%, var(--coin-deep)); display: flex; align-items: center; justify-content: center; margin-top: -28px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -4px 8px rgba(0,0,0,0.25), 0 8px 20px var(--coin-soft); color: #FFFFFF; }
+    .nav-label { font-size: 10px; font-weight: 500; letter-spacing: 0.01em; }
+    .nav-item.active .nav-label { text-shadow: 0 0 10px var(--coin-soft); }
+
+    /* ── icon capsule (Home / Video / Task / Refer) — floats, glows on active ── */
+    .nav-icon-wrap { position: relative; width: 38px; height: 38px; border-radius: 13px; display: flex; align-items: center; justify-content: center; background: linear-gradient(155deg, var(--surface-pop), rgba(0,0,0,0.15)); border: 1px solid var(--border); box-shadow: inset 0 1px 1px rgba(255,255,255,0.06), inset 0 -3px 6px rgba(0,0,0,0.3), 0 4px 10px rgba(0,0,0,0.3); transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s cubic-bezier(.34,1.56,.64,1); animation: nav-float 3.2s ease-in-out infinite; }
+    .nav-item:nth-child(1) .nav-icon-wrap { animation-delay: 0s; }
+    .nav-item:nth-child(2) .nav-icon-wrap { animation-delay: 0.5s; }
+    .nav-item:nth-child(4) .nav-icon-wrap { animation-delay: 1s; }
+    .nav-item:nth-child(5) .nav-icon-wrap { animation-delay: 1.5s; }
+    @keyframes nav-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .nav-item.active .nav-icon-wrap { border-color: rgba(124,252,60,0.5); box-shadow: inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.25), 0 0 0 1px rgba(124,252,60,0.15), 0 0 16px var(--coin-soft), 0 0 30px rgba(124,252,60,0.25); animation: nav-float 3.2s ease-in-out infinite, nav-glow-pulse 1.8s ease-in-out infinite; }
+    @keyframes nav-glow-pulse { 0%,100% { box-shadow: inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.25), 0 0 0 1px rgba(124,252,60,0.15), 0 0 14px var(--coin-soft), 0 0 26px rgba(124,252,60,0.2); } 50% { box-shadow: inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -3px 6px rgba(0,0,0,0.25), 0 0 0 1px rgba(124,252,60,0.3), 0 0 22px var(--coin-soft), 0 0 40px rgba(124,252,60,0.35); } }
+    /* thin lightning-streak sweep across the active icon capsule */
+    .nav-icon-wrap::after { content: ''; position: absolute; inset: 0; border-radius: 13px; overflow: hidden; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0) 48%, rgba(255,255,255,0) 52%, transparent 60%); opacity: 0; pointer-events: none; }
+    .nav-item.active .nav-icon-wrap::after { opacity: 1; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.55) 48%, rgba(200,255,170,0.9) 50%, rgba(255,255,255,0.55) 52%, transparent 65%); background-size: 260% 260%; animation: nav-lightning 2.6s ease-in-out infinite; }
+    @keyframes nav-lightning { 0% { background-position: 130% 0%; } 45% { background-position: -30% 0%; } 100% { background-position: -30% 0%; } }
+    .nav-item.active .nav-icon-wrap svg { filter: drop-shadow(0 0 4px var(--coin-soft)); }
+
+    /* ── center Earning button — bigger 3D orb, its own float + lightning ring ── */
+    .nav-earn { position: relative; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--coin) 55%, var(--coin-deep)); display: flex; align-items: center; justify-content: center; margin-top: -28px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -4px 8px rgba(0,0,0,0.25), 0 8px 20px var(--coin-soft), 0 0 24px rgba(124,252,60,0.3); color: #FFFFFF; animation: nav-earn-float 3s ease-in-out infinite; }
+    @keyframes nav-earn-float { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.02); } }
+    .nav-earn::before { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 1.5px solid rgba(124,252,60,0.35); opacity: 0; animation: nav-earn-ring 2.4s ease-out infinite; pointer-events: none; }
+    @keyframes nav-earn-ring { 0% { transform: scale(0.85); opacity: 0.7; } 100% { transform: scale(1.35); opacity: 0; } }
+    .nav-earn::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.55) 48%, rgba(255,255,255,0.55) 52%, transparent 70%); background-size: 240% 240%; mix-blend-mode: overlay; animation: nav-lightning 2.3s ease-in-out infinite 0.4s; pointer-events: none; }
+    .nav-item.active .nav-earn { box-shadow: inset 0 1px 1px rgba(255,255,255,0.4), inset 0 -4px 8px rgba(0,0,0,0.2), 0 10px 26px var(--coin-soft), 0 0 36px rgba(124,252,60,0.55); }
 
     #toast-host { position: fixed; top: 14px; left: 0; right: 0; max-width: 430px; margin: 0 auto; z-index: 200; pointer-events: none; padding: 0 16px; }
     .toast { background: var(--surface-pop); border: 0.5px solid var(--border-strong); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: toast-in 0.25s ease; }
@@ -392,8 +421,9 @@
     .btn:active:not(:disabled) { transform: scale(0.96); }
     .nav-item:active, .icon-btn:active { transform: scale(0.88); }
     .video-thumb:active { transform: scale(0.97); }
-    .nav-earn { transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); }
-    .nav-item.active .nav-earn { transform: scale(1.08); }
+    /* nav-earn's pop/scale is now driven by the nav-earn-float keyframes
+       above (bakes in a 1.02 scale mid-bob) plus the active box-shadow glow,
+       so no separate static transform rule is needed here anymore. */
 
     /* ── onboarding step transition ── */
     .ob-slide-in { animation: ob-slide-in 0.4s cubic-bezier(.22,.9,.32,1) both; }
@@ -718,7 +748,7 @@ const API_BASE = 'https://newtube-ton.vercel.app/api';
 const MINI_APP_BASE = 'https://t.me/NewTube12_bot/WatchTo_Earn';
 const OFFICIAL_CHANNEL = 'Newtube_offcial'; // ⚠️ SEASON 3 CHANGE — mirrors lib/telegram.js
 const COMMUNITY_GROUP = 'newtube_commonity';
-const PAY_CHANNEL = 'fruit_cut_payment'; // https://t.me/fruit_cut_payment
+const PAY_CHANNEL = 'Newtube_pay_chennel'; // https://t.me/Newtube_pay_chennel — updated from old fruit_cut_payment channel
 const WITHDRAW_METHOD_LABELS = { binance: 'Binance UID', tonkeeper: 'Tonkeeper Address' }; // mirrors lib/constants.js WITHDRAW_METHODS labels
 const MONETAG_INTERVAL_SECONDS = 360; // periodic non-reward interstitial, video section only (6 min)
 // ⚠️ NEW — mirrors lib/constants.js WITHDRAW_ADS_REQUIRED / FIRST_WITHDRAW_MIN_TASKS.
@@ -1243,7 +1273,7 @@ function renderShell() {
         <div class="bottomnav">
             ${TABS.map(t => t.id === 'earning'
                 ? `<button class="nav-item" data-tab="earning"><div class="nav-earn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5a3 3 0 013-1.5h0a3 3 0 010 6h0a3 3 0 000 6h0a3 3 0 003-1.5"/></svg></div><div class="nav-label">Earning</div></button>`
-                : `<button class="nav-item" data-tab="${t.id}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg><div class="nav-label">${t.label}</div></button>`
+                : `<button class="nav-item" data-tab="${t.id}"><div class="nav-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t.icon}</svg></div><div class="nav-label">${t.label}</div></button>`
             ).join('')}
         </div>`;
     document.querySelectorAll('.nav-item').forEach(btn => { btn.onclick = () => switchTab(btn.dataset.tab); });
