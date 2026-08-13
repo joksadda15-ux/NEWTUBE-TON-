@@ -9,9 +9,23 @@
 <!-- ══════════════════════════════════════════════════════════
      AD NETWORK SDKs — real integration, matching the original app's
      working zone/block IDs (extracted from your previous main.html)
+     ⚠️ FIX — none of these had `defer`, so they were all RENDER-BLOCKING:
+     the browser had to fully fetch+execute each one, in order, before
+     parsing could continue down to the app's own <script> at the bottom
+     of <body> — meaning init() never even STARTED running until every
+     single one of these 3rd-party domains responded. If even ONE of them
+     is slow, blocked (VPN/ISP/firewall), or briefly down, the entire app
+     hangs on the splash screen forever with zero chance to show any error
+     or retry screen, no matter how good the app's own error-handling is.
+     This is almost certainly what's been happening — a client on a VPN
+     (both crash reports had "VPN" visible in the status bar) is exactly
+     the kind of connection most likely to have trouble reaching some of
+     these ad-network domains. `defer` makes them fetch in the background
+     without blocking parsing, while still executing in this same order
+     before DOMContentLoaded — same effective behavior, just non-blocking.
      ══════════════════════════════════════════════════════════ -->
-<script type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
-<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<script defer type="text/javascript" src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+<script defer src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <!-- ⚠️ Monetag (libtl.com) is loaded statically again (back to how it
      originally was). It was switched to lazy-load earlier to stop its
      global click-listener from firing on GigaPub/Adsgram clicks — but in
@@ -21,10 +35,10 @@
      available" no-fill errors and far fewer impressions than Adsgram. That
      reliability loss outweighs the click-hijacking risk, so it's back to
      loading once, staying loaded for the whole session. -->
-<script src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
-<script src="https://ad.gigapub.tech/script?id=846"></script>
+<script defer src='//libtl.com/sdk.js' data-zone='9442539' data-sdk='show_9442539'></script>
+<script defer src="https://ad.gigapub.tech/script?id=846"></script>
 <!-- ⚠️ NEW — USL Ads (TowerAds) SDK, now live per admin-provided credentials. -->
-<script src="https://uslads.com/sdk/tower-ads-v4.js"></script>
+<script defer src="https://uslads.com/sdk/tower-ads-v4.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -3003,6 +3017,16 @@ async function generateDeviceFingerprint() {
         return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     } catch { return null; }
 }
+
+// ⚠️ NEW — absolute last-resort safety net. If ANY future script (ad SDK or
+// otherwise) ever blocks parsing again, or init() throws something not
+// caught above, this guarantees the user is never stuck on the static "92%"
+// splash forever — after 20s, if the splash is still there, force the
+// connection-error/retry screen.
+setTimeout(() => {
+    const splash = document.getElementById('splash');
+    if (splash && !splash.classList.contains('out')) showConnectionErrorScreen();
+}, 20000);
 
 init();
 </script>
