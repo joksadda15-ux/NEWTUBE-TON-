@@ -94,7 +94,10 @@ async function handleInit(req, res, db) {
         adsgramDailyCountToday: 0,
         monetagCountToday: 0,
         gigaCountToday: 0,
-        uslCountToday: 0, // ⚠️ NEW — ready for when the "usl" network is enabled
+        uslCountToday: 0,
+        usedAdStarts: [],
+        usedLootboxStarts: [],
+        usedTaskStarts: [],
         dailyVideoWtcMined: 0,
         tasksCompletedToday: 0,
         lastResetDate: todayBD(),
@@ -219,4 +222,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-        }
+}
