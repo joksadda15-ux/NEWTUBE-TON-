@@ -31,6 +31,7 @@ import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_SECOND_FEE_PERCENT, MIN_WITHDRAW_WTC,
     WITHDRAW_TASKS_REQUIRED, WITHDRAW_ADS_REQUIRED, WITHDRAW_VALID_REFERRALS_PER_WITHDRAW,
+    WITHDRAW_REFERRAL_COMMISSION_PERCENT,
     todayBD, WTC_PER_USD, WITHDRAWALS_OPEN,
 } from '../lib/constants.js';
 
@@ -58,7 +59,10 @@ async function handleStatus(req, res, db) {
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
 
     const adsToday = user.lastResetDate === today ? (user.adsWatchedToday || 0) : 0;
-    const tasksToday = user.lastResetDate === today ? (user.tasksCompletedToday || 0) : 0;
+    // ⚠️ CHANGED — tasks requirement is now LIFETIME, one-time (not daily).
+    // Once completedTasks.length ever reaches WITHDRAW_TASKS_REQUIRED, this
+    // stays satisfied forever — no daily reset involved.
+    const tasksLifetime = (user.completedTasks || []).length;
     const isFirstWithdraw = (user.withdrawalCount || 0) === 0;
     const validAvailable = Math.max(0, (user.validReferralCount || 0) - (user.usedValidReferrals || 0));
 
@@ -71,7 +75,7 @@ async function handleStatus(req, res, db) {
         withdrawalsOpen: WITHDRAWALS_OPEN,
         withdrawRequirements: {
             adsRequired: WITHDRAW_ADS_REQUIRED, adsWatchedToday: adsToday, adsMet: adsToday >= WITHDRAW_ADS_REQUIRED,
-            tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: tasksToday, tasksMet: tasksToday >= WITHDRAW_TASKS_REQUIRED,
+            tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: tasksLifetime, tasksMet: tasksLifetime >= WITHDRAW_TASKS_REQUIRED,
         },
         referralRequirement: {
             isFirstWithdrawFree: isFirstWithdraw,
@@ -132,13 +136,13 @@ async function handleCreate(req, res, db) {
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
 
-    // ── daily tasks requirement ──
-    const tasksToday = user.lastResetDate === today ? (user.tasksCompletedToday || 0) : 0;
-    if (tasksToday < WITHDRAW_TASKS_REQUIRED) {
+    // ── lifetime tasks requirement (one-time, not daily) ──
+    const tasksLifetime = (user.completedTasks || []).length;
+    if (tasksLifetime < WITHDRAW_TASKS_REQUIRED) {
         return res.status(400).json({
             ok: false, error: 'need_tasks',
-            tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: tasksToday,
-            message: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks today before withdrawing (you have ${tasksToday} today).`,
+            tasksRequired: WITHDRAW_TASKS_REQUIRED, tasksHave: tasksLifetime,
+            message: `Complete at least ${WITHDRAW_TASKS_REQUIRED} tasks (lifetime, one-time) before you can withdraw (you have ${tasksLifetime} done).`,
         });
     }
 
@@ -192,16 +196,20 @@ async function handleCreate(req, res, db) {
             wtcBalance: { $gte: wtcAmount },
             lastResetDate: today,
             adsWatchedToday: { $gte: WITHDRAW_ADS_REQUIRED },
-            tasksCompletedToday: { $gte: WITHDRAW_TASKS_REQUIRED },
             withdrawPending: { $ne: true },
-            ...(willConsumeReferral ? {
-                $expr: {
-                    $gte: [
-                        { $subtract: [{ $ifNull: ['$validReferralCount', 0] }, { $ifNull: ['$usedValidReferrals', 0] }] },
-                        WITHDRAW_VALID_REFERRALS_PER_WITHDRAW,
-                    ],
-                },
-            } : {}),
+            $expr: {
+                $and: [
+                    // ⚠️ CHANGED — tasks requirement re-verified here against the
+                    // LIFETIME completedTasks array size, not a daily counter.
+                    { $gte: [{ $size: { $ifNull: ['$completedTasks', []] } }, WITHDRAW_TASKS_REQUIRED] },
+                    ...(willConsumeReferral ? [{
+                        $gte: [
+                            { $subtract: [{ $ifNull: ['$validReferralCount', 0] }, { $ifNull: ['$usedValidReferrals', 0] }] },
+                            WITHDRAW_VALID_REFERRALS_PER_WITHDRAW,
+                        ],
+                    }] : []),
+                ],
+            },
         },
         updateOps,
         { returnDocument: 'after' }
@@ -236,6 +244,41 @@ async function handleCreate(req, res, db) {
         createdAt: new Date(),
     };
     const inserted = await withdrawals.insertOne(withdrawDoc);
+
+    // ══════════════════════════════════════════════════════════
+    // ⚠️ NEW — referral withdrawal commission. If this user was referred by
+    // someone, the referrer is credited WITHDRAW_REFERRAL_COMMISSION_PERCENT
+    // (10%) of the GROSS wtcAmount just withdrawn — e.g. a 1,000 WTC
+    // withdrawal pays the referrer 100 WTC. This fires on EVERY withdrawal,
+    // not just once, for as long as the referral relationship exists (see
+    // constants.js for the fraud/economics trade-offs flagged there). Runs
+    // as a best-effort follow-up update — it does not block or roll back
+    // the withdrawal itself if it fails, and a banned referrer is skipped.
+    // ══════════════════════════════════════════════════════════
+    let referrerCommission = 0;
+    if (user.referredBy) {
+        referrerCommission = Math.floor(wtcAmount * (WITHDRAW_REFERRAL_COMMISSION_PERCENT / 100));
+        if (referrerCommission > 0) {
+            try {
+                const referrerUpdate = await users.findOneAndUpdate(
+                    { _id: user.referredBy, isBanned: { $ne: true } },
+                    { $inc: { wtcBalance: referrerCommission, lifetimeWtcEarned: referrerCommission, referralCommissionEarned: referrerCommission } },
+                    { returnDocument: 'after' }
+                );
+                if (referrerUpdate) {
+                    tgSend(
+                        user.referredBy,
+                        `💰 <b>Referral Commission!</b>\n\nOne of your referrals just withdrew ${wtcAmount.toLocaleString()} WTC.\nYou earned <b>${referrerCommission.toLocaleString()} WTC</b> (10% commission) 🎉`
+                    ).catch(() => {});
+                }
+            } catch (e) { /* non-blocking — commission failure never blocks the withdrawal itself */ }
+        }
+    }
+    // Record the commission (if any) on the withdrawal doc for admin audit trail.
+    await withdrawals.updateOne(
+        { _id: inserted.insertedId },
+        { $set: { referrerId: user.referredBy || null, referrerCommissionPaid: referrerCommission } }
+    );
 
     if (ADMIN_ID) {
         const adminText =
@@ -279,4 +322,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-        }
+                            }
