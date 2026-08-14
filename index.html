@@ -24,17 +24,15 @@
      without blocking parsing, while still executing in this same order
      before DOMContentLoaded — same effective behavior, just non-blocking.
      ══════════════════════════════════════════════════════════ -->
-<!-- ⚠️ FIX (this update) — domain was wrong. It was pointing at
-     "cdn.tgads.space", which doesn't appear anywhere in Adexium's own docs —
-     looks like a mix-up between their two real domains (cdn.adexium.tech and
-     cdn.techtg.space). Since AdexiumWidget never loaded, the try/catch around
-     it (see the init call further down) was silently swallowing the failure
-     every single time — no error, no ads, nothing. Corrected to the domain
-     from Adexium's official Telegram Mini Apps integration guide
-     (docs.adexium.io/publisher/integration.html). If it ever goes dark again,
-     double-check the exact URL via @AdexiumSupportBot or the publisher
-     dashboard — these smaller ad-network CDNs do drift domains sometimes. -->
-<script defer type="text/javascript" src="https://cdn.adexium.tech/assets/js/adexium-widget.min.js"></script>
+<!-- ⚠️ FIX (this update) — the previous domain, cdn.adexium.tech, was ALSO
+     wrong (never existed in Adexium's docs either — a second bad guess).
+     Verified against Adexium's official Telegram Mini Apps integration guide
+     (docs.adexium.io/publisher/integration.html) on 2026-08-14: the real
+     script is cdn.techtg.space/assets/js/tg-ads-co-widget.min.js. Different
+     domain AND different filename. If it ever goes dark again, verify the
+     exact URL directly on docs.adexium.io before guessing — don't assume a
+     plausible-looking domain is correct. -->
+<script defer type="text/javascript" src="https://cdn.techtg.space/assets/js/tg-ads-co-widget.min.js"></script>
 <script defer src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <!-- ⚠️ Monetag (libtl.com) is loaded statically again (back to how it
      originally was). It was switched to lazy-load earlier to stop its
@@ -941,12 +939,26 @@ const showUslAd = () => new Promise((resolve, reject) => {
 const AD_SHOW_FUNCTIONS = { adsgramDaily: showAdsgramDailyAd, monetag: showMonetagAd, giga: showGigaPubAd, usl: showUslAd };
 
 // Adexium — passive, no-reward interstitial, shows itself automatically app-wide
-try {
-    if (typeof AdexiumWidget !== 'undefined') {
-        const adexiumWidget = new AdexiumWidget({ wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial' });
-        adexiumWidget.autoMode();
-    }
-} catch (e) { /* non-blocking — Adexium is decorative monetization, never block the app on it */ }
+// ⚠️ FIX — this used to run immediately, inline, at script-parse time. But
+// this whole <script> block (starting line ~741) has NO `defer`, so it
+// executes synchronously the instant the parser reaches it — which is
+// BEFORE any `defer`'d external script (including Adexium's own SDK) has
+// executed. Deferred scripts only run right before `DOMContentLoaded`, i.e.
+// strictly after this block already finished. So `typeof AdexiumWidget`
+// was checking a class that could not possibly exist yet — always false,
+// silently, every load, independent of whether the CDN URL was even right.
+// Adexium's own official sample code wraps this exact call in a
+// DOMContentLoaded listener for this reason — that's not optional.
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        if (typeof AdexiumWidget !== 'undefined') {
+            const adexiumWidget = new AdexiumWidget({ wid: '165512cc-372e-4fb0-98d2-552219c72799', adFormat: 'interstitial' });
+            adexiumWidget.autoMode();
+        } else {
+            console.warn('[Adexium] AdexiumWidget still undefined at DOMContentLoaded — SDK script failed to load (check network/CDN).');
+        }
+    } catch (e) { /* non-blocking — Adexium is decorative monetization, never block the app on it */ }
+});
 
 // ══════════════════════════════════════════════════════════════
 // TOAST
