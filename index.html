@@ -84,12 +84,16 @@
         --money-soft: rgba(34,197,94,0.16);
         --video-hue: #E4432C;    /* video / lootbox section — broadcast-signal red (the accent color itself) */
         --video-soft: rgba(228,67,44,0.16);
-        --task-hue: #D9A441;     /* regular tasks — warm gold, close kin to --coin */
+        --task-hue: #D9A441;     /* channel/group join tasks — warm gold, close kin to --coin */
         --task-soft: rgba(217,164,65,0.16);
-        --faucet-hue: #7C9070;   /* faucet sites — verdigris (aged brass/copper patina) */
-        --faucet-soft: rgba(124,144,112,0.16);
-        --article-hue: #8B98A6;  /* articles — muted slate (newsprint ink) */
-        --article-soft: rgba(139,152,166,0.16);
+        --daily-hue: #3FA9F5;    /* daily task — sky blue, "today's event" feel */
+        --daily-soft: rgba(63,169,245,0.16);
+        --exclusive-hue: #B47CFF; /* exclusive task — violet, premium/VIP feel */
+        --exclusive-soft: rgba(180,124,255,0.16);
+        --partner-hue: #4FD1C5;  /* partner task — teal */
+        --partner-soft: rgba(79,209,197,0.16);
+        --earning-hue: #8FBF6B;  /* earning/referral task — soft green, low-key */
+        --earning-soft: rgba(143,191,107,0.16);
         --gift-hue: #CB9A46;     /* admin gifts — warm gold, one step off --coin */
         --gift-soft: rgba(203,154,70,0.16);
         --refer-hue: #B8663F;    /* referrals — copper/terracotta, was hot pink */
@@ -393,14 +397,17 @@
     .count-pop { display: inline-block; animation: count-pop 0.35s ease; }
     @keyframes count-pop { 0% { transform: scale(1.18); color: var(--coin); } 100% { transform: scale(1); } }
 
-    /* ── "Earned this session" card on the video player only — kept purple/
-       neon per feedback (the browsing list itself was reverted to the
-       original theme, see renderVideoTab). ── */
-    --vid-neon-3: #FF6EC7;
-    --vid-neon-glow: rgba(176,60,232,0.45);
-    .vid-neon-card { background: linear-gradient(165deg, #1D0E33, #120725); border: 1px solid rgba(176,60,232,0.35); border-radius: 18px; padding: 16px; position: relative; overflow: hidden; box-shadow: 0 0 0 1px rgba(176,60,232,0.08) inset, 0 10px 26px rgba(76,10,120,0.35); }
-    .vid-neon-card::before { content: ''; position: absolute; inset: -40%; background: radial-gradient(circle at 25% 15%, rgba(176,60,232,0.28), transparent 60%); pointer-events: none; }
-    .vid-neon-sub { font-size: 11px; color: #B79FD1; margin-top: 8px; position: relative; z-index: 1; }
+    /* ── "Earned this session" card on the video player. ⚠️ UPDATED (this
+       update) — used to be hardcoded purple/pink (#1D0E33 bg, #FF6EC7 text)
+       which didn't match anything else in the app. Recolored onto the same
+       dark surface + --video-hue accent used everywhere else video-related
+       (floating lootbox ring, etc.), plus a slow rotating glow ring behind
+       the number and a lightning sweep across the card for extra VFX. ── */
+    .vid-neon-card { background: linear-gradient(165deg, var(--surface-pop), var(--surface)); border: 1px solid rgba(228,67,44,0.35); border-radius: 18px; padding: 16px; position: relative; overflow: hidden; box-shadow: 0 0 0 1px rgba(228,67,44,0.08) inset, 0 10px 26px rgba(228,67,44,0.15); }
+    .vid-neon-card::before { content: ''; position: absolute; inset: -60%; background: conic-gradient(from 0deg, transparent, rgba(228,67,44,0.22), transparent 35%); animation: vid-neon-spin 5s linear infinite; pointer-events: none; }
+    .vid-neon-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 48%, rgba(255,190,170,0.22) 50%, rgba(255,255,255,0.10) 52%, transparent 65%); background-size: 260% 260%; animation: nav-lightning 3.4s ease-in-out infinite; pointer-events: none; }
+    @keyframes vid-neon-spin { to { transform: rotate(360deg); } }
+    .vid-neon-sub { font-size: 11px; color: var(--ink-muted); margin-top: 8px; position: relative; z-index: 1; }
     #floating-lootbox { transition: transform 0.2s ease; animation: lootbox-bob 2.4s ease-in-out infinite; }
     #floating-lootbox:active { transform: scale(0.9); }
     @keyframes lootbox-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
@@ -414,6 +421,13 @@
     @keyframes lb-hint-bob { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
     @keyframes coin-flip { 0%,100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.08) rotate(5deg); } }
     .lb-gain-float { position: fixed; font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--coin); z-index: 51; pointer-events: none; animation: gain-float 1.1s ease-out forwards; }
+
+    /* ── video-player-only VFX: glowing close button + "up next" thumbnail
+       hover glow, both keyed off --video-hue to match the earnings card. ── */
+    .vp-close-glow { box-shadow: 0 0 0 1px rgba(228,67,44,0.3), 0 0 14px rgba(228,67,44,0.35); animation: vp-close-pulse 2.2s ease-in-out infinite; }
+    @keyframes vp-close-pulse { 0%,100% { box-shadow: 0 0 0 1px rgba(228,67,44,0.25), 0 0 10px rgba(228,67,44,0.25); } 50% { box-shadow: 0 0 0 1px rgba(228,67,44,0.45), 0 0 18px rgba(228,67,44,0.5); } }
+    .vp-thumb { position: relative; border-radius: 14px; overflow: hidden; transition: box-shadow 0.2s ease, transform 0.15s ease; }
+    .vp-thumb:active { transform: scale(0.97); box-shadow: 0 0 0 2px var(--video-hue), 0 0 16px rgba(228,67,44,0.5); }
     @keyframes gain-float { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 20% { opacity: 1; transform: translateY(-8px) scale(1); } 100% { opacity: 0; transform: translateY(-38px) scale(1); } }
 
     /* ── buttons: tactile press feedback ── */
@@ -496,12 +510,18 @@
     .an-watch-btn { width: auto; flex-shrink: 0; padding: 0 15px; height: 36px; font-size: 12.5px; display: flex; align-items: center; gap: 6px; background: linear-gradient(160deg, var(--coin), var(--coin-deep)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px var(--coin-soft); }
     .an-watch-btn.an-watch-done { background: transparent; border: 1px solid var(--border-strong); color: var(--ink-faint); box-shadow: none; }
 
-    /* ── segmented sub-nav (Tasks/Faucet, Ads/Articles — separate pages within a tab) ── */
+    /* ── segmented sub-nav (Task categories, Ads/777 — separate pages within a tab) ── */
     .subnav { display: flex; gap: 6px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 13px; padding: 4px; margin-bottom: 16px; }
     .subnav-btn { flex: 1; border: none; background: transparent; color: var(--ink-muted); font-size: 13px; font-weight: 600; padding: 9px 0; border-radius: 10px; transition: background 0.15s ease, color 0.15s ease; }
     .subnav-btn.active { background: linear-gradient(160deg, var(--coin), var(--coin-deep)); color: #fff; box-shadow: 0 4px 12px var(--coin-soft); }
+    /* ── 5-tab scrollable variant (Task section: Daily/Exclusive/Partner/Earning/Verify) ──
+       Equal-width flex breaks down past ~4 short labels on a 380px screen, so
+       this variant scrolls horizontally instead of squeezing/wrapping text. */
+    .subnav-scroll { display: flex; gap: 6px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 13px; padding: 4px; margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .subnav-scroll::-webkit-scrollbar { display: none; }
+    .subnav-scroll .subnav-btn { flex: 0 0 auto; white-space: nowrap; padding: 9px 14px; }
 
-    /* ── big decorative task/faucet/article cards ── */
+    /* ── big decorative task cards (Daily/Exclusive/Partner/Earning/Verify) ── */
     .task-card-big { display: flex; align-items: center; gap: 14px; padding: 16px; }
     .tc-icon { width: 52px; height: 52px; flex-shrink: 0; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: linear-gradient(155deg, var(--coin-soft), var(--accent-soft)); border: 1px solid var(--border); }
     .tc-title { font-weight: 600; font-size: 14.5px; line-height: 1.35; margin-bottom: 10px; }
@@ -2194,7 +2214,7 @@ function openVideoPlayer(video) {
         <div class="overlay" style="align-items:stretch;">
             <div class="sheet-fullscreen">
                 <div style="padding:14px 16px; display:flex; align-items:center; gap:10px;">
-                    <button class="icon-btn" id="vp-close" aria-label="Close">
+                    <button class="icon-btn vp-close-glow" id="vp-close" aria-label="Close">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     </button>
                     <div style="font-size:14px; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${video.title}</div>
@@ -2204,11 +2224,11 @@ function openVideoPlayer(video) {
                 </div>
                 <div class="section-pad" style="margin-top:18px;">
                     <div class="vid-neon-card" style="text-align:center;">
-                        <div style="font-size:11px; color:#B79FD1; margin-bottom:6px; position:relative; z-index:1;">Earned this session</div>
-                        <div style="font-family:var(--font-display); font-weight:700; font-size:24px; color:var(--vid-neon-3); text-shadow:0 0 14px var(--vid-neon-glow); position:relative; z-index:1;" id="vp-session-wtc">0 WTC</div>
+                        <div style="font-size:11px; color:var(--ink-muted); margin-bottom:6px; position:relative; z-index:1;">Earned this session</div>
+                        <div style="font-family:var(--font-display); font-weight:700; font-size:24px; color:var(--video-hue); text-shadow:0 0 14px rgba(228,67,44,0.5); position:relative; z-index:1;" id="vp-session-wtc">0 WTC</div>
                         <div class="vid-neon-sub" style="margin-top:6px;" id="vp-session-sub">60 WTC earned per hour watched</div>
                     </div>
-                    <div id="vp-lootbox-full-banner" style="display:none; margin-top:10px; padding:10px 14px; border-radius:12px; background:rgba(176,60,232,0.14); border:1px solid rgba(176,60,232,0.4); color:#E7C9FF; text-align:center; font-size:12.5px; font-weight:600;">
+                    <div id="vp-lootbox-full-banner" style="display:none; margin-top:10px; padding:10px 14px; border-radius:12px; background:rgba(228,67,44,0.14); border:1px solid rgba(228,67,44,0.4); color:#FFD9CF; text-align:center; font-size:12.5px; font-weight:600;">
                         🎁 Lootbox full — go claim it to keep earning!
                     </div>
                 </div>
@@ -2226,7 +2246,7 @@ function openVideoPlayer(video) {
     if (others.length) {
         upNext.innerHTML = others.map(v => `
             <div class="vp-next-item" data-vid="${v.videoId}" style="display:flex; gap:10px; align-items:center; cursor:pointer;">
-                <div style="position:relative; width:112px; flex-shrink:0; border-radius:10px; overflow:hidden; background:var(--surface); aspect-ratio:16/9;">
+                <div class="vp-thumb" style="width:112px; flex-shrink:0; background:var(--surface); aspect-ratio:16/9;">
                     <img src="${v.thumbnail || ''}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
                     <div style="position:absolute; right:5px; bottom:5px; background:rgba(0,0,0,0.65); border-radius:5px; padding:1px 5px; font-size:9px;">▶</div>
                 </div>
@@ -2433,24 +2453,7 @@ function renderEarningTab() {
     // tickets are only earned via referrals (see lib/referral.js). Result
     // is entirely server-decided (api/earn.js handleLotterySpin) — this
     // just animates reels then displays whatever the server returned.
-    // Replaces the old Articles sub-tab per this season's spec.
     if (state.earnSubTab === 'lottery') { renderLotteryGame(); return; }
-
-    // ── Articles page — reuses the same task system (category: 'article').
-    // Reading + claim flow is identical to a regular task; the only special
-    // behavior is that completeTask() fires a passive ad afterward for
-    // article claims (see "🎁 second revenue stream" note there).
-    (async () => {
-        const r = await apiGet('data?type=tasks');
-        const listEl = document.getElementById('earn-page-list');
-        if (!listEl) return; // sub-tab may have changed while this was loading
-        const done = new Set(state.user?.completedTasks || []);
-        const articles = (r.ok ? r.tasks : []).filter(t => t.category === 'article' && !done.has(t._id));
-        state.tasks = [...(state.tasks || []).filter(t => t.category !== 'article'), ...articles];
-        if (!articles.length) { listEl.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">No articles available yet.</div>`; return; }
-        listEl.innerHTML = articles.map(t => taskCardHtml(t)).join('');
-        listEl.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
-    })();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2580,14 +2583,23 @@ async function creditAdReward(network, startTime, signature) {
 // ══════════════════════════════════════════════════════════════
 async function renderTaskTab() {
     removeFloatingLootbox();
-    if (!state.taskSubTab) state.taskSubTab = 'tasks';
+    // ⚠️ UPDATED (this update) — Tasks/Faucet subnav replaced. Faucet tasks
+    // are gone; the Task section now mirrors the admin panel's 5 task types
+    // exactly: Daily / Exclusive / Partner / Earning / Verify (channel join).
+    const TASK_TABS = [
+        { id: 'daily', label: '📅 Daily' },
+        { id: 'exclusive', label: '⭐ Exclusive' },
+        { id: 'partner', label: '🤝 Partner' },
+        { id: 'earning', label: '👥 Earning' },
+        { id: 'channel', label: '✅ Verify' },
+    ];
+    if (!state.taskSubTab || !TASK_TABS.some(t => t.id === state.taskSubTab)) state.taskSubTab = 'daily';
     const root = document.getElementById('tab-content');
     root.innerHTML = `
         <div class="section-pad" style="margin-top:18px;">
             <div class="section-title" style="margin-bottom:14px;">Complete tasks, earn WTC</div>
-            <div class="subnav">
-                <button class="subnav-btn ${state.taskSubTab === 'tasks' ? 'active' : ''}" data-subtab="tasks">📋 Tasks</button>
-                <button class="subnav-btn ${state.taskSubTab === 'faucet' ? 'active' : ''}" data-subtab="faucet">🚰 Faucet</button>
+            <div class="subnav-scroll">
+                ${TASK_TABS.map(t => `<button class="subnav-btn ${state.taskSubTab === t.id ? 'active' : ''}" data-subtab="${t.id}">${t.label}</button>`).join('')}
             </div>
             <div style="display:flex; flex-direction:column; gap:10px;" id="task-page-list">
                 <div class="muted" style="text-align:center; padding:20px 0;">Loading...</div>
@@ -2604,42 +2616,51 @@ async function renderTaskTab() {
     const listEl = document.getElementById('task-page-list');
     if (!listEl) return; // sub-tab may have changed while this was loading
 
-    const isFaucetPage = state.taskSubTab === 'faucet';
     // ⚠️ A completed task is no longer shown in the list — after it vanishes
     // with an animation this is the intended behavior, so it's filtered out
     // right here.
-    const items = state.tasks.filter(t => !done.has(t._id) && (t.category === 'faucet') === isFaucetPage);
+    const items = state.tasks.filter(t => !done.has(t._id) && (t.category || 'partner') === state.taskSubTab);
 
     if (!items.length) {
-        listEl.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">${isFaucetPage ? 'No faucet sites available yet.' : 'No tasks available yet.'}</div>`;
+        listEl.innerHTML = `<div class="muted" style="text-align:center; padding:20px 0;">No tasks in this category right now — check back later.</div>`;
         return;
     }
     listEl.innerHTML = items.map(t => taskCardHtml(t)).join('');
     listEl.querySelectorAll('button[data-task]').forEach(btn => { btn.onclick = () => goToTask(btn.dataset.task, btn.dataset.url, btn.dataset.category); });
 }
 
+// meta per category: icon, badge text, and the CSS hue vars from the theme
+// (see the --daily-hue/--exclusive-hue/etc. block up top).
+const TASK_CATEGORY_META = {
+    channel:   { icon: '📢', badge: '✓ Verified', hue: 'var(--task-hue)',      hueSoft: 'var(--task-soft)' },
+    daily:     { icon: '📅', badge: 'Daily',       hue: 'var(--daily-hue)',     hueSoft: 'var(--daily-soft)' },
+    exclusive: { icon: '⭐', badge: 'Exclusive',   hue: 'var(--exclusive-hue)', hueSoft: 'var(--exclusive-soft)' },
+    partner:   { icon: '🤝', badge: 'Partner',     hue: 'var(--partner-hue)',   hueSoft: 'var(--partner-soft)' },
+    earning:   { icon: '👥', badge: 'Earning',     hue: 'var(--earning-hue)',   hueSoft: 'var(--earning-soft)' },
+};
+
 function taskCardHtml(t) {
-    const verified = t.category === 'channel';
-    const isFaucet = t.category === 'faucet';
-    const isArticle = t.category === 'article';
-    const icon = verified ? '📢' : isFaucet ? '🚰' : isArticle ? '📰' : '🌐';
-    const badgeText = verified ? '✓ Verified' : isFaucet ? 'Faucet' : isArticle ? 'Article' : 'Link';
-    // ── each task type gets its own matching color, drawn from the same theme family — "verified" tasks used to get a jarring off-white button, now they share the task gold tone (the ✓ Verified badge already signals the distinction) ──
-    const hue = isFaucet ? 'var(--faucet-hue)' : isArticle ? 'var(--article-hue)' : 'var(--task-hue)';
-    const hueSoft = isFaucet ? 'var(--faucet-soft)' : isArticle ? 'var(--article-soft)' : 'var(--task-soft)';
+    const cat = t.category || 'partner';
+    const m = TASK_CATEGORY_META[cat] || TASK_CATEGORY_META.partner;
+    // daily tasks priced in USDT show the USDT figure as the headline reward
+    // (with WTC as the small unit label swapped for "USDT") — the actual
+    // credited amount is still rewardWtc under the hood, this is display-only.
+    const isUsdt = t.rewardCurrency === 'usdt';
+    const rewardAmount = isUsdt ? (t.rewardUsdt ?? 0) : (t.rewardWtc || 0);
+    const rewardUnit = isUsdt ? 'USDT' : 'WTC';
     return `
     <div class="card task-card-big" data-task-card="${t._id}">
-        <div class="tc-icon" style="background:${hueSoft}; border-color:${hueSoft};">${icon}</div>
+        <div class="tc-icon" style="background:${m.hueSoft}; border-color:${m.hueSoft};">${m.icon}</div>
         <div style="flex:1; min-width:0;">
-            <span class="pill" style="background:${hueSoft}; color:${hue}; margin-bottom:6px;">${badgeText}</span>
+            <span class="pill" style="background:${m.hueSoft}; color:${m.hue}; margin-bottom:6px;">${m.badge}</span>
             <div class="tc-title">${t.title}</div>
-            <button class="btn tc-go-btn" style="background:${hue}; box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px ${hueSoft};" data-task="${t._id}" data-url="${t.url || ''}" data-category="${t.category || 'partner'}">
+            <button class="btn tc-go-btn" style="background:${m.hue}; box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 6px 14px ${m.hueSoft};" data-task="${t._id}" data-url="${t.url || ''}" data-category="${cat}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Start
             </button>
         </div>
         <div class="tc-reward-badge">
-            <div class="tc-reward-amount" style="color:${hue};">+${t.rewardWtc || 0}</div>
-            <div class="tc-reward-label">WTC</div>
+            <div class="tc-reward-amount" style="color:${m.hue};">+${rewardAmount}</div>
+            <div class="tc-reward-label">${rewardUnit}</div>
         </div>
     </div>`;
 }
@@ -2727,15 +2748,6 @@ async function completeTask(taskId, taskToken) {
         triggerBurst(document.querySelector(`button[data-task="${taskId}"]`) || document.body);
         showCongrats(`+${r.rewardWtc} WTC`, '✅');
         await refreshUser();
-
-        // 🎁 Second revenue stream for article tasks: fire a passive ad after
-        // claiming (result ignored — this isn't tied to the user's reward,
-        // it's just an extra impression for us). Same pattern as the video
-        // section's periodic passive interstitial.
-        const claimedTask = (state.tasks || []).find(t => t._id === taskId);
-        if (claimedTask?.category === 'article') {
-            showMonetagAd().catch(() => {});
-        }
 
         // ── Vanishes the completed task's card with an animation, then refreshes the list ──
         const refreshActiveTab = () => {
