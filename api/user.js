@@ -17,7 +17,7 @@ import { checkAndRecordFingerprint } from '../lib/fingerprintCheck.js';
 import { isMember, OFFICIAL_CHANNEL, COMMUNITY_GROUP } from '../lib/telegram.js';
 import { maybeAwardReferralMilestones } from '../lib/referral.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
-import { getClientIp, checkIp, claimIp, claimIpForUser, getOwnerPublicInfo } from '../lib/ipRegistry.js';
+import { getClientIp, checkDevice, claimDevice, claimDeviceForUser, getOwnerPublicInfo } from '../lib/ipRegistry.js';
 
 async function handleInit(req, res, db) {
     const initData = req.body?.initData;
@@ -30,22 +30,24 @@ async function handleInit(req, res, db) {
     const referrerCode = verified.startParam; // ✅ comes from verified initData — client can't send a different one separately
     const { fingerprint } = req.body;
 
-    // ── Season 3: pure IP gate, checked on EVERY init (new or returning
-    // user) since the client calls action:init on every app boot. A
-    // different account already owning this IP blocks entry outright —
-    // the client shows the "IP Already In Use" screen with the owner's
-    // public info and lets the person switch network or force-claim it.
+    // ── Season 4: device-fingerprint gate (IP kept only as fallback — see
+    // lib/ipRegistry.js), checked on EVERY init (new or returning user)
+    // since the client calls action:init on every app boot. A different
+    // account already owning this device blocks entry outright — the
+    // client shows the "Device Already In Use" screen with the owner's
+    // public info and lets the person log into that account, or force-claim
+    // this device for their own (resets balance).
     const clientIp = getClientIp(req);
-    const ipCheck = await checkIp(db, clientIp, userId);
-    if (ipCheck.blocked) {
-        const owner = await getOwnerPublicInfo(db, ipCheck.ownerId);
+    const deviceCheck = await checkDevice(db, fingerprint, clientIp, userId);
+    if (deviceCheck.blocked) {
+        const owner = await getOwnerPublicInfo(db, deviceCheck.ownerId);
         return res.status(409).json({ ok: false, error: 'ip_in_use', owner });
     }
 
     const users = db.collection('users');
     const existing = await users.findOne({ _id: userId });
     if (existing) {
-        if (ipCheck.unclaimed) await claimIp(db, clientIp, userId); // link a fresh IP to a returning user
+        if (deviceCheck.unclaimed) await claimDevice(db, deviceCheck.key, userId); // link a fresh device to a returning user
         // ⚠️ NEW — refresh the "still alive" clock every time the app opens.
         // Powers the 90-day dead-account TTL below: 3 months with the app
         // never once opened and the whole doc auto-deletes (see
@@ -122,7 +124,7 @@ async function handleInit(req, res, db) {
         await users.updateOne({ _id: newUser.referredBy }, { $inc: { referralCount: 1, weeklyReferralCount: 1, totalInvites: 1 } });
     }
 
-    await claimIp(db, clientIp, userId); // first account on this IP — claim it
+    await claimDevice(db, deviceCheck.key, userId); // first account on this device — claim it
 
     // ⚠️ CHANGED — checkAndRecordFingerprint (lib/fingerprintCheck.js) now
     // auto-suspends THIS account itself (isBanned:true + bannedTelegramIds
@@ -134,15 +136,18 @@ async function handleInit(req, res, db) {
     return res.status(200).json({ ok: true, created: true, multiAccountFlagged: fpResult.flagged });
 }
 
-// Season 3 "Switch account" — the way forward from the IP-in-use block
-// screen besides changing network. Force-claims the IP for the CALLER's
-// Telegram account and wipes their balance as the anti-abuse cost of doing
-// so. See lib/ipRegistry.js:claimIpForUser for exactly what gets reset.
+// Season 4 "Switch account" — the way forward from the device-in-use block
+// screen besides logging into the account that already owns this device.
+// Force-claims the device key (fingerprint, or IP as fallback — see
+// lib/ipRegistry.js:registryKey) for the CALLER's Telegram account and wipes
+// their balance as the anti-abuse cost of doing so. See
+// lib/ipRegistry.js:claimDeviceForUser for exactly what gets reset.
 async function handleSwitchAccount(req, res, db) {
     const initData = req.body?.initData;
     const verified = verifyTelegramInitData(initData);
     if (!verified.ok) return res.status(401).json({ ok: false, error: 'unauthorized', reason: verified.error });
     const userId = String(verified.user.id);
+    const { fingerprint } = req.body;
 
     const stillBanned = await db.collection('bannedTelegramIds').findOne({ _id: userId });
     if (stillBanned) return res.status(403).json({ ok: false, error: 'banned' });
@@ -151,7 +156,8 @@ async function handleSwitchAccount(req, res, db) {
     if (!existing) return res.status(404).json({ ok: false, error: 'user_not_found' });
 
     const clientIp = getClientIp(req);
-    await claimIpForUser(db, clientIp, userId);
+    const key = fingerprint && fingerprint.length >= 16 ? fingerprint : `ip:${clientIp}`;
+    await claimDeviceForUser(db, key, userId);
     return res.status(200).json({ ok: true, switched: true });
 }
 
@@ -222,4 +228,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-}
+    }
