@@ -125,8 +125,10 @@
 // ──────────────────────────────────────────────────────────────────
 // {
 //   _id: ObjectId, title: "...", url: "...", channelId: "@...",
-//   category: "channel" | "partner",
-//   rewardWtc: 60,                       // নতুন ফিল্ড নাম (পুরোনো rewardGold এখনো fallback হিসেবে কোডে আছে)
+//   category: "channel" | "daily" | "exclusive" | "partner" | "earning",
+//   rewardWtc: 60,                       // always the actual WTC credited (USDT already converted in, see below)
+//   rewardCurrency: "wtc" | "usdt",      // "daily" tasks may be priced in USDT — display-only, doesn't change crediting
+//   rewardUsdt: 0.5,                     // set only when rewardCurrency === "usdt", null otherwise
 //   isApproved: true, limit: 0, completionCount: 0, createdAt: Date
 // }
 //
