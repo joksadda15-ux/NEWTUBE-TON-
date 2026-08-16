@@ -41,10 +41,25 @@ const APP_URL = 'https://newtube-ton.vercel.app';
 
 // Returns the promise (does NOT fire it bare) — caller hands this to
 // waitUntil() so Vercel keeps the function alive until the request is sent.
+//
+// ⚠️ BUG FIX #2 (this update): waitUntil()'s promise is bound by the SAME
+// maxDuration deadline as the invocation itself (confirmed in Vercel's own
+// docs). The first version just did `waitUntil(fetch(nextChunkUrl))`, which
+// waits for the FULL response — but the next chunk takes ~6-8s to process
+// before it responds, so the CURRENT invocation (which already spent ~6-8s
+// sending this chunk) would need to survive well past Hobby's 10s cap to
+// see that fetch resolve. It got killed mid-wait, so the trigger sometimes
+// went out and sometimes didn't — explains the sporadic, unreliable delivery.
+// Fix: abort our own wait after 3s. That's enough time for the request to
+// actually be dispatched; we don't need to see its response — the next
+// invocation runs independently on Vercel once triggered, regardless of
+// whether our end is still listening (aborting our side doesn't cancel it).
 function triggerNextChunkPromise(jobId) {
-    return fetch(`${APP_URL}/api/broadcastWorker?jobId=${jobId}&secret=${BOT_TOKEN}`).catch((err) => {
-        console.error(`broadcastWorker: failed to trigger next chunk for job ${jobId}:`, err.message);
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    return fetch(`${APP_URL}/api/broadcastWorker?jobId=${jobId}&secret=${BOT_TOKEN}`, { signal: controller.signal })
+        .catch(() => {}) // expected: AbortError once the 3s cutoff hits — not a real failure
+        .finally(() => clearTimeout(timeout));
 }
 
 export default async function handler(req, res) {
@@ -112,4 +127,4 @@ export default async function handler(req, res) {
     waitUntil(triggerNextChunkPromise(jobId));
 
     return res.status(200).json({ ok: true, sentThisChunk: sentDelta, failedThisChunk: failedDelta });
-}
+            }
