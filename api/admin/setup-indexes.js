@@ -53,6 +53,12 @@ export default async function handler(req, res) {
             )],
             ['weeklyReferralReports.weekEndedAt', () => db.collection('weeklyReferralReports').createIndex({ weekEndedAt: -1 })],
             ['adminState.updatedAt (TTL 1h)', () => db.collection('adminState').createIndex({ updatedAt: 1 }, { expireAfterSeconds: 3600 })],
+            // ⚠️ NEW — resumable broadcast jobs (lib/broadcastJob.js). One doc
+            // per broadcast campaign, auto-cleaned 30 days after it finishes.
+            ['broadcastJobs.finishedAt (partial TTL 30d, status:done only)', () => db.collection('broadcastJobs').createIndex(
+                { finishedAt: 1 },
+                { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'done' } }
+            )],
         ];
 
         for (const [name, fn] of steps) {
