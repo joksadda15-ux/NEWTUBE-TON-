@@ -1,21 +1,35 @@
-// api/broadcastWorker.js — NEW / ⚠️ FIXED (this update)
+// api/broadcastWorker.js — NEW / ⚠️ FIXED (this update, 3rd fix)
 //
-// Processes ONE chunk (BROADCAST_CHUNK_SIZE users) of a broadcastJobs doc,
-// then triggers a call to itself to process the next chunk — so a 3000+
-// user broadcast survives Vercel Hobby's 10s function timeout instead of
-// dying mid-loop with no resume (see lib/broadcastJob.js for why).
+// Processes users from a broadcastJobs doc in small batches, then triggers
+// a call to itself to keep going — so a 3000+ user broadcast survives
+// Vercel Hobby's 10s function timeout instead of dying mid-loop with no
+// resume (see lib/broadcastJob.js for why).
 //
-// ⚠️ BUG FIX (this update): the original version used a plain `fetch(...)`
-// without `await` to trigger the next chunk ("fire-and-forget"). On Vercel,
-// once a function sends its response, the execution environment is
-// FROZEN — any in-flight network call that hasn't finished sending gets
-// killed right there. So the very first self-trigger never actually went
-// out, the chain never started, and NOTHING ever got sent (confirmed:
-// admin got the "queued" message — that part is synchronous — but zero
-// users received anything, because the worker was never really invoked).
-// Fix: wrap the trigger call in `waitUntil()` from `@vercel/functions`,
-// which explicitly tells Vercel to keep the function alive until that
-// promise settles, even after the response has already been sent.
+// ⚠️ BUG FIX #1: the original version used a plain `fetch(...)` without
+// `await` to trigger the next chunk. Vercel freezes execution the instant
+// a response is sent, killing any un-awaited network call — the very first
+// self-trigger never actually went out, so NOTHING was ever sent.
+//
+// ⚠️ BUG FIX #2: switching to `waitUntil()` alone wasn't enough — that
+// promise is bound by the SAME maxDuration deadline as the invocation, and
+// the original code awaited the next chunk's FULL response (which itself
+// takes several seconds), risking the parent getting killed mid-wait.
+// Fixed by aborting our own wait after 3s (see triggerNextChunkPromise) —
+// we only need the request dispatched, not answered.
+//
+// ⚠️ BUG FIX #3 (this one): chunk SIZE was sized only around the artificial
+// inter-message delay (BROADCAST_MSG_DELAY_MS), completely ignoring that
+// `await tgSend(...)` is a REAL network round-trip to Telegram's API —
+// typically 150-500ms on its own. 120 users × (real latency + delay) blew
+// way past Hobby's 10s cap, so the function got killed mid-loop on THE
+// VERY FIRST CHUNK, before ever reaching updateJobProgress — which is also
+// what triggers the next chunk. Result: job permanently stuck at
+// status:"running", sentCount:0, nothing ever retried automatically.
+// Fixed by switching from a fixed head-count per chunk to a TIME BUDGET:
+// keep sending for up to SEND_TIME_BUDGET_MS of real wall-clock time,
+// however many users that turns out to be, then stop and hand off the rest
+// via the cursor — this is safe regardless of how slow/fast Telegram's API
+// responds on any given invocation.
 //
 // Triggered by:
 //   1) api/bot.js right after the admin confirms the broadcast (bc_confirm)
@@ -31,7 +45,7 @@ import { tgSend, tgSendPhoto } from '../lib/telegram.js';
 import { waitUntil } from '@vercel/functions';
 import {
     getBroadcastJob, tryLockJob, updateJobProgress, markJobDone,
-    BROADCAST_CHUNK_SIZE, BROADCAST_MSG_DELAY_MS,
+    BROADCAST_MSG_DELAY_MS,
 } from '../lib/broadcastJob.js';
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -39,21 +53,23 @@ const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
 // ⚠️ Same URL as APP_URL in api/bot.js — keep these in sync if you change domains.
 const APP_URL = 'https://newtube-ton.vercel.app';
 
+// How many candidate users to pull from the DB per invocation. This is just
+// an upper ceiling — SEND_TIME_BUDGET_MS decides how many of them actually
+// get processed before this invocation stops and hands off the rest.
+const CANDIDATE_BATCH_SIZE = 500;
+// Stop sending once this much wall-clock time has passed in THIS invocation
+// (measured from the start of the send loop), leaving headroom under
+// Hobby's 10s cap for connectToDatabase, the DB query, updateJobProgress,
+// and dispatching the next trigger. Deliberately conservative — better to
+// under-fill a chunk and take one extra hop than to risk getting killed
+// before updateJobProgress runs (which is what caused bug #3 above).
+const SEND_TIME_BUDGET_MS = 7000;
+
 // Returns the promise (does NOT fire it bare) — caller hands this to
 // waitUntil() so Vercel keeps the function alive until the request is sent.
-//
-// ⚠️ BUG FIX #2 (this update): waitUntil()'s promise is bound by the SAME
-// maxDuration deadline as the invocation itself (confirmed in Vercel's own
-// docs). The first version just did `waitUntil(fetch(nextChunkUrl))`, which
-// waits for the FULL response — but the next chunk takes ~6-8s to process
-// before it responds, so the CURRENT invocation (which already spent ~6-8s
-// sending this chunk) would need to survive well past Hobby's 10s cap to
-// see that fetch resolve. It got killed mid-wait, so the trigger sometimes
-// went out and sometimes didn't — explains the sporadic, unreliable delivery.
-// Fix: abort our own wait after 3s. That's enough time for the request to
-// actually be dispatched; we don't need to see its response — the next
-// invocation runs independently on Vercel once triggered, regardless of
-// whether our end is still listening (aborting our side doesn't cancel it).
+// Aborts its own wait after 3s — we only need the request dispatched, not
+// answered; the next invocation runs independently on Vercel once
+// triggered, regardless of whether we're still listening for its response.
 function triggerNextChunkPromise(jobId) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000);
@@ -81,12 +97,12 @@ export default async function handler(req, res) {
     const users = db.collection('users');
 
     const query = job.lastUserId ? { _id: { $gt: job.lastUserId } } : {};
-    const chunk = await users.find(query, { projection: { _id: 1 } })
+    const candidates = await users.find(query, { projection: { _id: 1 } })
         .sort({ _id: 1 })
-        .limit(BROADCAST_CHUNK_SIZE)
+        .limit(CANDIDATE_BATCH_SIZE)
         .toArray();
 
-    if (chunk.length === 0) {
+    if (candidates.length === 0) {
         await markJobDone(jobId);
         await tgSend(ADMIN_ID, `✅ <b>Broadcast Done!</b>\n\nSent: <b>${job.sentCount}</b> | Failed: <b>${job.failedCount}</b>`, {
             reply_markup: { inline_keyboard: [[{ text: '◀️ Back to Menu', callback_data: 'a_menu' }]] },
@@ -101,8 +117,13 @@ export default async function handler(req, res) {
 
     let sentDelta = 0, failedDelta = 0;
     let lastUserId = job.lastUserId;
+    const loopStart = Date.now();
 
-    for (const u of chunk) {
+    for (const u of candidates) {
+        // ⚠️ THE FIX — stop based on real elapsed time, not a fixed count.
+        // Whatever's left over just gets picked up by the next invocation
+        // via the lastUserId cursor.
+        if (Date.now() - loopStart > SEND_TIME_BUDGET_MS) break;
         try {
             if (job.photoFileId) {
                 await tgSendPhoto(u._id, job.photoFileId, job.text, extra);
@@ -119,12 +140,7 @@ export default async function handler(req, res) {
 
     await updateJobProgress(jobId, { lastUserId, sentDelta, failedDelta });
 
-    // ⚠️ FIXED — was a bare, un-awaited `fetch(...)` before. Now the
-    // trigger promise is registered with waitUntil() so Vercel actually
-    // lets it complete instead of killing it the instant res.json() below
-    // sends the response. This is the root cause of the "queued but nobody
-    // ever received it" bug.
     waitUntil(triggerNextChunkPromise(jobId));
 
     return res.status(200).json({ ok: true, sentThisChunk: sentDelta, failedThisChunk: failedDelta });
-            }
+}
