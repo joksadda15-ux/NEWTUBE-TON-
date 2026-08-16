@@ -126,6 +126,7 @@
 // {
 //   _id: ObjectId, title: "...", url: "...", channelId: "@...",
 //   category: "channel" | "daily" | "exclusive" | "partner" | "earning",
+//   verifyType: "api" | "link",          // ⚠️ NEW — "api" = real Telegram join check (channelId required); "link" = manual claim after taskStart wait. Independent of category — any category can be "api" now, not just "channel".
 //   rewardWtc: 60,                       // always the actual WTC credited (USDT already converted in, see below)
 //   rewardCurrency: "wtc" | "usdt",      // "daily" tasks may be priced in USDT — display-only, doesn't change crediting
 //   rewardUsdt: 0.5,                     // set only when rewardCurrency === "usdt", null otherwise
