@@ -1,9 +1,21 @@
-// api/broadcastWorker.js — NEW
+// api/broadcastWorker.js — NEW / ⚠️ FIXED (this update)
 //
 // Processes ONE chunk (BROADCAST_CHUNK_SIZE users) of a broadcastJobs doc,
-// then fire-and-forgets a call to itself to process the next chunk — so a
-// 3000+ user broadcast survives Vercel Hobby's 10s function timeout instead
-// of dying mid-loop with no resume (see lib/broadcastJob.js for why).
+// then triggers a call to itself to process the next chunk — so a 3000+
+// user broadcast survives Vercel Hobby's 10s function timeout instead of
+// dying mid-loop with no resume (see lib/broadcastJob.js for why).
+//
+// ⚠️ BUG FIX (this update): the original version used a plain `fetch(...)`
+// without `await` to trigger the next chunk ("fire-and-forget"). On Vercel,
+// once a function sends its response, the execution environment is
+// FROZEN — any in-flight network call that hasn't finished sending gets
+// killed right there. So the very first self-trigger never actually went
+// out, the chain never started, and NOTHING ever got sent (confirmed:
+// admin got the "queued" message — that part is synchronous — but zero
+// users received anything, because the worker was never really invoked).
+// Fix: wrap the trigger call in `waitUntil()` from `@vercel/functions`,
+// which explicitly tells Vercel to keep the function alive until that
+// promise settles, even after the response has already been sent.
 //
 // Triggered by:
 //   1) api/bot.js right after the admin confirms the broadcast (bc_confirm)
@@ -16,6 +28,7 @@
 
 import { connectToDatabase } from '../lib/mongodb.js';
 import { tgSend, tgSendPhoto } from '../lib/telegram.js';
+import { waitUntil } from '@vercel/functions';
 import {
     getBroadcastJob, tryLockJob, updateJobProgress, markJobDone,
     BROADCAST_CHUNK_SIZE, BROADCAST_MSG_DELAY_MS,
@@ -26,10 +39,10 @@ const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
 // ⚠️ Same URL as APP_URL in api/bot.js — keep these in sync if you change domains.
 const APP_URL = 'https://newtube-ton.vercel.app';
 
-function triggerNextChunk(jobId) {
-    // Fire-and-forget — do NOT await, so this function can return its
-    // response immediately instead of waiting on the next chunk too.
-    fetch(`${APP_URL}/api/broadcastWorker?jobId=${jobId}&secret=${BOT_TOKEN}`).catch((err) => {
+// Returns the promise (does NOT fire it bare) — caller hands this to
+// waitUntil() so Vercel keeps the function alive until the request is sent.
+function triggerNextChunkPromise(jobId) {
+    return fetch(`${APP_URL}/api/broadcastWorker?jobId=${jobId}&secret=${BOT_TOKEN}`).catch((err) => {
         console.error(`broadcastWorker: failed to trigger next chunk for job ${jobId}:`, err.message);
     });
 }
@@ -91,9 +104,12 @@ export default async function handler(req, res) {
 
     await updateJobProgress(jobId, { lastUserId, sentDelta, failedDelta });
 
-    // More users left → chain to the next chunk. Otherwise the *next*
-    // invocation (triggered right now) will find an empty chunk and finalize.
-    triggerNextChunk(jobId);
+    // ⚠️ FIXED — was a bare, un-awaited `fetch(...)` before. Now the
+    // trigger promise is registered with waitUntil() so Vercel actually
+    // lets it complete instead of killing it the instant res.json() below
+    // sends the response. This is the root cause of the "queued but nobody
+    // ever received it" bug.
+    waitUntil(triggerNextChunkPromise(jobId));
 
     return res.status(200).json({ ok: true, sentThisChunk: sentDelta, failedThisChunk: failedDelta });
 }
