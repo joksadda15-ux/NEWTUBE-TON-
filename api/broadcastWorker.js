@@ -1,8 +1,8 @@
-// api/broadcastWorker.js — NEW / ⚠️ FIXED (this update, 3rd fix)
+// api/broadcastWorker.js — NEW / ⚠️ FIXED (this update, 4th fix)
 //
 // Processes users from a broadcastJobs doc in small batches, then triggers
 // a call to itself to keep going — so a 3000+ user broadcast survives
-// Vercel Hobby's 10s function timeout instead of dying mid-loop with no
+// Vercel Hobby's ~10s function timeout instead of dying mid-loop with no
 // resume (see lib/broadcastJob.js for why).
 //
 // ⚠️ BUG FIX #1: the original version used a plain `fetch(...)` without
@@ -11,25 +11,33 @@
 // self-trigger never actually went out, so NOTHING was ever sent.
 //
 // ⚠️ BUG FIX #2: switching to `waitUntil()` alone wasn't enough — that
-// promise is bound by the SAME maxDuration deadline as the invocation, and
-// the original code awaited the next chunk's FULL response (which itself
-// takes several seconds), risking the parent getting killed mid-wait.
-// Fixed by aborting our own wait after 3s (see triggerNextChunkPromise) —
-// we only need the request dispatched, not answered.
+// promise is bound by the SAME maxDuration deadline as the invocation.
+// Fixed by aborting our own wait after a short timeout — we only need the
+// request dispatched, not answered.
 //
-// ⚠️ BUG FIX #3 (this one): chunk SIZE was sized only around the artificial
-// inter-message delay (BROADCAST_MSG_DELAY_MS), completely ignoring that
-// `await tgSend(...)` is a REAL network round-trip to Telegram's API —
-// typically 150-500ms on its own. 120 users × (real latency + delay) blew
-// way past Hobby's 10s cap, so the function got killed mid-loop on THE
-// VERY FIRST CHUNK, before ever reaching updateJobProgress — which is also
-// what triggers the next chunk. Result: job permanently stuck at
-// status:"running", sentCount:0, nothing ever retried automatically.
-// Fixed by switching from a fixed head-count per chunk to a TIME BUDGET:
-// keep sending for up to SEND_TIME_BUDGET_MS of real wall-clock time,
-// however many users that turns out to be, then stop and hand off the rest
-// via the cursor — this is safe regardless of how slow/fast Telegram's API
-// responds on any given invocation.
+// ⚠️ BUG FIX #3: chunk size was sized only around the artificial
+// inter-message delay, ignoring that `await tgSend(...)` is itself a real
+// network round-trip. Switched from a fixed head-count to a time budget.
+//
+// ⚠️ BUG FIX #4 (this one — the actual reason chains kept dying after
+// EXACTLY one chunk, every single time, not randomly): the time budget in
+// fix #3 was measured starting from the beginning of the SEND LOOP only —
+// it never accounted for the time already spent on connectToDatabase(),
+// tryLockJob(), and the candidates query, all of which happen BEFORE the
+// loop starts. So real total elapsed time (DB overhead + 7s loop +
+// updateJobProgress + trigger dispatch) was landing at or past Vercel's
+// real cutoff — late enough that updateJobProgress usually still squeezed
+// in (explaining why partial progress like "83 sent" WAS saved), but the
+// self-trigger line right after it almost never got to run at all. That's
+// why the first hop (triggered by api/bot.js, which starts its own fresh
+// budget) always worked, while every self-triggered hop after it reliably
+// died — consistent, not probabilistic.
+// Fixed by measuring elapsed time from the true start of the ENTIRE
+// invocation (before any DB call), and reserving a fixed chunk of time at
+// the end — no matter how long the DB overhead ends up being — for
+// updateJobProgress + dispatching the next trigger. Also guarantees at
+// least one user gets sent per invocation regardless of the clock, so a
+// slow-DB day can never fully stall the job (no progress, no retry).
 //
 // Triggered by:
 //   1) api/bot.js right after the admin confirms the broadcast (bc_confirm)
@@ -53,32 +61,37 @@ const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
 // ⚠️ Same URL as APP_URL in api/bot.js — keep these in sync if you change domains.
 const APP_URL = 'https://newtube-ton.vercel.app';
 
-// How many candidate users to pull from the DB per invocation. This is just
-// an upper ceiling — SEND_TIME_BUDGET_MS decides how many of them actually
-// get processed before this invocation stops and hands off the rest.
+// How many candidate users to pull from the DB per invocation — just an
+// upper ceiling; the time budget below decides how many actually get sent.
 const CANDIDATE_BATCH_SIZE = 500;
-// Stop sending once this much wall-clock time has passed in THIS invocation
-// (measured from the start of the send loop), leaving headroom under
-// Hobby's 10s cap for connectToDatabase, the DB query, updateJobProgress,
-// and dispatching the next trigger. Deliberately conservative — better to
-// under-fill a chunk and take one extra hop than to risk getting killed
-// before updateJobProgress runs (which is what caused bug #3 above).
-const SEND_TIME_BUDGET_MS = 7000;
 
-// Returns the promise (does NOT fire it bare) — caller hands this to
-// waitUntil() so Vercel keeps the function alive until the request is sent.
-// Aborts its own wait after 3s — we only need the request dispatched, not
-// answered; the next invocation runs independently on Vercel once
-// triggered, regardless of whether we're still listening for its response.
+// ⚠️ FIX #4 — deliberately conservative overall budget, measured from the
+// TRUE top of the invocation (see FUNCTION_START below), not just the send
+// loop. Vercel Hobby's real cutoff is ~10s; this stays well under it.
+const TOTAL_BUDGET_MS = 8000;
+// Reserved out of the budget above for updateJobProgress's DB write + the
+// self-trigger dispatch — guaranteed available no matter how long
+// connectToDatabase/candidates-query/tryLockJob took up front.
+const WRAPUP_RESERVE_MS = 2500;
+// Trigger dispatch aborts our own wait after this long — we only need the
+// request sent, not answered, and this must fit inside WRAPUP_RESERVE_MS
+// alongside updateJobProgress's own DB write.
+const TRIGGER_ABORT_MS = 1500;
+
 function triggerNextChunkPromise(jobId) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
+    const timeout = setTimeout(() => controller.abort(), TRIGGER_ABORT_MS);
     return fetch(`${APP_URL}/api/broadcastWorker?jobId=${jobId}&secret=${BOT_TOKEN}`, { signal: controller.signal })
-        .catch(() => {}) // expected: AbortError once the 3s cutoff hits — not a real failure
+        .catch(() => {}) // expected: AbortError once the cutoff hits — not a real failure
         .finally(() => clearTimeout(timeout));
 }
 
 export default async function handler(req, res) {
+    // ⚠️ FIX #4 — clock starts here, BEFORE any DB call, so the send-loop
+    // deadline below correctly accounts for connectToDatabase/tryLockJob/
+    // candidates-query overhead instead of ignoring it.
+    const FUNCTION_START = Date.now();
+
     if (!BOT_TOKEN || req.query.secret !== BOT_TOKEN) {
         return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
@@ -117,13 +130,13 @@ export default async function handler(req, res) {
 
     let sentDelta = 0, failedDelta = 0;
     let lastUserId = job.lastUserId;
-    const loopStart = Date.now();
+    // Whatever's left of the budget once we get here, after DB overhead —
+    // could be less than TOTAL_BUDGET_MS - WRAPUP_RESERVE_MS if
+    // connectToDatabase/tryLockJob/the query were slow this time.
+    const sendDeadline = FUNCTION_START + TOTAL_BUDGET_MS - WRAPUP_RESERVE_MS;
 
-    for (const u of candidates) {
-        // ⚠️ THE FIX — stop based on real elapsed time, not a fixed count.
-        // Whatever's left over just gets picked up by the next invocation
-        // via the lastUserId cursor.
-        if (Date.now() - loopStart > SEND_TIME_BUDGET_MS) break;
+    for (let i = 0; i < candidates.length; i++) {
+        const u = candidates[i];
         try {
             if (job.photoFileId) {
                 await tgSendPhoto(u._id, job.photoFileId, job.text, extra);
@@ -135,7 +148,11 @@ export default async function handler(req, res) {
             failedDelta++;
         }
         lastUserId = u._id;
-        await new Promise((r) => setTimeout(r, BROADCAST_MSG_DELAY_MS));
+        // ⚠️ Checked AFTER processing the current user, not before — this
+        // guarantees at least one user gets sent per invocation even on a
+        // slow-DB day, so the job can never fully livelock at zero progress.
+        if (Date.now() >= sendDeadline) break;
+        if (i < candidates.length - 1) await new Promise((r) => setTimeout(r, BROADCAST_MSG_DELAY_MS));
     }
 
     await updateJobProgress(jobId, { lastUserId, sentDelta, failedDelta });
