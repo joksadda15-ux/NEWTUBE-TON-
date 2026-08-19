@@ -135,6 +135,16 @@ async function handleCreate(req, res, db) {
     const user = await users.findOne({ _id: id });
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
+    // ⚠️ NEW — referral-velocity auto-lock (lib/constants.js REFERRAL_VELOCITY_*,
+    // set in api/user.js). Softer than a ban — the account and its balance
+    // stay intact, but withdrawals are held until an admin reviews and
+    // either unlocks or bans. Prevents cashing out during the review window.
+    if (user.accountLocked) {
+        return res.status(403).json({
+            ok: false, error: 'account_locked',
+            message: 'Your account is temporarily locked for review. Please contact support.',
+        });
+    }
 
     // ── lifetime tasks requirement (one-time, not daily) ──
     const tasksLifetime = (user.completedTasks || []).length;
@@ -242,43 +252,25 @@ async function handleCreate(req, res, db) {
         referralConsumed: willConsumeReferral,
         status: 'pending',
         createdAt: new Date(),
+        // ⚠️ CHANGED (this update) — referrerId is still recorded here at
+        // request time (for the admin audit trail), but the actual
+        // commission credit no longer happens here. See api/bot.js
+        // finalizeWithdrawal for why and where it moved.
+        referrerId: user.referredBy || null,
+        referrerCommissionPaid: 0,
     };
     const inserted = await withdrawals.insertOne(withdrawDoc);
 
-    // ══════════════════════════════════════════════════════════
-    // ⚠️ NEW — referral withdrawal commission. If this user was referred by
-    // someone, the referrer is credited WITHDRAW_REFERRAL_COMMISSION_PERCENT
-    // (10%) of the GROSS wtcAmount just withdrawn — e.g. a 1,000 WTC
-    // withdrawal pays the referrer 100 WTC. This fires on EVERY withdrawal,
-    // not just once, for as long as the referral relationship exists (see
-    // constants.js for the fraud/economics trade-offs flagged there). Runs
-    // as a best-effort follow-up update — it does not block or roll back
-    // the withdrawal itself if it fails, and a banned referrer is skipped.
-    // ══════════════════════════════════════════════════════════
-    let referrerCommission = 0;
-    if (user.referredBy) {
-        referrerCommission = Math.floor(wtcAmount * (WITHDRAW_REFERRAL_COMMISSION_PERCENT / 100));
-        if (referrerCommission > 0) {
-            try {
-                const referrerUpdate = await users.findOneAndUpdate(
-                    { _id: user.referredBy, isBanned: { $ne: true } },
-                    { $inc: { wtcBalance: referrerCommission, lifetimeWtcEarned: referrerCommission, referralCommissionEarned: referrerCommission } },
-                    { returnDocument: 'after' }
-                );
-                if (referrerUpdate) {
-                    tgSend(
-                        user.referredBy,
-                        `💰 <b>Referral Commission!</b>\n\nOne of your referrals just withdrew ${wtcAmount.toLocaleString()} WTC.\nYou earned <b>${referrerCommission.toLocaleString()} WTC</b> (10% commission) 🎉`
-                    ).catch(() => {});
-                }
-            } catch (e) { /* non-blocking — commission failure never blocks the withdrawal itself */ }
-        }
-    }
-    // Record the commission (if any) on the withdrawal doc for admin audit trail.
-    await withdrawals.updateOne(
-        { _id: inserted.insertedId },
-        { $set: { referrerId: user.referredBy || null, referrerCommissionPaid: referrerCommission } }
-    );
+    // ⚠️ BUG FIX (this update) — referral withdrawal commission used to be
+    // credited RIGHT HERE, the instant a withdrawal was REQUESTED — before
+    // any admin approval. That meant a referrer got paid their 10% cut even
+    // if the withdrawal was later rejected (e.g. for being fraudulent),
+    // with no claw-back anywhere in the reject flow. Concretely: a farmed
+    // account requests a huge withdrawal, gets banned and the request
+    // rejected, but the referrer who invited them had ALREADY pocketed the
+    // commission and keeps it regardless. Commission crediting now happens
+    // in api/bot.js's finalizeWithdrawal, ONLY on actual approval — see
+    // there for the credit logic. Nothing to do here anymore.
 
     if (ADMIN_ID) {
         const adminText =
@@ -322,4 +314,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-                    }
+            }
