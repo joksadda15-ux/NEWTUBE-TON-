@@ -11,13 +11,15 @@
 //   GET  /api/user?action=profile&initData=...
 
 import { connectToDatabase } from '../lib/mongodb.js';
-import { todayBD } from '../lib/constants.js';
+import { todayBD, REFERRAL_VELOCITY_WINDOW_MS, REFERRAL_VELOCITY_THRESHOLD } from '../lib/constants.js';
 import { ensureDailyReset } from '../lib/dailyReset.js';
 import { checkAndRecordFingerprint } from '../lib/fingerprintCheck.js';
-import { isMember, OFFICIAL_CHANNEL, COMMUNITY_GROUP } from '../lib/telegram.js';
+import { isMember, OFFICIAL_CHANNEL, COMMUNITY_GROUP, tgSend } from '../lib/telegram.js';
 import { maybeAwardReferralMilestones } from '../lib/referral.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import { getClientIp, checkDevice, claimDevice, claimDeviceForUser, getOwnerPublicInfo } from '../lib/ipRegistry.js';
+
+const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
 
 async function handleInit(req, res, db) {
     const initData = req.body?.initData;
@@ -121,7 +123,44 @@ async function handleInit(req, res, db) {
     }
 
     if (newUser.referredBy) {
-        await users.updateOne({ _id: newUser.referredBy }, { $inc: { referralCount: 1, weeklyReferralCount: 1, totalInvites: 1 } });
+        const referrerId = newUser.referredBy;
+        const now = new Date();
+        // ⚠️ NEW — referral signup velocity lock (lib/constants.js
+        // REFERRAL_VELOCITY_*). Every signup under this referrer pushes a
+        // timestamp onto a capped rolling list (last 50 — plenty to check
+        // a 2-minute window, negligible storage), then checks how many of
+        // those timestamps fall inside the velocity window.
+        const referrerAfter = await users.findOneAndUpdate(
+            { _id: referrerId },
+            {
+                $inc: { referralCount: 1, weeklyReferralCount: 1, totalInvites: 1 },
+                $push: { recentReferralSignups: { $each: [now], $slice: -50 } },
+            },
+            { returnDocument: 'after' }
+        );
+        const referrerDoc = referrerAfter?.value !== undefined ? referrerAfter.value : referrerAfter;
+        if (referrerDoc && !referrerDoc.accountLocked) {
+            const windowStart = Date.now() - REFERRAL_VELOCITY_WINDOW_MS;
+            const recentCount = (referrerDoc.recentReferralSignups || [])
+                .filter((t) => new Date(t).getTime() >= windowStart).length;
+            if (recentCount >= REFERRAL_VELOCITY_THRESHOLD) {
+                // ⚠️ Atomic guard (accountLocked:{$ne:true}) — if two signups
+                // trip this in the same instant, only one locks + alerts.
+                const justLocked = await users.updateOne(
+                    { _id: referrerId, accountLocked: { $ne: true } },
+                    { $set: { accountLocked: true, accountLockedAt: now, accountLockedReason: 'referral_velocity' } }
+                );
+                if (justLocked.modifiedCount > 0 && ADMIN_ID) {
+                    const minutes = Math.round(REFERRAL_VELOCITY_WINDOW_MS / 60000);
+                    tgSend(
+                        ADMIN_ID,
+                        `🔒 <b>Account auto-locked — referral velocity</b>\n\n` +
+                        `Referrer <code>${referrerId}</code> just crossed <b>${REFERRAL_VELOCITY_THRESHOLD}+</b> referral signups within <b>${minutes} minutes</b> — no real promotion delivers signups this fast.\n\n` +
+                        `Their withdrawals and referral rewards are held until you review and Unlock or Ban from their user info.`
+                    ).catch(() => {});
+                }
+            }
+        }
     }
 
     await claimDevice(db, deviceCheck.key, userId); // first account on this device — claim it
@@ -228,4 +267,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-    }
+}
