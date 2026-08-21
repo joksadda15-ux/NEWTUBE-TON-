@@ -30,6 +30,7 @@ import { ensureDailyReset } from '../lib/dailyReset.js';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import {
     WITHDRAW_METHODS, WITHDRAW_FEE_PERCENT, WITHDRAW_SECOND_FEE_PERCENT, MIN_WITHDRAW_WTC,
+    FIRST_WITHDRAW_MAX_WTC, FIRST_WITHDRAW_MAX_USD,
     WITHDRAW_TASKS_REQUIRED, WITHDRAW_ADS_REQUIRED, WITHDRAW_VALID_REFERRALS_PER_WITHDRAW,
     WITHDRAW_REFERRAL_COMMISSION_PERCENT,
     todayBD, WTC_PER_USD, WITHDRAWALS_OPEN,
@@ -79,6 +80,10 @@ async function handleStatus(req, res, db) {
         },
         referralRequirement: {
             isFirstWithdrawFree: isFirstWithdraw,
+            // ⚠️ NEW — frontend can show this cap upfront instead of letting
+            // the user submit and only then find out their free first
+            // withdrawal is capped.
+            firstWithdrawMaxWtc: isFirstWithdraw ? FIRST_WITHDRAW_MAX_WTC : null,
             perWithdraw: WITHDRAW_VALID_REFERRALS_PER_WITHDRAW,
             validReferralsAvailable: validAvailable,
             needsReferral: !isFirstWithdraw,
@@ -174,6 +179,16 @@ async function handleCreate(req, res, db) {
     // ── referral gate: free on the very first withdrawal, otherwise 1 valid referral is consumed ──
     const isFirstWithdraw = (user.withdrawalCount || 0) === 0;
     const willConsumeReferral = !isFirstWithdraw;
+    // ⚠️ NEW — the free first withdrawal is now capped at FIRST_WITHDRAW_MAX_WTC
+    // ($0.15 USD equivalent). Without this, a fresh account (farmed or not)
+    // could take an unlimited first withdrawal for zero referral cost.
+    if (isFirstWithdraw && wtcAmount > FIRST_WITHDRAW_MAX_WTC) {
+        return res.status(400).json({
+            ok: false, error: 'first_withdraw_cap',
+            firstWithdrawMaxWtc: FIRST_WITHDRAW_MAX_WTC, firstWithdrawMaxUsd: FIRST_WITHDRAW_MAX_USD,
+            message: `Your free first withdrawal is capped at ${FIRST_WITHDRAW_MAX_WTC.toLocaleString()} WTC (~$${FIRST_WITHDRAW_MAX_USD}). Lower the amount, or refer a friend and wait for them to complete all 3 referral steps to unlock larger withdrawals.`,
+        });
+    }
     const validAvailable = Math.max(0, (user.validReferralCount || 0) - (user.usedValidReferrals || 0));
     if (willConsumeReferral && validAvailable < WITHDRAW_VALID_REFERRALS_PER_WITHDRAW) {
         return res.status(400).json({
@@ -314,4 +329,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-            }
+}
