@@ -139,24 +139,34 @@ async function handleInit(req, res, db) {
             { returnDocument: 'after' }
         );
         const referrerDoc = referrerAfter?.value !== undefined ? referrerAfter.value : referrerAfter;
-        if (referrerDoc && !referrerDoc.accountLocked) {
+        // ⚠️ CHANGED (this update) — this used to auto-lock the referrer
+        // immediately (blocking their withdrawals + referral rewards).
+        // Now it's ALERT-ONLY — the admin reviews and decides (Lock or
+        // dismiss) from the alert or the user's info panel. No automatic
+        // harm to the user just for tripping a heuristic; a legitimate
+        // fast-growing promotion doesn't get punished by default.
+        if (referrerDoc && !referrerDoc.accountLocked && !referrerDoc.velocityFlaggedAt) {
             const windowStart = Date.now() - REFERRAL_VELOCITY_WINDOW_MS;
             const recentCount = (referrerDoc.recentReferralSignups || [])
                 .filter((t) => new Date(t).getTime() >= windowStart).length;
             if (recentCount >= REFERRAL_VELOCITY_THRESHOLD) {
-                // ⚠️ Atomic guard (accountLocked:{$ne:true}) — if two signups
-                // trip this in the same instant, only one locks + alerts.
-                const justLocked = await users.updateOne(
-                    { _id: referrerId, accountLocked: { $ne: true } },
-                    { $set: { accountLocked: true, accountLockedAt: now, accountLockedReason: 'referral_velocity' } }
+                // ⚠️ Atomic guard (velocityFlaggedAt:{$exists:false}) — only
+                // the first signup to cross the threshold sends the alert;
+                // this is now purely informational (velocityFlaggedAt), it
+                // does NOT block anything on its own — see accountLocked
+                // (admin-set only now) for the actual enforcement flag.
+                const justFlagged = await users.updateOne(
+                    { _id: referrerId, velocityFlaggedAt: { $exists: false } },
+                    { $set: { velocityFlaggedAt: now, velocityFlaggedReason: 'referral_velocity' } }
                 );
-                if (justLocked.modifiedCount > 0 && ADMIN_ID) {
+                if (justFlagged.modifiedCount > 0 && ADMIN_ID) {
                     const minutes = Math.round(REFERRAL_VELOCITY_WINDOW_MS / 60000);
                     tgSend(
                         ADMIN_ID,
-                        `🔒 <b>Account auto-locked — referral velocity</b>\n\n` +
+                        `🚩 <b>Referral velocity alert (no action taken)</b>\n\n` +
                         `Referrer <code>${referrerId}</code> just crossed <b>${REFERRAL_VELOCITY_THRESHOLD}+</b> referral signups within <b>${minutes} minutes</b> — no real promotion delivers signups this fast.\n\n` +
-                        `Their withdrawals and referral rewards are held until you review and Unlock or Ban from their user info.`
+                        `Nothing is blocked — check their referral list, then Lock if it looks fake or ignore if it's a real promotion.`,
+                        { reply_markup: { inline_keyboard: [[{ text: '🔎 Review this account', callback_data: `lookup_${referrerId}` }]] } }
                     ).catch(() => {});
                 }
             }
@@ -267,4 +277,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-}
+    }
