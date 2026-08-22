@@ -299,10 +299,24 @@ async function handleCreate(req, res, db) {
             `👥 Total referrals: <b>${user.referralCount || 0}</b>\n` +
             `📅 ${withdrawDoc.createdAt.toLocaleString()}\n` +
             `🆔 Request: <code>${inserted.insertedId}</code>`;
-        tgSend(ADMIN_ID, adminText, { reply_markup: { inline_keyboard: [[
-            { text: '✅ Approve', callback_data: `wd_approve_${inserted.insertedId}` },
-            { text: '❌ Reject', callback_data: `wd_reject_${inserted.insertedId}` },
-        ]] } }).catch(() => {});
+        // ⚠️ CHANGED — added a 3rd "Wrong Address" button (see api/bot.js
+        // wd_wrongaddr_/wd_addrconfirm_ handlers), and now AWAITS the send
+        // so the message_id can be stored on the withdrawal doc — needed
+        // so the wrong-address flow can edit THIS message later from a
+        // completely different chat (the user's), once they confirm.
+        try {
+            const sent = await tgSend(ADMIN_ID, adminText, { reply_markup: { inline_keyboard: [
+                [{ text: '✅ Approve', callback_data: `wd_approve_${inserted.insertedId}` },
+                 { text: '❌ Reject', callback_data: `wd_reject_${inserted.insertedId}` }],
+                [{ text: '⚠️ Wrong Address', callback_data: `wd_wrongaddr_${inserted.insertedId}` }],
+            ] } });
+            if (sent?.ok && sent.result?.message_id) {
+                await withdrawals.updateOne(
+                    { _id: inserted.insertedId },
+                    { $set: { adminMsgChatId: ADMIN_ID, adminMsgId: sent.result.message_id } }
+                );
+            }
+        } catch { /* non-blocking — the request is still saved even if this notification fails */ }
     }
 
     return res.status(200).json({
@@ -329,4 +343,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-}
+            }
