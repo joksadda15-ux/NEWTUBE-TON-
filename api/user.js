@@ -45,6 +45,16 @@ async function handleInit(req, res, db) {
         const owner = await getOwnerPublicInfo(db, deviceCheck.ownerId);
         return res.status(409).json({ ok: false, error: 'ip_in_use', owner });
     }
+    // ⚠️ NEW — soft IP-fallback collision (see lib/ipRegistry.js checkDevice).
+    // Not blocked, but worth a quiet admin-side breadcrumb in case a real
+    // multi-account pattern later shows up on the SAME key from the SAME
+    // userId repeatedly — never touches isBanned, never alerts per-event.
+    if (deviceCheck.fallbackCollision) {
+        db.collection('users').updateOne(
+            { _id: userId },
+            { $set: { ipFallbackCollisionFlag: true, ipFallbackCollisionWith: deviceCheck.ownerId } }
+        ).catch(() => {});
+    }
 
     const users = db.collection('users');
     const existing = await users.findOne({ _id: userId });
@@ -175,12 +185,12 @@ async function handleInit(req, res, db) {
 
     await claimDevice(db, deviceCheck.key, userId); // first account on this device — claim it
 
-    // ⚠️ CHANGED — checkAndRecordFingerprint (lib/fingerprintCheck.js) now
-    // auto-suspends THIS account itself (isBanned:true + bannedTelegramIds
-    // registry) the moment a duplicate-device match is found, instead of
-    // only setting multiAccountFlag for later admin review. See that file
-    // for the full reasoning/trade-off note. The ORIGINAL (first) account on
-    // that device is never touched by this — only the newly-created one.
+    // NOTE — checkAndRecordFingerprint (lib/fingerprintCheck.js) only sets
+    // multiAccountFlag for admin review here; it does NOT auto-ban. Real
+    // one-account-per-device enforcement is the hard block up in checkDevice()
+    // above. (An earlier version of this comment described an auto-ban path
+    // that was intentionally reverted — see fingerprintCheck.js's own note —
+    // fixed here so it stops contradicting the actual code.)
     const fpResult = await checkAndRecordFingerprint(db, userId, fingerprint);
     return res.status(200).json({ ok: true, created: true, multiAccountFlagged: fpResult.flagged });
 }
@@ -277,4 +287,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-    }
+                         }
