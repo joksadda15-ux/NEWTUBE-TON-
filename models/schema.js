@@ -55,8 +55,8 @@
 //   multiAccountSiblings: [],           // অন্য userId গুলো যারা একই fingerprint শেয়ার করে
 //   multiAccountFingerprint: "..."      // (optional) যে হ্যাশ ম্যাচ করেছে
 //
-//   // ── SEASON 3 ──
-//   luckyTickets: 0,                    // 🎟 777 lottery — earned 1 per verified referral, see lib/referral.js
+//   // ⚠️ REMOVED — luckyTickets / "777" lottery field. Feature removed entirely (this update).
+//   // Old user docs may still carry this field with a stale value; it's inert now, no code reads or writes it.
 //
 //   // ── SEASON 4 — simplified single-step withdraw ──
 //   validReferralCount: 0,              // lifetime, +1 when a referral completes all 3 steps (lib/referral.js)
