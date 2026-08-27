@@ -122,7 +122,7 @@ async function handleInit(req, res, db) {
         multiAccountSiblings: [],
         validReferralCount: 0,      // ⚠️ NEW — Season 4, +1 when a referral completes all 3 steps (lib/referral.js)
         usedValidReferrals: 0,      // ⚠️ NEW — Season 4, +1 each withdraw after the user's first (free) one
-        luckyTickets: 0,            // ⚠️ NEW — Season 3 "777" lottery, earned via referrals (see lib/referral.js)
+        // ⚠️ REMOVED (this update) — luckyTickets / "777" lottery field. Feature removed entirely, see lib/constants.js.
     };
 
     try {
@@ -287,4 +287,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-                         }
+    }
