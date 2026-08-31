@@ -309,6 +309,11 @@ async function handleCreate(req, res, db) {
                 [{ text: '✅ Approve', callback_data: `wd_approve_${inserted.insertedId}` },
                  { text: '❌ Reject', callback_data: `wd_reject_${inserted.insertedId}` }],
                 [{ text: '⚠️ Wrong Address', callback_data: `wd_wrongaddr_${inserted.insertedId}` }],
+                // ⚠️ NEW — for scripted/bot withdraw spam (e.g. many requests seconds
+                // apart following an identical pattern): bans the user AND wipes their
+                // entire wtcBalance to 0, not just this withdrawal's amount. See
+                // wd_banscam_ handler in api/bot.js.
+                [{ text: '🚫 Ban & Wipe (Scam)', callback_data: `wd_banscam_${inserted.insertedId}` }],
             ] } });
             if (sent?.ok && sent.result?.message_id) {
                 await withdrawals.updateOne(
@@ -343,4 +348,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-            }
+        }
