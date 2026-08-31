@@ -1035,6 +1035,7 @@ const ERROR_MESSAGES = {
     invalid_ad_token: 'Ad session invalid — please tap "Watch" again.',
     watch_time_too_short: 'Please watch the full ad before claiming the reward.',
     ad_token_expired: 'This ad session expired — please tap "Watch" again.',
+    video_token_expired: 'Video session expired — resuming...',
     ad_token_already_used: 'This ad was already claimed.',
     invalid_network: 'Unknown ad network — please refresh the app.',
     server_misconfigured: 'Ad rewards are temporarily unavailable — please try again later.',
@@ -2356,7 +2357,7 @@ function updateLootboxFullUI(isFull) {
     const sub = document.getElementById('vp-session-sub');
     if (!banner || !sub) return;
     banner.style.display = isFull ? 'block' : 'none';
-    sub.textContent = isFull ? 'Paused — claim your lootbox to resume earning' : '60 WTC earned per hour watched';
+    sub.textContent = isFull ? 'Paused — claim your lootbox to resume earning' : '50 WTC earned per hour watched';
 }
 
 async function startVideoSession() {
@@ -2364,12 +2365,12 @@ async function startVideoSession() {
     sessionDisplayWTC = 0;
     videoWatchSeconds = 0;
     lastMonetagInterstitialAt = 0;
-    const startRes = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
+    const startRes = await apiPost('earn', { action: 'videoStart' }); // ⚠️ CHANGED — userId no longer sent; server now derives it from verified initData only (see api/earn.js)
     if (!startRes.success) { toast(errorText(startRes.error), 'error'); return; }
     state.videoSession = { startTime: startRes.startTime, signature: startRes.signature };
     updateLootboxFullUI((state.user?.pendingVideoWTC || 0) >= 25);
 
-    // ── Visual counter: every 10 seconds, adds 0.167 WTC (= 60 WTC/hr / 360 ticks/hr)
+    // ── Visual counter: every 10 seconds, adds ~0.139 WTC (= 50 WTC/hr / 360 ticks/hr)
     // This is purely for display — it makes the UI feel like a miner ticking up.
     // The real WTC is only credited by the 30-second backend call below.
     // ⚠️ FIX: this used to keep climbing even after the backend stopped crediting
@@ -2382,7 +2383,7 @@ async function startVideoSession() {
     state.videoDisplayInterval = setInterval(() => {
         if (!state.videoSession) return;
         if ((state.user?.pendingVideoWTC || 0) >= 25) { updateLootboxFullUI(true); return; }
-        sessionDisplayWTC = parseFloat((sessionDisplayWTC + 0.167).toFixed(3));
+        sessionDisplayWTC = parseFloat((sessionDisplayWTC + 0.139).toFixed(3));
         const out = document.getElementById('vp-session-wtc');
         if (out) out.textContent = `${sessionDisplayWTC.toFixed(1)} WTC`;
     }, 10000);
@@ -2407,7 +2408,7 @@ async function startVideoSession() {
     // "auto-show" or "in-page push" toggle to turn off.
 
         const elapsedSec = Math.floor((Date.now() - state.videoSession.startTime) / 1000);
-        const claimable = Math.floor(elapsedSec * (1 / 60)); // 60 WTC/hr = 1 WTC/min = 1/60 WTC/sec — matches backend VIDEO_WTC_PER_SECOND
+        const claimable = Math.floor(elapsedSec * (50 / 3600)); // 50 WTC/hr — matches backend VIDEO_WTC_PER_SECOND (lib/constants.js)
         if (claimable <= 0) return;
 
         // ⚠️ NEW: once 25+ WTC is already sitting unclaimed in the lootbox, the
@@ -2434,7 +2435,7 @@ async function startVideoSession() {
             if (state.user) state.user.pendingVideoWTC = r.pendingVideoWTC;
             renderFloatingLootbox();
             showLootboxGain(claimable);
-            const fresh = await apiPost('earn', { action: 'videoStart', userId: USER_ID });
+            const fresh = await apiPost('earn', { action: 'videoStart' });
             if (fresh.success) state.videoSession = { startTime: fresh.startTime, signature: fresh.signature };
         } else if (r.error === 'lootbox_claim_required') {
             updateLootboxFullUI(true);
@@ -2442,6 +2443,16 @@ async function startVideoSession() {
                 state._lootboxNudgeShown = true;
                 toast('🎁 Your lootbox is full — claim it to keep earning!', 'info');
             }
+        } else if (r.error === 'video_token_expired' || r.error === 'invalid_signature') {
+            // ⚠️ NEW — self-heal: this can legitimately happen if the tab was
+            // backgrounded/throttled past the 5-minute token expiry (see
+            // api/earn.js handleVideoClaim). Just get a fresh token silently
+            // and keep the session going — the elapsed time already missed
+            // is genuinely lost (by design, same as every other ad/task
+            // token here), but there's no reason to make the user restart
+            // watching from scratch over it.
+            const fresh = await apiPost('earn', { action: 'videoStart' });
+            if (fresh.success) state.videoSession = { startTime: fresh.startTime, signature: fresh.signature };
         }
     }, 30000);
 }
