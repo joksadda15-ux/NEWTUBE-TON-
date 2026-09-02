@@ -106,6 +106,7 @@ async function handleInit(req, res, db) {
         lifetimeAdsWatched: 0,
         adsWatchedToday: 0,
         adsgramDailyCountToday: 0,
+        adsgramSpecialCountToday: 0,
         monetagCountToday: 0,
         gigaCountToday: 0,
         uslCountToday: 0,
@@ -287,4 +288,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-    }
+        }
