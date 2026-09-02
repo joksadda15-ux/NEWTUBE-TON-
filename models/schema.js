@@ -36,6 +36,7 @@
 //   lifetimeAdsWatched: 0,
 //   adsWatchedToday: 0,
 //   adsgramDailyCountToday: 0,
+//   adsgramSpecialCountToday: 0,          // ⚠️ NEW — re-added Special Ads network (block 27566)
 //   monetagCountToday: 0,
 //   gigaCountToday: 0,
 //   uslCountToday: 0,                   // ⚠️ NEW — USL Ads (TowerAds), live
