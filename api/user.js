@@ -217,7 +217,17 @@ async function handleSwitchAccount(req, res, db) {
 
     const clientIp = getClientIp(req);
     const key = fingerprint && fingerprint.length >= 16 ? fingerprint : `ip:${clientIp}`;
-    await claimDeviceForUser(db, key, userId);
+    const result = await claimDeviceForUser(db, key, userId);
+    // ⚠️ NEW — claimDeviceForUser now enforces a cooldown between switches on
+    // the same device (see lib/ipRegistry.js for why). Surface it clearly
+    // instead of silently no-op'ing.
+    if (!result.ok) {
+        const hours = Math.ceil(result.retryAfterMs / (60 * 60 * 1000));
+        return res.status(429).json({
+            ok: false, error: 'switch_cooldown', retryAfterMs: result.retryAfterMs,
+            message: `This device was already switched recently. Try again in about ${hours}h, or log into the existing account instead.`,
+        });
+    }
     return res.status(200).json({ ok: true, switched: true });
 }
 
@@ -240,17 +250,31 @@ async function handleCheckJoin(req, res, db) {
                 await maybeAwardReferralMilestones(db, userId, { channelVerified: true });
             } catch { /* non-blocking */ }
         } else {
-            const existing = await db.collection('users').findOne({ _id: userId }, { projection: { channelVerified: 1 } });
-            if (existing?.channelVerified) {
-                await db.collection('users').updateOne({ _id: userId }, { $set: { channelVerified: false } });
-                return res.status(200).json({ joined: false, inChannel, inGroup, leftAfterVerifying: true });
-            }
+            // ⚠️ FIX — this DB read+write had no try/catch of its own, so a
+            // transient Mongo error here (not just isMember failing) fell
+            // through to the outer catch below, which used to return
+            // `joined: true` — see that fix for why this branch is wrapped now too.
+            try {
+                const existing = await db.collection('users').findOne({ _id: userId }, { projection: { channelVerified: 1 } });
+                if (existing?.channelVerified) {
+                    await db.collection('users').updateOne({ _id: userId }, { $set: { channelVerified: false } });
+                    return res.status(200).json({ joined: false, inChannel, inGroup, leftAfterVerifying: true });
+                }
+            } catch { /* non-blocking — worst case this one flag update is skipped, joined:false below still holds */ }
         }
 
         return res.status(200).json({ joined, inChannel, inGroup });
     } catch (err) {
         console.error('checkJoin error:', err);
-        return res.status(200).json({ joined: true, error: 'check_failed' });
+        // ⚠️ SECURITY FIX — this used to return `joined: true` here, meaning
+        // ANY transient error (a DB blip, isMember throwing unexpectedly)
+        // waved the user through the join-gate as if they were a verified
+        // member, with nothing checked at all. Fail CLOSED instead — a
+        // genuine member just sees "not joined yet" for a moment and can
+        // tap "check now" again; a non-member correctly stays gated during
+        // the same failure window. Matches the fail-closed pattern used
+        // everywhere else in this codebase (see isMember() in telegram.js).
+        return res.status(200).json({ joined: false, error: 'check_failed' });
     }
 }
 
@@ -288,4 +312,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-        }
+                       }
