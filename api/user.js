@@ -110,6 +110,7 @@ async function handleInit(req, res, db) {
         monetagCountToday: 0,
         gigaCountToday: 0,
         uslCountToday: 0,
+        tadsCountToday: 0,
         usedAdStarts: [],
         usedLootboxStarts: [],
         usedTaskStarts: [],
@@ -312,4 +313,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-                       }
+                                 }
