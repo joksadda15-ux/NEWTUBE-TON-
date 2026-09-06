@@ -110,7 +110,14 @@ async function handleInit(req, res, db) {
         monetagCountToday: 0,
         gigaCountToday: 0,
         uslCountToday: 0,
-        tadsCountToday: 0,
+        // ⚠️ REMOVED — tadsCountToday (network deleted)
+        // ⚠️ NEW — spin wheel fields. dailySpinsUsed resets nightly (see
+        // dailyResetFields in lib/constants.js); bonusSpinsAvailable does
+        // NOT reset — it only grows, via referral signups (see the
+        // referrerAfter update just above) and is spent first in handleSpin.
+        dailySpinsUsed: 0,
+        bonusSpinsAvailable: 0,
+        monetagPopupCountToday: 0,
         usedAdStarts: [],
         usedLootboxStarts: [],
         usedTaskStarts: [],
@@ -145,7 +152,12 @@ async function handleInit(req, res, db) {
         const referrerAfter = await users.findOneAndUpdate(
             { _id: referrerId },
             {
-                $inc: { referralCount: 1, weeklyReferralCount: 1, totalInvites: 1 },
+                // ⚠️ NEW — +1 bonusSpinsAvailable per referral signup (per
+                // admin request — "proti refer e ekta spin"). Doesn't reset
+                // daily like the 3 free ad-gated spins (see dailyResetFields
+                // in constants.js) — these accumulate and are spent first,
+                // before the daily free pool (see handleSpin in api/earn.js).
+                $inc: { referralCount: 1, weeklyReferralCount: 1, totalInvites: 1, bonusSpinsAvailable: 1 },
                 $push: { recentReferralSignups: { $each: [now], $slice: -50 } },
             },
             { returnDocument: 'after' }
@@ -313,4 +325,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-                                 }
+            }
