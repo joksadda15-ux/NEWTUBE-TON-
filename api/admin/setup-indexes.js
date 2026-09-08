@@ -59,6 +59,35 @@ export default async function handler(req, res) {
                 { finishedAt: 1 },
                 { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'done' } }
             )],
+            // ⚠️ NEW — Punch Key + Create Task (api/payments.js). See
+            // models/schema.js's punchKeyOrders/taskCreateOrders collection
+            // docs for the full field shapes these indexes support.
+            ['punchKeyOrders.memo (unique)', () => db.collection('punchKeyOrders').createIndex({ memo: 1 }, { unique: true })],
+            ['punchKeyOrders.userId+status', () => db.collection('punchKeyOrders').createIndex({ userId: 1, status: 1 })],
+            ['punchKeyOrders.expiresAt (partial TTL 1h, status:pending only)', () => db.collection('punchKeyOrders').createIndex(
+                { expiresAt: 1 },
+                { expireAfterSeconds: 3600, partialFilterExpression: { status: 'pending' } }
+            )],
+            ['punchKeyOrders.expiredAt (partial TTL 30d, status:expired only)', () => db.collection('punchKeyOrders').createIndex(
+                { expiredAt: 1 },
+                { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'expired' } }
+            )],
+            ['taskCreateOrders.memo (unique)', () => db.collection('taskCreateOrders').createIndex({ memo: 1 }, { unique: true })],
+            ['taskCreateOrders.userId+status', () => db.collection('taskCreateOrders').createIndex({ userId: 1, status: 1 })],
+            ['taskCreateOrders.expiresAt (partial TTL 1h, status:pending only)', () => db.collection('taskCreateOrders').createIndex(
+                { expiresAt: 1 },
+                { expireAfterSeconds: 3600, partialFilterExpression: { status: 'pending' } }
+            )],
+            ['taskCreateOrders.expiredAt (partial TTL 30d, status:expired only)', () => db.collection('taskCreateOrders').createIndex(
+                { expiredAt: 1 },
+                { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'expired' } }
+            )],
+            ['tasks.completedAt (partial TTL 5d, isUserCreated:true only)', () => db.collection('tasks').createIndex(
+                { completedAt: 1 },
+                { expireAfterSeconds: 432000, partialFilterExpression: { isUserCreated: true } }
+            )],
+            ['tasks.createdBy+isUserCreated+createdAt ("My Created Tasks")', () => db.collection('tasks').createIndex({ createdBy: 1, isUserCreated: 1, createdAt: -1 })],
+            ['tasks.isUserCreated+reviewStatus+createdAt ("🕐 Pending Review")', () => db.collection('tasks').createIndex({ isUserCreated: 1, reviewStatus: 1, createdAt: 1 })],
         ];
 
         for (const [name, fn] of steps) {
