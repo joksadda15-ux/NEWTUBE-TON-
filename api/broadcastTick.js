@@ -50,10 +50,10 @@ const REMINDER_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 hours
 // ✏️ চাইলে এই টেক্সট/বাটন যা খুশি বদলে ফেলুন — নিচের broadcast এই টেক্সটটাই পাঠাবে।
 const REMINDER_TEXT =
     `🎬 <b>Daily Complete Ads Earn 0.1$!</b>\n\n` +
-    `আজকের earning miss করবেন না —\n\n` +
-    `1️⃣ প্রথমে <b>Task</b> complete করুন ✅\n` +
-    `2️⃣ তারপর <b>Video Watch</b> করে reward নিন ▶️\n\n` +
-    `👇 এখনই App খুলে শুরু করুন:`;
+    `Don't miss out on today's earning —\n\n` +
+    `1️⃣ First, complete your <b>Task</b> ✅\n` +
+    `2️⃣ Then <b>Watch Video</b> to claim your reward ▶️\n\n` +
+    `👇 Open the App now and get started:`;
 
 export default async function handler(req, res) {
     if (!BOT_TOKEN || req.query.secret !== BOT_TOKEN) {
@@ -105,4 +105,4 @@ export default async function handler(req, res) {
 
     const result = await processBroadcastChunk(String(newJob._id));
     return res.status(200).json({ ...result, jobId: String(newJob._id), autoReminder: true });
-}
+        }
