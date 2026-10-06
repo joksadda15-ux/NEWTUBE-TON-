@@ -65,19 +65,9 @@ export default async function handler(req, res) {
                 { finishedAt: 1 },
                 { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'done' } }
             )],
-            // ⚠️ NEW — Punch Key + Create Task (api/payments.js). See
-            // models/schema.js's punchKeyOrders/taskCreateOrders collection
+            // ⚠️ NEW — Create Task (api/payments.js). See
+            // models/schema.js's taskCreateOrders collection
             // docs for the full field shapes these indexes support.
-            ['punchKeyOrders.memo (unique)', () => db.collection('punchKeyOrders').createIndex({ memo: 1 }, { unique: true })],
-            ['punchKeyOrders.userId+status', () => db.collection('punchKeyOrders').createIndex({ userId: 1, status: 1 })],
-            ['punchKeyOrders.expiresAt (partial TTL 1h, status:pending only)', () => db.collection('punchKeyOrders').createIndex(
-                { expiresAt: 1 },
-                { expireAfterSeconds: 3600, partialFilterExpression: { status: 'pending' } }
-            )],
-            ['punchKeyOrders.expiredAt (partial TTL 30d, status:expired only)', () => db.collection('punchKeyOrders').createIndex(
-                { expiredAt: 1 },
-                { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'expired' } }
-            )],
             ['taskCreateOrders.memo (unique)', () => db.collection('taskCreateOrders').createIndex({ memo: 1 }, { unique: true })],
             ['taskCreateOrders.userId+status', () => db.collection('taskCreateOrders').createIndex({ userId: 1, status: 1 })],
             ['taskCreateOrders.expiresAt (partial TTL 1h, status:pending only)', () => db.collection('taskCreateOrders').createIndex(
@@ -111,4 +101,4 @@ export default async function handler(req, res) {
     } catch (err) {
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message, results });
     }
-                }
+                                                                      }
