@@ -138,7 +138,7 @@ export default async function handler(req, res) {
     const users = db.collection('users');
     const totalUsers = await users.countDocuments({});
 
-    // ⚠️ NEW — pick the next caption in rotation (saved position + 1 each time).
+    // pick the next caption in rotation (saved position + 1 each time).
     const captionIndex = (Number(state?.captionIndex) || 0) % REMINDER_CAPTIONS.length;
 
     const newJob = await createBroadcastJob({
@@ -161,4 +161,4 @@ export default async function handler(req, res) {
 
     const result = await processBroadcastChunk(String(newJob._id));
     return res.status(200).json({ ...result, jobId: String(newJob._id), autoReminder: true, caption: captionIndex + 1 });
-    }
+            }
