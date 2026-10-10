@@ -1,18 +1,11 @@
-// api/data.js — নতুন UI-তে video section, task list, ও recent-withdrawals ticker-এর জন্য
-// পাবলিক read-only ডেটা।
+// api/data.js — public read-only data for the mini app.
 //   GET /api/data?type=videos
+//   GET /api/data?type=games
 //   GET /api/data?type=tasks
-//   GET /api/data?type=leaderboard        (referralCount অনুযায়ী টপ ২০)
-//   GET /api/data?type=recentWithdrawals   (Home-এ "social proof" ticker-এর জন্য — সত্যিকারের approved withdraw, username মাস্ক করা)
+//   GET /api/data?type=leaderboard        (top 20 by referralCount)
+//   GET /api/data?type=weeklyContest      (top 10 by weeklyReferralCount)
 
 import { connectToDatabase } from '../lib/mongodb.js';
-
-// প্রাইভেসির জন্য username আংশিক মাস্ক করা হয় — যেমন "Rashu_Xansi" → "Ras***si"
-function maskUsername(name) {
-    if (!name || name === 'N/A') return 'User';
-    if (name.length <= 4) return name[0] + '***';
-    return name.slice(0, 3) + '***' + name.slice(-2);
-}
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -64,22 +57,7 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true, leaderboard: top });
         }
 
-        if (type === 'recentWithdrawals') {
-            const recent = await db.collection('withdrawals')
-                .find({ status: 'approved' })
-                .project({ username: 1, cashAmount: 1, currency: 1, processedAt: 1 })
-                .sort({ processedAt: -1 })
-                .limit(15)
-                .toArray();
-            const items = recent.map(w => ({
-                username: maskUsername(w.username),
-                cashAmount: w.cashAmount,
-                currency: w.currency,
-            }));
-            return res.status(200).json({ ok: true, items });
-        }
-
-        // ⚠️ NEW — Weekly Referral Contest (mini app "Milestones" button). Reads
+        // Weekly Referral Contest (mini app "Milestones" button). Reads
         // the SAME live `weeklyReferralCount` field the admin panel's a_weekly
         // screen uses, so it automatically reflects the admin's manual
         // "🔄 Reset week now" (bot.js a_weekly_reset_confirm) — no separate
