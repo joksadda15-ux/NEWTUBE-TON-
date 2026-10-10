@@ -48,24 +48,24 @@ export default async function handler(req, res) {
             ['withdrawals.details', () => db.collection('withdrawals').createIndex({ details: 1 })],
             ['promos.code (unique)', () => db.collection('promos').createIndex({ code: 1 }, { unique: true })],
             ['promos.expiresAt (TTL)', () => db.collection('promos').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 })],
-            // ⚠️ NEW — the two cleanup indexes for this update
+            // the two cleanup indexes for this update
             ['fingerprints.lastSeenAt (TTL 180d)', () => db.collection('fingerprints').createIndex({ lastSeenAt: 1 }, { expireAfterSeconds: 15552000 })],
             ['gifts.claimedAt (partial TTL 30d, status:claimed only)', () => db.collection('gifts').createIndex(
                 { claimedAt: 1 },
                 { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'claimed' } }
             )],
-            // ⚠️ NEW — spin history: TTL 30 days (2592000s) + lookup index for the admin user panel
+            // spin history: TTL 30 days (2592000s) + lookup index for the admin user panel
             ['spinLogs.createdAt (TTL 30d)', () => db.collection('spinLogs').createIndex({ createdAt: 1 }, { expireAfterSeconds: 2592000 })],
             ['spinLogs.userId+createdAt', () => db.collection('spinLogs').createIndex({ userId: 1, createdAt: -1 })],
             ['weeklyReferralReports.weekEndedAt', () => db.collection('weeklyReferralReports').createIndex({ weekEndedAt: -1 })],
             ['adminState.updatedAt (TTL 1h)', () => db.collection('adminState').createIndex({ updatedAt: 1 }, { expireAfterSeconds: 3600 })],
-            // ⚠️ NEW — resumable broadcast jobs (lib/broadcastJob.js). One doc
+            // resumable broadcast jobs (lib/broadcastJob.js). One doc
             // per broadcast campaign, auto-cleaned 30 days after it finishes.
             ['broadcastJobs.finishedAt (partial TTL 30d, status:done only)', () => db.collection('broadcastJobs').createIndex(
                 { finishedAt: 1 },
                 { expireAfterSeconds: 2592000, partialFilterExpression: { status: 'done' } }
             )],
-            // ⚠️ NEW — Create Task (api/payments.js). See
+            // Create Task (api/payments.js). See
             // models/schema.js's taskCreateOrders collection
             // docs for the full field shapes these indexes support.
             ['taskCreateOrders.memo (unique)', () => db.collection('taskCreateOrders').createIndex({ memo: 1 }, { unique: true })],
@@ -101,4 +101,4 @@ export default async function handler(req, res) {
     } catch (err) {
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message, results });
     }
-                                                                      }
+                    }
