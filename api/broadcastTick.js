@@ -70,13 +70,13 @@ const REMINDER_CAPTIONS = [
     `Every minute you spend today brings you closer to your next withdrawal. Why wait?\n\n` +
     `👇 Tap below and keep earning:`,
 
-    `🔥 <b>Don't break your streak!</b>\n\n` +
-    `Your daily streak reward gets bigger every consecutive day — but only if you show up. Miss a day and it starts over from zero!\n\n` +
+    `🏆 <b>Weekly Referral Contest is live!</b>\n\n` +
+    `Refer new friends this week and compete for the weekly reward — the more valid people you bring, the higher you rank.\n\n` +
     `Right now you can:\n` +
-    `🔥 Claim today's streak reward\n` +
+    `👥 Share your referral link\n` +
     `📺 Watch your daily ads\n` +
     `🎬 Collect your video lootbox\n\n` +
-    `It takes just a few minutes, and the reward is worth it. Protect your streak today!\n\n` +
+    `It takes just a few minutes — start today!\n\n` +
     `👇 Open NEWTUBE now:`,
 
     `🎡 <b>Free spins are ready!</b>\n\n` +
@@ -161,4 +161,4 @@ export default async function handler(req, res) {
 
     const result = await processBroadcastChunk(String(newJob._id));
     return res.status(200).json({ ...result, jobId: String(newJob._id), autoReminder: true, caption: captionIndex + 1 });
-            }
+                                 }
