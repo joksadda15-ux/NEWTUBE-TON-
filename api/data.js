@@ -45,18 +45,6 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true, tasks });
         }
 
-        if (type === 'leaderboard') {
-            // ফিক্স: আগে ভুলে lifetimeWtcEarned দিয়ে সর্ট হতো, কিন্তু লেবেল ছিল "Top Referrer" —
-            // এখন আসল referralCount দিয়েই সর্ট ও দেখানো হচ্ছে
-            const top = await db.collection('users')
-                .find({ isBanned: { $ne: true } })
-                .project({ telegramUsername: 1, firstName: 1, referralCount: 1 })
-                .sort({ referralCount: -1 })
-                .limit(20)
-                .toArray();
-            return res.status(200).json({ ok: true, leaderboard: top });
-        }
-
         // Weekly Referral Contest (mini app "Milestones" button). Reads
         // the SAME live `weeklyReferralCount` field the admin panel's a_weekly
         // screen uses, so it automatically reflects the admin's manual
