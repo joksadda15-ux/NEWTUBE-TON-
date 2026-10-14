@@ -1,6 +1,5 @@
 // api/data.js — public read-only data for the mini app.
 //   GET /api/data?type=videos
-//   GET /api/data?type=games
 //   GET /api/data?type=tasks
 //   GET /api/data?type=leaderboard        (top 20 by referralCount)
 //   GET /api/data?type=weeklyContest      (top 10 by weeklyReferralCount)
@@ -23,17 +22,6 @@ export default async function handler(req, res) {
                 .limit(50)
                 .toArray();
             return res.status(200).json({ ok: true, videos });
-        }
-
-        // 🎮 NEW — Games section (admin adds games from the bot, stored in `games`)
-        if (type === 'games') {
-            const games = await db.collection('games')
-                .find({ isActive: true })
-                .project({ title: 1, gameUrl: 1, thumbnail: 1 })
-                .sort({ createdAt: -1 })
-                .limit(300)
-                .toArray();
-            return res.status(200).json({ ok: true, games });
         }
 
         if (type === 'tasks') {
