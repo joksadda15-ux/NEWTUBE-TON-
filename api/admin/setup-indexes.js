@@ -40,9 +40,6 @@ export default async function handler(req, res) {
                 { expireAfterSeconds: 5184000, partialFilterExpression: { isBanned: true } }
             )],
             ['videos.isActive+createdAt', () => db.collection('videos').createIndex({ isActive: 1, createdAt: -1 })],
-            // 🎮 NEW — Games section (permanent collection, so no TTL — just lookup indexes)
-            ['games.isActive+createdAt', () => db.collection('games').createIndex({ isActive: 1, createdAt: -1 })],
-            ['games.gameUrl', () => db.collection('games').createIndex({ gameUrl: 1 })],
             ['tasks.isApproved+category+createdAt', () => db.collection('tasks').createIndex({ isApproved: 1, category: 1, createdAt: -1 })],
             ['withdrawals.userId+createdAt', () => db.collection('withdrawals').createIndex({ userId: 1, createdAt: -1 })],
             ['withdrawals.details', () => db.collection('withdrawals').createIndex({ details: 1 })],
@@ -101,4 +98,4 @@ export default async function handler(req, res) {
     } catch (err) {
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message, results });
     }
-                    }
+}
