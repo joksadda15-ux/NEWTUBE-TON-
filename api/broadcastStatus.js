@@ -7,15 +7,16 @@
 // recently-created admin test account near the end of the sorted list) may
 // simply not have been reached yet even while the job is progressing fine.
 //
-// GET /api/broadcastStatus?secret=<BOT_TOKEN>
+// GET /api/broadcastStatus?secret=<CRON_SECRET>
 // Visit from a browser exactly like /api/admin/setup-indexes.
 
 import { getLatestBroadcastJob } from '../lib/broadcastJob.js';
+import { isCronAuthorized } from '../lib/cronAuth.js';
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
 export default async function handler(req, res) {
-    if (!BOT_TOKEN || req.query.secret !== BOT_TOKEN) {
+    if (!isCronAuthorized(req)) {
         return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
 
