@@ -39,77 +39,36 @@
 // only actually queues+sends once every 12 hours.
 
 import { connectToDatabase } from '../lib/mongodb.js';
+import { isCronAuthorized } from '../lib/cronAuth.js';
 import { getLatestBroadcastJob, createBroadcastJob } from '../lib/broadcastJob.js';
 import { processBroadcastChunk } from '../lib/broadcastProcessor.js';
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const MINI_APP_URL = 'https://t.me/NewTube12_bot/WatchTo_Earn'; // ⚠️ must match api/bot.js's MINI_APP_URL
 
-const REMINDER_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const REMINDER_INTERVAL_MS = 8 * 60 * 60 * 1000; // 8 hours
 
-// ✏️ ROTATING CAPTIONS (update) — the 12-hour reminder now cycles through these
-// captions in order: 1st broadcast uses caption #1, the next one (12h later)
-// caption #2, … and after the last one it starts again from #1. Edit / add /
-// remove captions freely (any number from 1 up; the position is saved in the
-// `settings` collection → autoEarnReminder.captionIndex).
+// ✏️ ROTATING CAPTIONS — the 8-hour reminder cycles through these short captions
+// in order (1st send = #1, next = #2, … then starts again from #1). Edit / add /
+// remove freely (the position is saved in `settings` → autoEarnReminder.captionIndex).
 const REMINDER_CAPTIONS = [
-    `🎬 <b>Daily Complete Ads Earn 0.1$!</b>\n\n` +
-    `Don't miss out on today's earning — your daily rewards are open right now and they reset at midnight!\n\n` +
-    `1️⃣ First, complete your <b>Tasks</b> ✅ — every task pays WTC straight to your balance.\n` +
-    `2️⃣ Then <b>Watch Videos</b> ▶️ — the longer you watch, the more WTC piles up in your lootbox.\n` +
-    `3️⃣ Finally, <b>watch your daily ads</b> 📺 and claim your reward.\n\n` +
-    `💡 Complete all of it every day and your balance keeps growing — small steps, real money.\n\n` +
-    `👇 Open the App now and get started:`,
-
-    `💰 <b>Your WTC is waiting for you!</b>\n\n` +
-    `Your balance doesn't grow while the app is closed — but it grows fast when you're in!\n\n` +
-    `▶️ Watch videos and fill your lootbox\n` +
-    `✅ Finish tasks for instant WTC\n` +
-    `🎡 Spin the wheel for bonus rewards\n` +
-    `📺 Watch ads to unlock extra earnings\n\n` +
-    `Every minute you spend today brings you closer to your next withdrawal. Why wait?\n\n` +
-    `👇 Tap below and keep earning:`,
-
-    `🏆 <b>Weekly Referral Contest is live!</b>\n\n` +
-    `Refer new friends this week and compete for the weekly reward — the more valid people you bring, the higher you rank.\n\n` +
-    `Right now you can:\n` +
-    `👥 Share your referral link\n` +
-    `📺 Watch your daily ads\n` +
-    `🎬 Collect your video lootbox\n\n` +
-    `It takes just a few minutes — start today!\n\n` +
-    `👇 Open NEWTUBE now:`,
-
-    `🎡 <b>Free spins are ready!</b>\n\n` +
-    `The wheel is waiting — every spin can drop bonus WTC straight into your balance.\n\n` +
-    `Here's your quick plan for today:\n` +
-    `1️⃣ Spin the wheel 🎡\n` +
-    `2️⃣ Complete your tasks ✅\n` +
-    `3️⃣ Watch your daily ads 📺\n\n` +
-    `Do these steps regularly and you'll unlock your next withdrawal sooner than you think. 💸\n\n` +
-    `👇 Spin & earn now:`,
-
-    `👥 <b>Invite friends, earn more!</b>\n\n` +
-    `Did you know your friends can make your earnings grow too?\n\n` +
-    `🎁 You get WTC rewards at every step your friend completes\n` +
-    `✅ A friend who finishes all the steps becomes a <b>Valid Referral</b>\n` +
-    `💸 Valid referrals unlock bigger withdrawals for you\n` +
-    `🤝 And you earn a commission every time they withdraw\n\n` +
-    `Share your personal link with friends and family today — the more people you invite, the more you earn.\n\n` +
-    `👇 Open the app and copy your referral link:`,
-
-    `⏰ <b>12 hours passed — time to earn again!</b>\n\n` +
-    `Your daily tasks, ads and videos are open and waiting for you. Don't let today's rewards go unclaimed!\n\n` +
-    `📋 Your checklist:\n` +
-    `✅ Complete your tasks\n` +
-    `▶️ Watch videos & claim the lootbox\n` +
-    `📺 Watch your daily ads\n` +
-    `🎡 Do your spins\n\n` +
-    `Finish them all and you'll be ready to withdraw. Consistency is what turns small rewards into real cash. 💵\n\n` +
-    `👇 Open the App:`,
+    `📺 <b>Daily ads are ready!</b>\nClaim today's limit and keep your balance growing.`,
+    `🆕 <b>New tasks added!</b>\nCheck them out and earn WTC.`,
+    `🎡 <b>Your free spin is waiting!</b>\nSpin now for bonus WTC.`,
+    `⛏️ <b>Mining is ready!</b>\nCollect your mining reward now.`,
+    `▶️ <b>Watch and earn!</b>\nFill your video lootbox today.`,
+    `🎁 <b>Promo codes drop in our channel!</b>\nOpen the channel, grab a code, redeem it in the app.`,
+    `👥 <b>Invite friends, earn more!</b>\nGet WTC every time a friend completes the steps.`,
+    `💸 <b>Ready to withdraw?</b>\nFinish today's tasks and ads, then cash out.`,
+    `⏰ <b>Time to earn again!</b>\nYour tasks, ads and spins are open.`,
+    `🏆 <b>Weekly referral contest is live!</b>\nInvite friends and climb the leaderboard.`,
+    `🔥 <b>Don't miss today's rewards!</b>\nYour daily limits are open — claim them now.`,
+    `✅ <b>Check today's tasks!</b>\nFinish them for instant WTC.`,
 ];
 
+
 export default async function handler(req, res) {
-    if (!BOT_TOKEN || req.query.secret !== BOT_TOKEN) {
+    if (!isCronAuthorized(req)) {
         return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
 
@@ -131,7 +90,7 @@ export default async function handler(req, res) {
     const lastSentAt = state?.lastSentAt ? new Date(state.lastSentAt).getTime() : 0;
 
     if (now - lastSentAt < REMINDER_INTERVAL_MS) {
-        // এখনো 12h পার হয়নি — সত্যিকারের harmless idle tick।
+        // এখনো 8h পার হয়নি — সত্যিকারের harmless idle tick।
         return res.status(200).json({ ok: true, idle: true });
     }
 
@@ -146,7 +105,7 @@ export default async function handler(req, res) {
         buttonText: '🚀 Open NEWTUBE',
         buttonUrl: MINI_APP_URL,
         photoFileId: null,
-        createdBy: 'auto-cron-12h',
+        createdBy: 'auto-cron-8h',
         totalUsers,
     });
 
@@ -161,4 +120,4 @@ export default async function handler(req, res) {
 
     const result = await processBroadcastChunk(String(newJob._id));
     return res.status(200).json({ ...result, jobId: String(newJob._id), autoReminder: true, caption: captionIndex + 1 });
-                                 }
+}
