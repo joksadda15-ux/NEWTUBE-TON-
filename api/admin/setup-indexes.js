@@ -19,11 +19,12 @@
 // schema changes too.
 
 import { connectToDatabase } from '../../lib/mongodb.js';
+import { isCronAuthorized } from '../../lib/cronAuth.js';
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
 export default async function handler(req, res) {
-    if (!BOT_TOKEN || req.query.secret !== BOT_TOKEN) {
+    if (!isCronAuthorized(req)) {
         return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
 
