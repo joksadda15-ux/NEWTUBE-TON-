@@ -19,6 +19,7 @@
 // (auto-provisioned by Vercel) — verified below so nobody else can trigger this.
 
 import { connectToDatabase } from '../../lib/mongodb.js';
+import { isCronAuthorized } from '../../lib/cronAuth.js';
 import { tgSend } from '../../lib/telegram.js';
 import { WEEKLY_REFERRAL_MIN_COUNT, WEEKLY_REFERRAL_MAX_WINNERS } from '../../lib/constants.js';
 
@@ -26,7 +27,7 @@ const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
 
 export default async function handler(req, res) {
     const authHeader = req.headers['authorization'];
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!isCronAuthorized(req)) {
         return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
 
