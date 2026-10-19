@@ -13,6 +13,7 @@
 //   7 days) and changes NOTHING about rewards. Needs env var POSTBACK_SECRET in Vercel.
 
 import { connectToDatabase } from '../lib/mongodb.js';
+import { cyInc, cyMin } from '../lib/cycleStats.js'; // 18 Oct 2026 — cycle counters
 import { ObjectId } from 'mongodb';
 import { verifyTelegramInitData } from '../lib/telegramAuth.js';
 import crypto from 'crypto';
@@ -58,7 +59,7 @@ async function handleClaim(req, res, db) {
     if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
     if (user.isBanned) return res.status(403).json({ ok: false, error: 'banned' });
 
-    await users.updateOne({ _id: userId }, { $inc: { wtcBalance: gate.amount, lifetimeWtcEarned: gate.amount } });
+    await users.updateOne({ _id: userId }, { $inc: { wtcBalance: gate.amount, lifetimeWtcEarned: gate.amount, ...cyInc('gift', gate.amount) }, $min: cyMin() });
 
     return res.status(200).json({ ok: true, amount: gate.amount });
 }
@@ -132,4 +133,4 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-}
+        }
