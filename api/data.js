@@ -15,7 +15,10 @@ export default async function handler(req, res) {
         const { type } = req.query;
         const { db } = await connectToDatabase();
 
+        // v1.2 (saves Vercel usage): these lists are the same for everybody, so Vercel's edge cache answers them
+        // (no function run, no database read) for a few minutes instead of every single request.
         if (type === 'videos') {
+            res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
             const videos = await db.collection('videos')
                 .find({ isActive: true })
                 .sort({ createdAt: -1 })
@@ -25,6 +28,7 @@ export default async function handler(req, res) {
         }
 
         if (type === 'tasks') {
+            res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
             const tasks = await db.collection('tasks')
                 .find({ isApproved: true })
                 .sort({ createdAt: -1 })
@@ -39,6 +43,7 @@ export default async function handler(req, res) {
         // "🔄 Reset week now" (bot.js a_weekly_reset_confirm) — no separate
         // reset needed here, it's the same field/collection.
         if (type === 'weeklyContest') {
+            res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
             const top = await db.collection('users')
                 .find({ isBanned: { $ne: true }, weeklyReferralCount: { $gt: 0 } })
                 .project({ telegramUsername: 1, firstName: 1, weeklyReferralCount: 1 })
