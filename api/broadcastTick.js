@@ -82,14 +82,20 @@ export default async function handler(req, res) {
 
     // কোনো broadcast এই মুহূর্তে চলছে না (হয় কখনো হয়নি, নয়তো শেষ হয়ে গেছে) —
     // তাহলে দেখো auto-reminder-এর পালা এসেছে কিনা।
+    // v1.5 (saves Vercel usage): once we know when the reminder is next due, a warm instance remembers it and skips the
+    // settings read on idle ticks (only a "not due yet" answer is ever cached, so a due reminder is never missed).
+    const now = Date.now();
+    if (global._reminderNextDueAt && now < global._reminderNextDueAt) {
+        return res.status(200).json({ ok: true, idle: true });
+    }
     const { db } = await connectToDatabase();
     const settings = db.collection('settings');
     const state = await settings.findOne({ _id: 'autoEarnReminder' });
-    const now = Date.now();
     const lastSentAt = state?.lastSentAt ? new Date(state.lastSentAt).getTime() : 0;
 
     if (now - lastSentAt < REMINDER_INTERVAL_MS) {
         // এখনো 8h পার হয়নি — সত্যিকারের harmless idle tick।
+        global._reminderNextDueAt = lastSentAt + REMINDER_INTERVAL_MS;
         return res.status(200).json({ ok: true, idle: true });
     }
 
@@ -111,6 +117,7 @@ export default async function handler(req, res) {
     // lastSentAt সাথে সাথেই lock করে ফেলা হচ্ছে (job তৈরির পরপরই) — পরের
     // মিনিটের tick এসে দ্বিতীয়বার নতুন job বানানো আটকাবে (তখন getLatestBroadcastJob
     // এই নতুন job-টাই ফেরত দেবে, status 'done' না হওয়া পর্যন্ত উপরের ব্লকেই ঢুকবে)।
+    global._reminderNextDueAt = now + REMINDER_INTERVAL_MS;
     await settings.updateOne(
         { _id: 'autoEarnReminder' },
         { $set: { lastSentAt: new Date(now), captionIndex: (captionIndex + 1) % REMINDER_CAPTIONS.length } },
