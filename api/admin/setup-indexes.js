@@ -40,6 +40,10 @@ export default async function handler(req, res) {
                 { bannedAt: 1 },
                 { expireAfterSeconds: 5184000, partialFilterExpression: { isBanned: true } }
             )],
+            // v1.5: admin dashboard / "All Users" page used to scan the whole users collection for these
+            ['users.createdAt', () => db.collection('users').createIndex({ createdAt: -1 })],
+            ['users.multiAccountFlag (partial)', () => db.collection('users').createIndex({ multiAccountFlag: 1 }, { partialFilterExpression: { multiAccountFlag: true } })],
+            ['users.accountLocked (partial)', () => db.collection('users').createIndex({ accountLocked: 1 }, { partialFilterExpression: { accountLocked: true } })],
             ['videos.isActive+createdAt', () => db.collection('videos').createIndex({ isActive: 1, createdAt: -1 })],
             ['tasks.isApproved+category+createdAt', () => db.collection('tasks').createIndex({ isApproved: 1, category: 1, createdAt: -1 })],
             ['withdrawals.userId+createdAt', () => db.collection('withdrawals').createIndex({ userId: 1, createdAt: -1 })],
@@ -100,4 +104,4 @@ export default async function handler(req, res) {
     } catch (err) {
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message, results });
     }
-                                     }
+            }
