@@ -2,7 +2,6 @@
 //   GET /api/data?type=videos
 //   GET /api/data?type=tasks
 //   GET /api/data?type=leaderboard        (top 20 by referralCount)
-//   GET /api/data?type=weeklyContest      (top 10 by weeklyReferralCount)
 
 import { connectToDatabase } from '../lib/mongodb.js';
 
@@ -35,22 +34,6 @@ export default async function handler(req, res) {
                 .limit(50)
                 .toArray();
             return res.status(200).json({ ok: true, tasks });
-        }
-
-        // Weekly Referral Contest (mini app "Milestones" button). Reads
-        // the SAME live `weeklyReferralCount` field the admin panel's a_weekly
-        // screen uses, so it automatically reflects the admin's manual
-        // "🔄 Reset week now" (bot.js a_weekly_reset_confirm) — no separate
-        // reset needed here, it's the same field/collection.
-        if (type === 'weeklyContest') {
-            res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
-            const top = await db.collection('users')
-                .find({ isBanned: { $ne: true }, weeklyReferralCount: { $gt: 0 } })
-                .project({ telegramUsername: 1, firstName: 1, weeklyReferralCount: 1 })
-                .sort({ weeklyReferralCount: -1 })
-                .limit(10)
-                .toArray();
-            return res.status(200).json({ ok: true, top });
         }
 
         return res.status(400).json({ ok: false, error: 'unknown_type' });
