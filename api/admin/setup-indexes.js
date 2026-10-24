@@ -35,7 +35,7 @@ export default async function handler(req, res) {
         const steps = [
             ['users.referredBy', () => db.collection('users').createIndex({ referredBy: 1 })],
             ['users.isBanned', () => db.collection('users').createIndex({ isBanned: 1 })],
-            ['users.weeklyReferralCount', () => db.collection('users').createIndex({ weeklyReferralCount: -1 })],
+            ['users.createdAt+referredBy (admin Top Referrers 7d)', () => db.collection('users').createIndex({ createdAt: -1, referredBy: 1 })],
             ['users.bannedAt (partial TTL 60d, isBanned:true only)', () => db.collection('users').createIndex(
                 { bannedAt: 1 },
                 { expireAfterSeconds: 5184000, partialFilterExpression: { isBanned: true } }
@@ -104,4 +104,4 @@ export default async function handler(req, res) {
     } catch (err) {
         return res.status(500).json({ ok: false, error: 'server_error', message: err.message, results });
     }
-            }
+                }
