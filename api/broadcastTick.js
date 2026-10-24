@@ -60,7 +60,6 @@ const REMINDER_CAPTIONS = [
     `👥 <b>Invite friends, earn more!</b>\nGet WTC every time a friend completes the steps.`,
     `💸 <b>Ready to withdraw?</b>\nFinish today's tasks and ads, then cash out.`,
     `⏰ <b>Time to earn again!</b>\nYour tasks, ads and mining are open.`,
-    `🏆 <b>Weekly referral contest is live!</b>\nInvite friends and climb the leaderboard.`,
     `🔥 <b>Don't miss today's rewards!</b>\nYour daily limits are open — claim them now.`,
     `✅ <b>Check today's tasks!</b>\nFinish them for instant WTC.`,
 ];
@@ -126,4 +125,4 @@ export default async function handler(req, res) {
 
     const result = await processBroadcastChunk(String(newJob._id));
     return res.status(200).json({ ...result, jobId: String(newJob._id), autoReminder: true, caption: captionIndex + 1 });
-}
+                                                            }
