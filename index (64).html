@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>NEWTUBE — Watch &amp; Download</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- Only Adsgram is kept (same SDK as the old app). Monetag / GigaPub can be added back later if you want them. -->
+<script defer src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<style>
+:root{--bg:#0B0807;--surface:#14100E;--raised:#1C1613;--accent:#FF8A3D;--pink:#FF3D81;--ink:#FFF8F2;--muted:#B5A79A;--line:rgba(255,138,61,.14);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.top{position:sticky;top:0;z-index:5;padding:12px 16px;background:rgba(11,8,7,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{font-weight:800;letter-spacing:.08em}.brand b{color:var(--accent)}
+main{padding:14px 0 calc(84px + var(--sb))}
+h2{margin:0 16px 10px;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+h2 a{font-size:12px;color:var(--accent);font-weight:500;cursor:pointer}
+.sec{margin-bottom:22px}
+.hrow{display:flex;gap:12px;overflow-x:auto;padding:0 16px;scrollbar-width:none}
+.hrow .card{flex:0 0 220px}
+.grid{display:flex;flex-direction:column;gap:18px;padding:0 16px}
+.card{cursor:pointer}
+.thumb{position:relative;aspect-ratio:16/9;background:var(--surface);border-radius:14px;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.dur{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.75);border-radius:6px;padding:2px 7px;font-size:11px}
+.ct{margin-top:7px;font-size:13.5px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
+.chip{background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:18px 12px;text-align:center;font-weight:600}
+.muted{color:var(--muted);font-size:13px;text-align:center;padding:26px 16px}
+.btn{display:block;width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--pink));color:#1a0c05;font-weight:700;text-align:center}
+.btn.ghost{background:var(--raised);color:var(--ink);border:1px solid var(--line);margin:16px 16px 0;width:calc(100% - 32px)}
+.back{padding:0 16px 12px;color:var(--accent);font-size:14px}
+input.q{width:calc(100% - 32px);margin:0 16px 16px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(20,16,14,.96);border-top:1px solid var(--line);padding-bottom:var(--sb);z-index:6}
+.nav button{flex:1;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted)}
+.nav button.on{color:var(--accent)}
+.player{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto}
+.ptop{display:flex;align-items:center;gap:10px;padding:12px 16px}
+.ptop button{font-size:20px;color:var(--accent)}
+.vwrap{position:relative;aspect-ratio:16/9;background:#000}
+.vwrap video{width:100%;height:100%;background:#000}
+.cd{position:absolute;right:10px;bottom:46px;background:rgba(0,0,0,.78);border:1px solid var(--accent);border-radius:8px;padding:5px 10px;font-size:12.5px;font-weight:600;pointer-events:none}
+.pbody{padding:16px}.pbody h1{font-size:17px;margin:0 0 14px}
+#toast{position:fixed;left:50%;bottom:calc(90px + var(--sb));transform:translateX(-50%);background:var(--raised);border:1px solid var(--line);padding:10px 16px;border-radius:10px;font-size:13px;z-index:50;display:none;max-width:86%;text-align:center}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<div id="toast"></div>
+<script>
+'use strict';
+// ═════════ CONFIG — change values only here ═════════
+const API_BASE = 'https://newtube-ton.vercel.app/api';   // same domain as before (S2S stays valid)
+const BOT_USERNAME = 'NewTube12_bot';
+const AD_BLOCK_PLAY = 'int-27565';       // Adsgram interstitial: before play + every 6 min (existing block; create a new one later if you wish)
+const AD_BLOCK_DOWNLOAD = '27566';       // Adsgram block shown before download (existing block)
+const MIDROLL_EVERY = 360;               // seconds of REAL watching between ads (6 min)
+const COUNTDOWN = 5;                     // "Ad coming in N" shown for the last 5 seconds
+const PAGE = 20;
+const DEMO = /[?&]demo=1/.test(location.search);   // open index.html?demo=1 in a normal browser to preview the layout
+
+const tg = window.Telegram?.WebApp;
+if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor('#0B0807'); } catch (e) {} }
+const INIT = tg?.initData || '';
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtDur = s => { s = Math.floor(+s || 0); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
+let toastT; function toast(m) { const t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => t.style.display = 'none', 2600); }
+
+// ═════════ API ═════════
+const DV = [
+  { videoId: 'demo1', title: 'Big Buck Bunny (Creative Commons demo)', thumbnail: '', duration: 596, videoUrl: 'https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4' },
+  { videoId: 'demo2', title: 'Sintel trailer (Creative Commons demo)', thumbnail: '', duration: 52, videoUrl: 'https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4' }];
+async function api(path, body) {
+  if (DEMO) return path.includes('type=home') ? { ok: true, rows: [{ slug: 'animation', name: 'Animation', videos: DV }] }
+    : path.includes('type=categories') ? { ok: true, categories: [{ slug: 'animation', name: 'Animation' }] }
+    : { ok: true, videos: DV, total: DV.length };
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), 12000);
+  try {
+    const r = await fetch(`${API_BASE}/${path}`, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, initData: INIT }), signal: ac.signal } : { signal: ac.signal });
+    return await r.json();
+  } catch (e) { return { ok: false, error: 'server_error' }; } finally { clearTimeout(t); }
+}
+
+// ═════════ ADS (Adsgram gate copied from the old app: an ad can show ONLY when this code opens the gate) ═════════
+let adGate = 0, adBusy = false;
+function patchGate() {
+  try {
+    const A = window.Adsgram; if (!A || A.__gate || typeof A.init !== 'function') return !!(A && A.__gate);
+    const orig = A.init.bind(A);
+    A.init = o => { const c = orig(o); if (!c || typeof c.show !== 'function') return c; const s = c.show.bind(c);
+      c.show = () => adGate ? s() : Promise.reject({ error: true, done: false, state: 'blocked' }); return c; };
+    A.__gate = true; return true;
+  } catch (e) { return false; }
+}
+(function () { let n = 0; const t = setInterval(() => { if (patchGate() || ++n > 40) clearInterval(t); }, 250); })();
+// returns { done, error }.  error=true means "no ad available" → we never block the user for that.
+async function showAd(blockId) {
+  if (!window.Adsgram || adBusy) return { done: false, error: true };
+  patchGate(); adBusy = true; adGate++;
+  try { const r = await window.Adsgram.init({ blockId }).show(); return { done: r?.done !== false, error: false }; }
+  catch (e) { return { done: false, error: !!(e && e.error) }; }
+  finally { adGate = Math.max(0, adGate - 1); setTimeout(() => { adBusy = false; }, 800); }
+}
+
+// ═════════ SHELL + TABS (Home / Browse / Search) ═════════
+const S = { map: {}, tab: 'home' };
+const TABS = [
+  ['home', 'Home', '<path d="M3 11l9-8 9 8v10H3z"/>'],
+  ['browse', 'Browse', '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'],
+  ['search', 'Search', '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>']];
+function shell() {
+  $('app').innerHTML = `<div class="top"><div class="brand">NEW<b>TUBE</b></div></div><main id="view"></main>
+  <nav class="nav">${TABS.map(t => `<button data-t="${t[0]}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${t[2]}</svg>${t[1]}</button>`).join('')}</nav>`;
+  document.querySelectorAll('.nav button').forEach(b => b.onclick = () => go(b.dataset.t));
+}
+function go(tab) {
+  S.tab = tab;
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  ({ home: viewHome, browse: viewBrowse, search: viewSearch })[tab]();
+}
+const card = v => { S.map[v.videoId] = v; return `<div class="card" data-id="${esc(v.videoId)}"><div class="thumb"><img loading="lazy" src="${esc(v.thumbnail || '')}" onerror="this.style.display='none'">${v.duration ? `<span class="dur">${fmtDur(v.duration)}</span>` : ''}</div><div class="ct">${esc(v.title)}</div></div>`; };
+function bindCards(root) { root.querySelectorAll('.card').forEach(c => c.onclick = () => openPlayer(S.map[c.dataset.id])); }
+
+// HOME — one cached call: data?type=home → rows[{slug,name,videos[]}]
+async function viewHome() {
+  const v = $('view'); v.innerHTML = '<div class="muted">Loading…</div>';
+  const r = await api('data?type=home');
+  if (!r.ok || !r.rows?.length) { v.innerHTML = '<div class="muted">No videos yet.</div>'; return; }
+  v.innerHTML = r.rows.map(row => `<section class="sec"><h2>${esc(row.name)}<a data-cat="${esc(row.slug)}" data-name="${esc(row.name)}">See all</a></h2><div class="hrow">${row.videos.map(card).join('')}</div></section>`).join('');
+  bindCards(v);
+  v.querySelectorAll('[data-cat]').forEach(a => a.onclick = () => viewList({ category: a.dataset.cat }, a.dataset.name));
+}
+// BROWSE — categories grid: data?type=categories → categories[{slug,name}]
+async function viewBrowse() {
+  const v = $('view'); v.innerHTML = '<div class="muted">Loading…</div>';
+  const r = await api('data?type=categories');
+  if (!r.ok || !r.categories?.length) { v.innerHTML = '<div class="muted">No categories yet.</div>'; return; }
+  v.innerHTML = `<div class="chips">${r.categories.map(c => `<button class="chip" data-cat="${esc(c.slug)}" data-name="${esc(c.name)}">${esc(c.name)}</button>`).join('')}</div>`;
+  v.querySelectorAll('.chip').forEach(b => b.onclick = () => viewList({ category: b.dataset.cat }, b.dataset.name));
+}
+// LIST (category or search) — data?type=videos&category=..&q=..&page=N → videos[], total
+async function viewList(params, title, target) {
+  const host = target || $('view');
+  let page = 1;
+  if (!target) host.innerHTML = `<div class="back" id="bk">← ${esc(title)}</div><div class="grid" id="lg"></div><div id="lm"></div>`;
+  const grid = (target ? host : $('lg')), more = target ? null : $('lm');
+  if (!target) $('bk').onclick = () => go(S.tab);
+  const load = async () => {
+    const qs = new URLSearchParams({ type: 'videos', page, limit: PAGE, ...params }).toString();
+    const r = await api('data?' + qs);
+    if (!r.ok) { toast('Connection problem, try again'); return; }
+    if (page === 1 && !r.videos?.length) grid.innerHTML = '<div class="muted">Nothing found.</div>';
+    else { grid.insertAdjacentHTML('beforeend', r.videos.map(card).join('')); bindCards(grid); }
+    if (more) more.innerHTML = (page * PAGE < (r.total || 0)) ? '<button class="btn ghost" id="lmb">Load more</button>' : '';
+    if ($('lmb')) $('lmb').onclick = () => { page++; load(); };
+  };
+  if (target) grid.innerHTML = '';
+  load();
+}
+// SEARCH
+function viewSearch() {
+  const v = $('view'); v.innerHTML = '<input class="q" id="q" placeholder="Search videos…" autocomplete="off"><div id="sr"></div>';
+  let t; $('q').oninput = e => { clearTimeout(t); const q = e.target.value.trim(); t = setTimeout(() => { if (q.length < 2) { $('sr').innerHTML = ''; return; } $('sr').innerHTML = '<div class="grid" id="sg"></div>'; viewList({ q }, '', $('sg')); }, 450); };
+}
+
+// ═════════ PLAYER: ad → video → (every 6 min of real watching) "Ad coming in 5…" → ad → resume ═════════
+let P = null;
+async function openPlayer(v) {
+  if (!v) return; closePlayer();
+  $('modal').innerHTML = `<div class="player"><div class="ptop"><button id="pc">←</button><div class="ct" style="margin:0">${esc(v.title)}</div></div>
+    <div class="vwrap"><video id="vid" controls playsinline controlsList="nodownload" preload="metadata"></video><div class="cd" id="cd" hidden></div></div>
+    <div class="pbody"><h1>${esc(v.title)}</h1><button class="btn" id="dl">⬇ Download</button></div></div>`;
+  const me = P = { v, watched: 0, last: null, nextAt: MIDROLL_EVERY, busy: false };
+  $('pc').onclick = closePlayer; $('dl').onclick = () => download(v);
+  await showAd(AD_BLOCK_PLAY);                 // 1) ad when the user taps a video
+  if (P !== me) return;                        //    (user went back during the ad)
+  const vid = $('vid'); vid.src = v.videoUrl; vid.play().catch(() => {});
+  vid.ontimeupdate = () => tick(vid);
+  vid.onseeking = vid.onpause = () => { if (P) { P.last = null; if (!P.busy) $('cd').hidden = true; } };
+}
+function tick(vid) {                           // counts only REAL playing time (seeking forward does not count)
+  if (!P || P.busy || vid.paused) return;
+  const t = vid.currentTime;
+  if (P.last !== null) { const d = t - P.last; if (d > 0 && d < 1.5) P.watched += d; }
+  P.last = t;
+  const left = P.nextAt - P.watched, cd = $('cd');
+  if (left <= 0) midroll(vid);
+  else if (left <= COUNTDOWN) { cd.hidden = false; cd.textContent = `Ad coming in ${Math.ceil(left)}`; }
+  else cd.hidden = true;
+}
+async function midroll(vid) {
+  const me = P; me.busy = true; vid.pause(); $('cd').hidden = true;
+  try { (document.exitFullscreen || document.webkitExitFullscreen)?.call(document); } catch (e) {}
+  await showAd(AD_BLOCK_PLAY);                 // 2) ad every 6 min
+  if (P !== me) return;
+  me.nextAt = me.watched + MIDROLL_EVERY; me.last = null; me.busy = false; vid.play().catch(() => {});
+}
+function closePlayer() {
+  const vid = $('vid'); if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
+  P = null; $('modal').innerHTML = '';
+}
+
+// ═════════ DOWNLOAD: ad → server gives a one-time token → Telegram bot sends the file ═════════
+let dlBusy = false;
+async function download(v) {
+  if (dlBusy) return; dlBusy = true;
+  try {
+    const ad = await showAd(AD_BLOCK_DOWNLOAD);
+    if (!ad.done && !ad.error) { toast('Please watch the full ad to download'); return; }
+    const r = await api('user', { action: 'dlToken', videoId: v.videoId });   // ← backend part comes in the next step
+    if (!r.ok) { toast('Download is not available right now'); return; }
+    const url = `https://t.me/${BOT_USERNAME}?start=dl_${v.videoId}_${r.token}`;
+    tg?.openTelegramLink ? tg.openTelegramLink(url) : window.open(url, '_blank');
+  } finally { dlBusy = false; }
+}
+
+// ═════════ START ═════════
+if (!DEMO && !INIT) {
+  $('app').innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:0 30px"><div style="font-size:46px">📱</div><b>Open this in Telegram</b><div class="muted">NEWTUBE works only inside the Telegram app.</div></div>';
+} else { shell(); go('home'); }
+</script>
+</body>
+</html>
