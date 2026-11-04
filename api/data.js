@@ -59,10 +59,10 @@ export default async function handler(req, res) {
         if (type === 'videos') {
             res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=1800, stale-while-revalidate=3600'); // 29 Oct 2026: videos rarely change → phone keeps it 2 min, edge 30 min
             const videos = await db.collection('videos')
-                .find({ isActive: true, kind: { $ne: 'movie' }, videoId: { $exists: true } })
-                .project({ videoId: 1, title: 1, thumbnail: 1, createdAt: 1 })
+                .find({ isActive: true, kind: { $ne: 'movie' }, $or: [{ videoId: { $exists: true } }, { listId: { $exists: true } }] })
+                .project({ videoId: 1, listId: 1, title: 1, thumbnail: 1, category: 1, playlistId: 1, playlistTitle: 1, createdAt: 1 })
                 .sort({ createdAt: -1 })
-                .limit(60)
+                .limit(400)
                 .toArray();
             return res.status(200).json({ ok: true, videos });
         }
@@ -73,11 +73,12 @@ export default async function handler(req, res) {
                 { $match: { isActive: true, kind: 'movie' } },
                 { $sort: { createdAt: -1 } },
                 { $limit: 300 },
-                { $project: { title: 1, category: 1, createdAt: 1, thumbnail: 1, streamUrl: 1, hasPoster: { $cond: [{ $ifNull: ['$posterFileId', false] }, true, false] }, canDownload: { $cond: [{ $ifNull: ['$fileId', false] }, true, false] } } },
+                { $project: { title: 1, category: 1, createdAt: 1, thumbnail: 1, streamUrl: 1, chatUsername: 1, messageId: 1, hasPoster: { $cond: [{ $ifNull: ['$posterFileId', false] }, true, false] }, canDownload: { $cond: [{ $ifNull: ['$fileId', false] }, true, false] } } },
             ]).toArray();
             for (const m of movies) {
                 if (m.hasPoster) m.thumbnail = `data?type=poster&id=${m._id}`;
-                delete m.hasPoster;
+                if (m.chatUsername && m.messageId) m.watchLink = `https://t.me/${m.chatUsername}/${m.messageId}`; // opens the post in Telegram's own player
+                delete m.hasPoster; delete m.chatUsername; delete m.messageId;
             }
             return res.status(200).json({ ok: true, movies });
         }
@@ -139,4 +140,4 @@ export default async function handler(req, res) {
         console.error('data error:', err);
         return res.status(500).json({ ok: false, error: 'server_error' });
     }
-            }
+                }
